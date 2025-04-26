@@ -50,15 +50,12 @@ class _DetailsFormState extends State<DetailsForm> {
       try {
         final response = await http.post(
           Uri.parse(url),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          body: jsonEncode({
+          body: {
+            'token': token,
             'name': _nameController.text.trim(),
             'email': _emailController.text.trim(),
             'college': _selectedCollege,
-          }),
+          },
         );
 
         if (response.statusCode == 200) {
