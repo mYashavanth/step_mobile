@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
 Widget formInputWithLabel(
-    TextEditingController controller, String hintText, String labelText) {
+  TextEditingController controller,
+  String hintText,
+  String labelText, {
+  bool readOnly = false, // Added readOnly parameter
+  String? Function(String?)? validator, // Added validator parameter
+}) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -19,15 +24,16 @@ Widget formInputWithLabel(
         height: 8,
       ),
       Container(
-        padding: EdgeInsets.symmetric(vertical: 4,horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         decoration: ShapeDecoration(
           shape: RoundedRectangleBorder(
-            side: BorderSide(width: 1, color: Color(0xFFDDDDDD)),
+            side: const BorderSide(width: 1, color: Color(0xFFDDDDDD)),
             borderRadius: BorderRadius.circular(8),
           ),
         ),
         child: TextFormField(
           controller: controller,
+          readOnly: readOnly, // Set the readOnly property
           style: const TextStyle(
             color: Color(0xFF1A1A1A),
             fontSize: 16,
@@ -36,33 +42,17 @@ Widget formInputWithLabel(
             height: 1.50,
           ),
           decoration: InputDecoration(
-              // labelText: labelText,
-              hintText: hintText,
-              hintStyle: const TextStyle(
-                color: Color(0xFF9CA3AF),
-                fontSize: 16,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w400,
-                height: 1.50,
-              ),
-              border: InputBorder.none
-              // const OutlineInputBorder(
-              //   gapPadding: 0,
-              //   borderRadius: BorderRadius.all(
-              //     Radius.circular(8),
-              //   ),
-              //   borderSide: BorderSide(
-              //     width: 1,
-              //     color: Color(0xFFDDDDDD),
-              //   ),
-              // ),
-              ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter your name';
-            }
-            return null;
-          },
+            hintText: hintText,
+            hintStyle: const TextStyle(
+              color: Color(0xFF9CA3AF),
+              fontSize: 16,
+              fontFamily: 'SF Pro Display',
+              fontWeight: FontWeight.w400,
+              height: 1.50,
+            ),
+            border: InputBorder.none,
+          ),
+          validator: validator, // Use the validator parameter
         ),
       ),
     ],

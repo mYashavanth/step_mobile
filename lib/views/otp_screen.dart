@@ -46,92 +46,46 @@ class _OTPScreenState extends State<OTPScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print('Response data: $data'); // Debug print
         if (data['errFlag'] == 0) {
           // OTP verification successful
           setState(() {
             enteredOtp = ""; // Clear the entered OTP
             clearOtpField = true; // Set the flag to clear the OTP field
           });
+          await storage.write(key: 'token', value: data['token']);
           Navigator.pushNamed(context, "/details_form");
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                data['message'],
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              backgroundColor: const Color(0xFF247E80), // Theme color
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0),
-              ),
-            ),
+
+          showCustomSnackBar(
+            context: context,
+            message: data['message'],
+            isSuccess: true,
           );
         } else {
           // OTP verification failed
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                data['message'],
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              backgroundColor: Colors.red, // Error color
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0),
-              ),
-            ),
+
+          showCustomSnackBar(
+            context: context,
+            message: data['message'],
+            isSuccess: false,
           );
         }
       } else {
         // Server error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              'Failed to verify OTP. Please try again.',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            backgroundColor: Colors.red, // Error color
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16.0),
-            ),
-          ),
+
+        showCustomSnackBar(
+          context: context,
+          message: 'Failed to verify OTP. Please try again.',
+          isSuccess: false,
         );
       }
     } catch (e) {
       // Exception handling
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'An error occurred: $e',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontFamily: 'SF Pro Display',
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          backgroundColor: Colors.red, // Error color
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
-          ),
-        ),
+      print('Error: $e'); // Debug print
+      showCustomSnackBar(
+        context: context,
+        message: 'An error occurred: $e',
+        isSuccess: false,
       );
     }
   }
