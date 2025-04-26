@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 Widget borderHorizontal() {
   return Container(
     // width: 390,
-    decoration: ShapeDecoration(
+    decoration: const ShapeDecoration(
       shape: RoundedRectangleBorder(
         side: BorderSide(
           width: 0.5,
@@ -125,6 +125,6 @@ Widget buildBorderButtonRow(
   );
 }
 
-MaterialStateProperty<Color> getMaterialStateThemeColor() {
-  return MaterialStateProperty.all(const Color(0xFF247E80));
+WidgetStateProperty<Color> getMaterialStateThemeColor() {
+  return WidgetStateProperty.all(const Color(0xFF247E80));
 }

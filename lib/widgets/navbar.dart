@@ -17,7 +17,7 @@ class _StepNavigationBar extends State<StepNavigationBar> {
   void initState() {
     _selectedIndex = widget.selected;
     setState(() {});
-    print("index : ${_selectedIndex}");
+    print("index : $_selectedIndex");
     super.initState();
   }
 

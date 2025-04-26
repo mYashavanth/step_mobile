@@ -5,12 +5,14 @@ import 'package:step_mobile/widgets/notes_widgets.dart';
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});
 
+  @override
   State<NotesScreen> createState() {
     return _NotesScreen();
   }
 }
 
 class _NotesScreen extends State<NotesScreen> {
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF3F4F6),

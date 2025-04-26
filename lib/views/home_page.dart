@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:step_mobile/views/notes.dart';
 import 'package:step_mobile/widgets/homepage_widgets.dart';
 import 'package:step_mobile/widgets/navbar.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:step_mobile/views/urlconfig.dart';
 import 'dart:math' as math;
 
 class HomePage extends StatefulWidget {
@@ -12,413 +16,441 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
+// class Subject {
+//   final String id;
+//   final String name;
+//   final int progress; // Assuming progress is a percentage (0-100)
+
+//   Subject({
+//     required this.id,
+//     required this.name,
+//     required this.progress,
+//   });
+
+//   factory Subject.fromJson(Map<String, dynamic> json) {
+//     return Subject(
+//       id: json['id'].toString(),
+//       name: json['name'],
+//       progress: math.max(0, math.min(100, json['progress'] ?? 0)),
+//     );
+//   }
+// }
+
 class _HomePageState extends State<HomePage> {
-  List<Map> selectCourseData = [
-    {"name": "NEET PG (2025)", "id": 1},
-    {"name": "FMGE ( June - 2025 )", "id": 2},
-    {"name": "JEE ( June - 2025 )", "id": 3},
-  ];
-  List<int> selectedCourse = [1];
+  List<Map<String, dynamic>> courses = [];
+  bool isLoadingCourses = true;
+  String courseError = '';
+  List<int> selectedCourseIds = [1]; // Default selected course
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCourses();
+  }
+
+  Future<void> _fetchCourses() async {
+    setState(() {
+      isLoadingCourses = true;
+      courseError = '';
+    });
+
+     final storage = const FlutterSecureStorage();
+
+    try {
+      String token = await storage.read(key: 'token') ?? '';
+
+      final response = await http.get(
+        Uri.parse('$baseurl/app/get-all-course-names/$token'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          courses = data
+              .map((course) =>
+                  {'name': course['course_name'], 'id': course['id']})
+              .toList();
+        });
+      } else {
+        throw Exception('Failed to load courses: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        courseError = 'Failed to load courses: ${e.toString()}';
+      });
+    } finally {
+      setState(() {
+        isLoadingCourses = false;
+      });
+    }
+  }
+
+  String get selectedCourseName {
+    if (isLoadingCourses) return 'Loading...';
+    if (courseError.isNotEmpty) return 'Error loading courses';
+    if (courses.isEmpty) return 'No courses available';
+
+    final selected = courses.firstWhere(
+      (course) => course['id'] == selectedCourseIds.first,
+      orElse: () => courses.first,
+    );
+    return selected['name'];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SafeArea(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(
-                          // width: 160,
-                          child: Text.rich(
-                            TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: 'Hello ',
-                                  style: TextStyle(
-                                    color: Color(0xFF1A1A1A),
-                                    fontSize: 16,
-                                    fontFamily: 'SF Pro Display',
-                                    fontWeight: FontWeight.w400,
-                                    height: 1.50,
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: 'Rohan Canara ',
-                                  style: TextStyle(
-                                    color: Color(0xFF247E80),
-                                    fontSize: 16,
-                                    fontFamily: 'SF Pro Display',
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.50,
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: '👋 ',
-                                  style: TextStyle(
-                                    color: Color(0xFF887E5B),
-                                    fontSize: 16,
-                                    fontFamily: 'SF Pro Display',
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.50,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () {
-                            showModalBottomSheet(
-                                isScrollControlled: true,
-                                context: context,
-                                //  isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (context) {
-                                  return StatefulBuilder(builder:
-                                      (BuildContext context,
-                                          StateSetter modalSetState) {
-                                    return buidSelectCourseBottomSheet(
-                                        modalSetState,
-                                        selectCourseData,
-                                        selectedCourse,
-                                        "Select your Course");
-                                  });
-                                });
-                          },
-                          child: const Row(
-                            children: [
-                              Text(
-                                'NEET - PG (2025)',
-                                style: TextStyle(
-                                  color: Color(0xFF737373),
-                                  fontSize: 14,
-                                  fontFamily: 'SF Pro Display',
-                                  fontWeight: FontWeight.w400,
-                                  height: 1.57,
-                                ),
-                              ),
-                              Icon(
-                                Icons.keyboard_arrow_down,
-                                color: Color(0xFF737373),
-                              )
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                    Container(
-                      // width: 92,
-                      // height: 34,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: ShapeDecoration(
-                        color: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          side: const BorderSide(
-                              width: 2, color: Color(0xB231B5B9)),
-                          borderRadius: BorderRadius.circular(50),
-                        ),
-                        shadows: const [
-                          BoxShadow(
-                            color: Color(0x0C000000),
-                            blurRadius: 20,
-                            offset: Offset(0, 4),
-                            spreadRadius: 0,
-                          )
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          SvgPicture.asset("assets/icons/Group (6).svg"),
-                          const SizedBox(
-                            width: 12,
-                          ),
-                          const Text.rich(
-                            TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: '35',
-                                  style: TextStyle(
-                                    color: Color(0xFF1A1A1A),
-                                    fontSize: 14,
-                                    fontFamily: 'SF Pro Display',
-                                    fontWeight: FontWeight.w400,
-                                    height: 1.57,
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: '/',
-                                  style: TextStyle(
-                                    color: Color(0xFF1A1A1A),
-                                    fontSize: 14,
-                                    fontFamily: 'SF Pro Display',
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.57,
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: '60',
-                                  style: TextStyle(
-                                    color: Color(0xFFFE7D14),
-                                    fontSize: 14,
-                                    fontFamily: 'SF Pro Display',
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.57,
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(
-                height: 12,
-              ),
-              const CourseBanner(),
-              const SizedBox(height: 20),
-              const CalendarSection(),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(
-                      child: homeStepsCard(
-                          "TOTAL WATCH MINS", "238 Mins", "clock.svg")),
-                  const SizedBox(
-                    width: 16,
-                  ),
-                  Expanded(
-                      child:
-                          homeStepsCard("STEPS COMPLETED", "23", "steps.svg")),
-                ],
-              ),
-              const SizedBox(
-                height: 12,
-              ),
-              Row(
-                children: [
-                  Expanded(
-                      child: homeStepsCard("TESTS ATTEMPTED", "5", "done.svg")),
-                  const SizedBox(
-                    width: 16,
-                  ),
-                  Expanded(
-                      child: homeStepsCard(
-                          "QUESTIONS ATTEMPTED", "85", "questions.svg")),
-                ],
-              ),
-              const SizedBox(height: 20),
-              const UpcomingTests(),
-              // const SizedBox(
-              //   height: 16,
-              // ),
-
-              bannerNotes(),
-              // const SizedBox(
-              //   height: 12,
-              // ),
-              const Text(
-                'Resume learning',
-                style: TextStyle(
-                  color: Color(0xFF1A1A1A),
-                  fontSize: 20,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w500,
-                  height: 1.40,
-                ),
-              ),
-              const SizedBox(
-                height: 12,
-              ),
-
-              //Resume learning
-              SizedBox(
-                height: 310,
-                child: ListView(
-                  itemExtent: 220,
-                  shrinkWrap: true,
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    buildVedioLearnCard(
-                        'vedio1.png',
-                        "Types of bones, joints, and cartilage",
-                        "Teacher Name",
-                        "Anatomy"),
-                    buildVedioLearnCard('vedio1.png', "Epithelium types",
-                        "Teacher Name", "Pediatrics"),
-                  ],
-                ),
-              ),
-
-              const SizedBox(
-                height: 12,
-              ),
-              //Step wise course
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Step-wise course",
-                    style: TextStyle(
-                      color: Color(0xFF1A1A1A),
-                      fontSize: 20,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w500,
-                      height: 1.40,
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      Navigator.pushNamed(context, "/all_subjects");
-                    },
-                    child: Text(
-                      'View',
-                      style: TextStyle(
-                        color: Color(0xFF1A1A1A),
-                        fontSize: 14,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w400,
-                        height: 1.57,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 8,
-              ),
-              buildStepWiseCourseCard("01", 2, "Anatomy", context),
-              const SizedBox(
-                height: 8,
-              ),
-              buildStepWiseCourseCard("02", 1, "Physiology", context),
-              const SizedBox(
-                height: 8,
-              ),
-              buildStepWiseCourseCard("03", 0, "Biochemistry", context),
-              const SizedBox(
-                height: 8,
-              ),
-              buildStepWiseCourseCard("04", 0, "Pathology", context),
-              const SizedBox(
-                height: 8,
-              ),
-              buildStepWiseCourseCard("05", 0, "Parmacology", context),
-              const SizedBox(
-                height: 8,
-              ),
-              buildStepWiseCourseCard("06", 0, "Comunity Medicine", context),
-              const SizedBox(
-                height: 8,
-              ),
-              buildStepWiseCourseCard("07", 0, "Forensic Medicine", context),
-              const SizedBox(
-                height: 24,
-              ),
-
-              //bottom banner
-
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: ShapeDecoration(
-                  image: const DecorationImage(
-                      image: AssetImage("assets/image/gradient_bg.jpg"),
-                      fit: BoxFit.cover),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Row(
-                  // mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Column(
+      body: RefreshIndicator(
+        onRefresh: _fetchCourses,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SafeArea(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Spread the Success, Share STEP!',
-                            style: TextStyle(
-                              color: Color(0xFF003E40),
-                              fontSize: 16,
-                              fontFamily: 'SF Pro Display',
-                              fontWeight: FontWeight.w700,
-                              // height: 1.50,
-                            ),
-                          ),
-                          const Text(
-                            'Help your friends ace their exams with STEP - because success is better when shared!',
-                            style: TextStyle(
-                              color: Color(0xCC003F40),
-                              fontSize: 14,
-                              fontFamily: 'SF Pro Display',
-                              fontWeight: FontWeight.w400,
-                              height: 1.43,
-                            ),
-                          ),
                           const SizedBox(
-                            height: 12,
-                          ),
-                          SizedBox(
-                            width: 170,
-                            child: ElevatedButton(
-                              onPressed: () {},
-                              // style: ButtonStyle(),
-                              style: ElevatedButton.styleFrom(
-                                // minimumSize: const Size(100, 50),
-                                backgroundColor: const Color(0xFF247E80),
-                              ),
-                              child: Row(
+                            child: Text.rich(
+                              TextSpan(
                                 children: [
-                                  Transform.rotate(
-                                    angle: 320 * math.pi / 180,
-                                    child: const Icon(
-                                      Icons.send_rounded,
-                                      color: Colors.white,
+                                  TextSpan(
+                                    text: 'Hello ',
+                                    style: TextStyle(
+                                      color: Color(0xFF1A1A1A),
+                                      fontSize: 16,
+                                      fontFamily: 'SF Pro Display',
+                                      fontWeight: FontWeight.w400,
+                                      height: 1.50,
                                     ),
                                   ),
-                                  const SizedBox(
-                                    width: 12,
-                                  ),
-                                  const Text(
-                                    'Invite friends',
+                                  TextSpan(
+                                    text: 'Rohan Canara ',
                                     style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
+                                      color: Color(0xFF247E80),
+                                      fontSize: 16,
                                       fontFamily: 'SF Pro Display',
                                       fontWeight: FontWeight.w700,
+                                      height: 1.50,
                                     ),
-                                  )
+                                  ),
+                                  TextSpan(
+                                    text: '👋 ',
+                                    style: TextStyle(
+                                      color: Color(0xFF887E5B),
+                                      fontSize: 16,
+                                      fontFamily: 'SF Pro Display',
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.50,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                           ),
+                          InkWell(
+                            onTap: () {
+                              if (courses.isEmpty) return;
+
+                              showModalBottomSheet(
+                                isScrollControlled: true,
+                                context: context,
+                                backgroundColor: Colors.transparent,
+                                builder: (context) {
+                                  return StatefulBuilder(
+                                    builder: (BuildContext context,
+                                        StateSetter modalSetState) {
+                                      return buidSelectCourseBottomSheet(
+                                          modalSetState,
+                                          courses,
+                                          selectedCourseIds,
+                                          "Select your Course");
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                            child: Row(
+                              children: [
+                                Text(
+                                  selectedCourseName,
+                                  style: const TextStyle(
+                                    color: Color(0xFF737373),
+                                    fontSize: 14,
+                                    fontFamily: 'SF Pro Display',
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.57,
+                                  ),
+                                ),
+                                const Icon(
+                                  Icons.keyboard_arrow_down,
+                                  color: Color(0xFF737373),
+                                )
+                              ],
+                            ),
+                          )
                         ],
                       ),
-                    ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: ShapeDecoration(
+                          color: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            side: const BorderSide(
+                                width: 2, color: Color(0xB231B5B9)),
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          shadows: const [
+                            BoxShadow(
+                              color: Color(0x0C000000),
+                              blurRadius: 20,
+                              offset: Offset(0, 4),
+                              spreadRadius: 0,
+                            )
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            SvgPicture.asset("assets/icons/Group (6).svg"),
+                            const SizedBox(width: 12),
+                            const Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: '35',
+                                    style: TextStyle(
+                                      color: Color(0xFF1A1A1A),
+                                      fontSize: 14,
+                                      fontFamily: 'SF Pro Display',
+                                      fontWeight: FontWeight.w400,
+                                      height: 1.57,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '/',
+                                    style: TextStyle(
+                                      color: Color(0xFF1A1A1A),
+                                      fontSize: 14,
+                                      fontFamily: 'SF Pro Display',
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.57,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '60',
+                                    style: TextStyle(
+                                      color: Color(0xFFFE7D14),
+                                      fontSize: 14,
+                                      fontFamily: 'SF Pro Display',
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.57,
+                                      letterSpacing: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const CourseBanner(),
+                const SizedBox(height: 20),
+                const CalendarSection(),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
                     Expanded(
-                      flex: 1,
-                      child: SvgPicture.asset("assets/icons/boy_writing.svg"),
-                    )
+                        child: homeStepsCard(
+                            "TOTAL WATCH MINS", "238 Mins", "clock.svg")),
+                    const SizedBox(width: 16),
+                    Expanded(
+                        child: homeStepsCard(
+                            "STEPS COMPLETED", "23", "steps.svg")),
                   ],
                 ),
-              )
-            ],
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                        child:
+                            homeStepsCard("TESTS ATTEMPTED", "5", "done.svg")),
+                    const SizedBox(width: 16),
+                    Expanded(
+                        child: homeStepsCard(
+                            "QUESTIONS ATTEMPTED", "85", "questions.svg")),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const UpcomingTests(),
+                bannerNotes(),
+                const Text(
+                  'Resume learning',
+                  style: TextStyle(
+                    color: Color(0xFF1A1A1A),
+                    fontSize: 20,
+                    fontFamily: 'SF Pro Display',
+                    fontWeight: FontWeight.w500,
+                    height: 1.40,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 310,
+                  child: ListView(
+                    itemExtent: 220,
+                    shrinkWrap: true,
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      buildVedioLearnCard(
+                          'vedio1.png',
+                          "Types of bones, joints, and cartilage",
+                          "Teacher Name",
+                          "Anatomy"),
+                      buildVedioLearnCard('vedio1.png', "Epithelium types",
+                          "Teacher Name", "Pediatrics"),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Step-wise course",
+                      style: TextStyle(
+                        color: Color(0xFF1A1A1A),
+                        fontSize: 20,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w500,
+                        height: 1.40,
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () {
+                        Navigator.pushNamed(context, "/all_subjects");
+                      },
+                      child: const Text(
+                        'View',
+                        style: TextStyle(
+                          color: Color(0xFF1A1A1A),
+                          fontSize: 14,
+                          fontFamily: 'SF Pro Display',
+                          fontWeight: FontWeight.w400,
+                          height: 1.57,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                buildStepWiseCourseCard("01", 2, "Anatomy", context),
+                const SizedBox(height: 8),
+                buildStepWiseCourseCard("02", 1, "Physiology", context),
+                const SizedBox(height: 8),
+                buildStepWiseCourseCard("03", 0, "Biochemistry", context),
+                const SizedBox(height: 8),
+                buildStepWiseCourseCard("04", 0, "Pathology", context),
+                const SizedBox(height: 8),
+                buildStepWiseCourseCard("05", 0, "Parmacology", context),
+                const SizedBox(height: 8),
+                buildStepWiseCourseCard("06", 0, "Comunity Medicine", context),
+                const SizedBox(height: 8),
+                buildStepWiseCourseCard("07", 0, "Forensic Medicine", context),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: ShapeDecoration(
+                    image: const DecorationImage(
+                        image: AssetImage("assets/image/gradient_bg.jpg"),
+                        fit: BoxFit.cover),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Spread the Success, Share STEP!',
+                              style: TextStyle(
+                                color: Color(0xFF003E40),
+                                fontSize: 16,
+                                fontFamily: 'SF Pro Display',
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const Text(
+                              'Help your friends ace their exams with STEP - because success is better when shared!',
+                              style: TextStyle(
+                                color: Color(0xCC003F40),
+                                fontSize: 14,
+                                fontFamily: 'SF Pro Display',
+                                fontWeight: FontWeight.w400,
+                                height: 1.43,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: 170,
+                              child: ElevatedButton(
+                                onPressed: () {},
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF247E80),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Transform.rotate(
+                                      angle: 320 * math.pi / 180,
+                                      child: const Icon(
+                                        Icons.send_rounded,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'Invite friends',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontFamily: 'SF Pro Display',
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: SvgPicture.asset("assets/icons/boy_writing.svg"),
+                      )
+                    ],
+                  ),
+                )
+              ],
+            ),
           ),
         ),
       ),
@@ -540,7 +572,7 @@ class CourseBanner extends StatelessWidget {
                       color: Colors.white,
                       size: 24,
                     ),
-                    const SizedBox(
+                    SizedBox(
                       width: 4,
                     ),
                     Text(
@@ -864,11 +896,11 @@ class TestCard extends StatelessWidget {
   }
 }
 
-MaterialStateProperty<Color> getColor() {
-  return MaterialStateProperty.all(const Color(0xFF31B5B9));
+WidgetStateProperty<Color> getColor() {
+  return WidgetStateProperty.all(const Color(0xFF31B5B9));
 }
 
-MaterialStateProperty<Size> getFullWidth() {
-  return MaterialStateProperty.all(
+WidgetStateProperty<Size> getFullWidth() {
+  return WidgetStateProperty.all(
       const Size(double.infinity, double.maxFinite));
 }

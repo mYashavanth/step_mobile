@@ -54,7 +54,7 @@ class _UpdatesScreenState extends State<UpdatesScreen> {
                   2),
               borderHorizontal(),
               buildUpdateRowCard(
-                  const Color(0x7FF34C759),
+                  const Color(0x7ff34c759),
                   "update3.svg",
                   "Revisit Notes before Test – Review your notes on ‘Respiratory System’ before your upcoming test.",
                   3),
@@ -66,19 +66,19 @@ class _UpdatesScreenState extends State<UpdatesScreen> {
                   4),
               borderHorizontal(),
               buildUpdateRowCard(
-                  const Color(0x7FF3498DB),
+                  const Color(0x7ff3498db),
                   "update5.svg",
                   "Subscription Activated! – Welcome! Your subscription for the NEET PG Course is now active.",
                   5),
               borderHorizontal(),
               buildUpdateRowCard(
-                  const Color(0x7FF3498DB),
+                  const Color(0x7ff3498db),
                   "update6.svg",
                   "Trending Topics! – Most students are revising ‘Neuroanatomy’ today. Join them now!",
                   6),
               borderHorizontal(),
               buildUpdateRowCard(
-                  const Color(0x7FF34C759),
+                  const Color(0x7ff34c759),
                   "update7.svg",
                   "Subscription Activated! – Welcome! Your subscription for the NEET PG Course is now active.",
                   7),

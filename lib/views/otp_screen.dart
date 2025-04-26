@@ -14,7 +14,7 @@ class OTPScreen extends StatefulWidget {
 }
 
 class _OTPScreenState extends State<OTPScreen> {
-  final storage = FlutterSecureStorage();
+  final storage = const FlutterSecureStorage();
   late String mobile;
   late String appUserId;
   String enteredOtp = ""; // Variable to store the entered OTP

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:step_mobile/views/notes.dart';
 import 'package:step_mobile/widgets/homepage_widgets.dart';
 import 'package:step_mobile/widgets/navbar.dart';
 

@@ -5,6 +5,7 @@ import "package:step_mobile/widgets/homepage_widgets.dart";
 class SubscribePage extends StatefulWidget {
   const SubscribePage({super.key});
 
+  @override
   State<SubscribePage> createState() {
     return _SubscribePage();
   }

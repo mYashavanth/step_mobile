@@ -31,7 +31,7 @@ Widget buildUserRow(int num, String name) {
             Text(
               name,
               style: TextStyle(
-                color:num == 420 ?   Color(0xFF247E80) :Color(0xFF1A1A1A),
+                color:num == 420 ?   const Color(0xFF247E80) :const Color(0xFF1A1A1A),
                 fontSize: 16,
                 fontFamily: 'SF Pro Display',
                 fontWeight:num == 420 ? FontWeight.w700 : FontWeight.w400,

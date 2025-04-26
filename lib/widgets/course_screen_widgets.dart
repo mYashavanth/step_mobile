@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
-Widget buildTabBarCourse(TabController _tabController,
+Widget buildTabBarCourse(TabController tabController,
     List<int> stepTabSelectedIndex, StateSetter setState) {
   return Column(
     mainAxisSize: MainAxisSize.min,
@@ -439,6 +439,8 @@ Widget collapseStepClassCard(
 }
 
 class StepContent extends StatefulWidget {
+  const StepContent({super.key});
+
   @override
   State<StepContent> createState() => _StepContentState();
 }

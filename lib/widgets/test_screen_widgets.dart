@@ -172,7 +172,7 @@ void submitTestDialog(BuildContext context) {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Container(
+                              SizedBox(
                                 height: 35,
                                 width: double.maxFinite,
                                 // color: const Color.fromARGB(151, 76, 175, 79),
@@ -289,7 +289,7 @@ void submitTestDialog(BuildContext context) {
                           ),
                         ),
                         child: const Center(
-                          child: const Text(
+                          child: Text(
                             'Submit test',
                             textAlign: TextAlign.center,
                             style: TextStyle(

@@ -1,7 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:step_mobile/widgets/common_widgets.dart';
 import 'package:step_mobile/widgets/test_screen_widgets.dart';
 
 class TestScreen extends StatefulWidget {

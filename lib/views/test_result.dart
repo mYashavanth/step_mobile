@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:step_mobile/widgets/common_widgets.dart';
 import 'package:step_mobile/widgets/test_result_widgets.dart';

@@ -187,7 +187,7 @@ Widget buildCalendar(List<DateTime> dateList) {
       }
     },
   );
-  return Container(
+  return SizedBox(
     height: 400,
     child: CalendarDatePicker2(
         config: config,

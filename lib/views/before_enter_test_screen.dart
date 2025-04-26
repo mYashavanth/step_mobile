@@ -5,11 +5,13 @@ import 'package:step_mobile/widgets/common_widgets.dart';
 class BeforeEnterTestScreen extends StatefulWidget {
   const BeforeEnterTestScreen({super.key});
 
+  @override
   State<BeforeEnterTestScreen> createState() => _BeforeEnterTestScreen();
 }
 
 class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
   //  List<Map> examDetailsData = [{"icon":"query.svg","title":""},{},{}];
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -70,7 +72,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                         height: 20,
                       ),
                       Container(
-                        padding: EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(12),
                         clipBehavior: Clip.antiAlias,
                         decoration: ShapeDecoration(
                           color: const Color(0x0C31B5B9),
@@ -173,7 +175,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                 ),
                 borderHorizontal(),
                 Padding(
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     children: [
                       testAtemptedCard("4 / 200 marks", context),
@@ -189,7 +191,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                   height: 16,
                 ),
                 Padding(
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -226,7 +228,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                 // ),
                 borderHorizontal(),
                 Padding(
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -352,11 +354,11 @@ Widget testAtemptedCard(String title, BuildContext context) {
           height: 1.50,
         ),
       ),
-      subtitle: Column(
+      subtitle: const Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '23 Jan 25',
             style: TextStyle(
               color: Color(0xFF737373),

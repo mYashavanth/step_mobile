@@ -283,7 +283,7 @@ Widget buildStepWiseCourseCard(
               ],
             ),
             const Text(
-              '4 hr 30 mins • 20 steps',
+              '4 hr 30 mins • 10 steps',
               style: TextStyle(
                 color: Color(0xFF737373),
                 fontSize: 12,

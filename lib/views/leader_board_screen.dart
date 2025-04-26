@@ -40,7 +40,7 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen> {
               child: Stack(
                 children: [
                   Transform.translate(
-                    offset: Offset(0, -60),
+                    offset: const Offset(0, -60),
                     child: Image.asset(
                       "assets/image/Clip_path_group.png",
                       fit: BoxFit.contain,
@@ -74,7 +74,7 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen> {
               height: 16,
             ),
             Padding(
-              padding: EdgeInsets.all(12),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 children: [
                   buildUserRow(1, "Sushanth Raj"),
@@ -92,7 +92,7 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen> {
         ),
       ),
       bottomNavigationBar: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: buildButton(context, "Go home", "/home_page"),
       ),
     );

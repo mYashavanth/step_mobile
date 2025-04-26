@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:step_mobile/widgets/inputs.dart';
 import 'package:step_mobile/widgets/select_course_widgets.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:step_mobile/views/urlconfig.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 
 class SelectCourse extends StatefulWidget {
   const SelectCourse({super.key});
@@ -12,8 +17,62 @@ class SelectCourse extends StatefulWidget {
 class _SelectCourseState extends State<SelectCourse> {
   bool graduate = false;
   TextEditingController yearOfStudy = TextEditingController();
+  bool isLoading = false;
 
   List<bool> selectCourseList = [true, false, false];
+
+  Future<void> updateUGGStatus() async {
+    // Validate year of study
+    if (yearOfStudy.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter year of study')),
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+     final storage = const FlutterSecureStorage();
+
+    try {
+     
+      String token = await storage.read(key: 'token') ?? '';
+
+      final response = await http.post(
+        Uri.parse('$baseurl/app-users/update-app-users-ug-g-status'),
+        body:{
+          'isUG': graduate ? '0' : '1',
+          'isGraduated': graduate ? '1' : '0',
+          'yearOfGraduation': yearOfStudy.text,
+          'token': token,
+        },
+      );
+
+      print("Response: ${response.body}");
+      // print("Status Code:++++++++++++++++++++++++++++++++++++++++++");
+
+      if (response.statusCode == 200) {
+        // Success - navigate to home page
+        Navigator.pushNamed(context, "/home_page");
+      } else {
+        // Handle error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,7 +114,6 @@ class _SelectCourseState extends State<SelectCourse> {
                           setState(() {});
                         },
                         child: Container(
-                          // width: 178.95,
                           height: 48,
                           decoration: ShapeDecoration(
                             color: graduate ? Colors.transparent : Colors.white,
@@ -96,7 +154,6 @@ class _SelectCourseState extends State<SelectCourse> {
                           setState(() {});
                         },
                         child: Container(
-                          // width: 178.95,
                           height: 48,
                           decoration: ShapeDecoration(
                               color:
@@ -133,11 +190,9 @@ class _SelectCourseState extends State<SelectCourse> {
                   ],
                 ),
               ),
-              const SizedBox(
-                height: 16,
-              ),
+              const SizedBox(height: 16),
               formInputWithLabel(
-                  yearOfStudy, "Enter Yera Of Study", "Year Of Study"),
+                  yearOfStudy, "Enter Year Of Study", "Year Of Study"),
               const SizedBox(height: 16),
               const Text(
                 'Select course',
@@ -149,9 +204,7 @@ class _SelectCourseState extends State<SelectCourse> {
                   height: 1.38,
                 ),
               ),
-              const SizedBox(
-                height: 16,
-              ),
+              const SizedBox(height: 16),
               GestureDetector(
                 onTap: () {
                   selectCourseList[2] = false;
@@ -165,9 +218,7 @@ class _SelectCourseState extends State<SelectCourse> {
                     "microscope.svg",
                     selectCourseList[0]),
               ),
-              const SizedBox(
-                height: 16,
-              ),
+              const SizedBox(height: 16),
               GestureDetector(
                 onTap: () {
                   selectCourseList[2] = false;
@@ -178,9 +229,7 @@ class _SelectCourseState extends State<SelectCourse> {
                 child: createSelectCourseCard("FMGE (JUNE-2025)", "MMBS Prof",
                     "microscope.svg", selectCourseList[1]),
               ),
-              const SizedBox(
-                height: 16,
-              ),
+              const SizedBox(height: 16),
               GestureDetector(
                 onTap: () {
                   selectCourseList[2] = true;
@@ -201,24 +250,23 @@ class _SelectCourseState extends State<SelectCourse> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ElevatedButton(
-              onPressed: () {
-                // Handle login with mobile number
-                Navigator.pushNamed(context, "/home_page");
-              },
+              onPressed: isLoading ? null : updateUGGStatus,
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
                 backgroundColor: const Color(0xFF247E80),
               ),
-              child: const Text(
-                'Proceed',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w500,
-                  height: 1.50,
-                ),
-              ),
+              child: isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text(
+                      'Proceed',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w500,
+                        height: 1.50,
+                      ),
+                    ),
             ),
           ],
         ),

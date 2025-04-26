@@ -43,7 +43,7 @@ Widget createSelectCourseCard(
                 height: 1.67,
               ),
             ),
-            SizedBox(
+            const SizedBox(
               height: 8,
             )
           ],

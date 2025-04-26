@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 class NotesWidgets extends StatefulWidget {
-  NotesWidgets({super.key});
+  const NotesWidgets({super.key});
 
+  @override
   State<NotesWidgets> createState() {
     return _NotesWidget();
   }
@@ -89,6 +90,7 @@ class _NotesWidget extends State<NotesWidgets>
       ],
     },
   ];
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: List.generate(notesData.length, (index) {
