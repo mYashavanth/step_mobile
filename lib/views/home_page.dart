@@ -8,7 +8,6 @@ import 'package:step_mobile/widgets/navbar.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:step_mobile/views/urlconfig.dart';
 import 'dart:math' as math;
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -16,36 +15,22 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-// class Subject {
-//   final String id;
-//   final String name;
-//   final int progress; // Assuming progress is a percentage (0-100)
-
-//   Subject({
-//     required this.id,
-//     required this.name,
-//     required this.progress,
-//   });
-
-//   factory Subject.fromJson(Map<String, dynamic> json) {
-//     return Subject(
-//       id: json['id'].toString(),
-//       name: json['name'],
-//       progress: math.max(0, math.min(100, json['progress'] ?? 0)),
-//     );
-//   }
-// }
-
 class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> courses = [];
   bool isLoadingCourses = true;
   String courseError = '';
   List<int> selectedCourseIds = [1]; // Default selected course
 
+  // New state variables for subjects
+  List<Map<String, dynamic>> subjects = [];
+  bool isLoadingSubjects = true;
+  String subjectError = '';
+
   @override
   void initState() {
     super.initState();
     _fetchCourses();
+    _fetchSubjects();
   }
 
   Future<void> _fetchCourses() async {
@@ -54,7 +39,7 @@ class _HomePageState extends State<HomePage> {
       courseError = '';
     });
 
-     final storage = const FlutterSecureStorage();
+    final storage = const FlutterSecureStorage();
 
     try {
       String token = await storage.read(key: 'token') ?? '';
@@ -86,6 +71,48 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _fetchSubjects() async {
+    setState(() {
+      isLoadingSubjects = true;
+      subjectError = '';
+    });
+
+    final storage = const FlutterSecureStorage();
+
+    try {
+      String token = await storage.read(key: 'token') ?? '';
+      int courseId = selectedCourseIds.isNotEmpty ? selectedCourseIds.first : 1;
+
+      final response = await http.get(
+        Uri.parse(
+            '$baseurl/app/get-all-subjects-by-course-id/$token/$courseId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          subjects = data
+              .map((subject) => {
+                    'id': subject['id'],
+                    'name': subject['subject_name'],
+                  })
+              .toList();
+        });
+      } else {
+        throw Exception('Failed to load subjects: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        subjectError = 'Failed to load subjects: ${e.toString()}';
+      });
+    } finally {
+      setState(() {
+        isLoadingSubjects = false;
+      });
+    }
+  }
+
   String get selectedCourseName {
     if (isLoadingCourses) return 'Loading...';
     if (courseError.isNotEmpty) return 'Error loading courses';
@@ -103,7 +130,10 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: RefreshIndicator(
-        onRefresh: _fetchCourses,
+        onRefresh: () async {
+          await _fetchCourses();
+          await _fetchSubjects();
+        },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Padding(
@@ -176,7 +206,10 @@ class _HomePageState extends State<HomePage> {
                                     },
                                   );
                                 },
-                              );
+                              ).then((_) {
+                                // When course selection changes, fetch subjects for the new course
+                                _fetchSubjects();
+                              });
                             },
                             child: Row(
                               children: [
@@ -358,19 +391,28 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                buildStepWiseCourseCard("01", 2, "Anatomy", context),
-                const SizedBox(height: 8),
-                buildStepWiseCourseCard("02", 1, "Physiology", context),
-                const SizedBox(height: 8),
-                buildStepWiseCourseCard("03", 0, "Biochemistry", context),
-                const SizedBox(height: 8),
-                buildStepWiseCourseCard("04", 0, "Pathology", context),
-                const SizedBox(height: 8),
-                buildStepWiseCourseCard("05", 0, "Parmacology", context),
-                const SizedBox(height: 8),
-                buildStepWiseCourseCard("06", 0, "Comunity Medicine", context),
-                const SizedBox(height: 8),
-                buildStepWiseCourseCard("07", 0, "Forensic Medicine", context),
+                if (isLoadingSubjects)
+                  const Center(child: CircularProgressIndicator())
+                else if (subjectError.isNotEmpty)
+                  Text(subjectError)
+                else if (subjects.isEmpty)
+                  const Text('No subjects available')
+                else
+                  ...subjects.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    var subject = entry.value;
+                    return Column(
+                      children: [
+                        buildStepWiseCourseCard(
+                          (index + 1).toString().padLeft(2, '0'),
+                          0, // All steps set to 0 as requested
+                          subject['name'],
+                          context,
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    );
+                  }).toList(),
                 const SizedBox(height: 24),
                 Container(
                   padding: const EdgeInsets.all(12),

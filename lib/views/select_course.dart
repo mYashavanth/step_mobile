@@ -6,7 +6,6 @@ import 'package:step_mobile/views/urlconfig.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-
 class SelectCourse extends StatefulWidget {
   const SelectCourse({super.key});
 
@@ -18,14 +17,58 @@ class _SelectCourseState extends State<SelectCourse> {
   bool graduate = false;
   TextEditingController yearOfStudy = TextEditingController();
   bool isLoading = false;
+  List<dynamic> courses = [];
+  int? selectedCourseId;
+  final storage = const FlutterSecureStorage();
 
-  List<bool> selectCourseList = [true, false, false];
+  @override
+  void initState() {
+    super.initState();
+    fetchCourses();
+  }
+
+  Future<void> fetchCourses() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      String token = await storage.read(key: 'token') ?? '';
+      final response = await http.get(
+        Uri.parse('$baseurl/app/get-all-course-names/$token'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          courses = json.decode(response.body);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching courses: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   Future<void> updateUGGStatus() async {
-    // Validate year of study
     if (yearOfStudy.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter year of study')),
+      );
+      return;
+    }
+
+    if (selectedCourseId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a course')),
       );
       return;
     }
@@ -34,15 +77,14 @@ class _SelectCourseState extends State<SelectCourse> {
       isLoading = true;
     });
 
-     final storage = const FlutterSecureStorage();
-
     try {
-     
       String token = await storage.read(key: 'token') ?? '';
+      await storage.write(
+          key: 'selectedCourseId', value: selectedCourseId.toString());
 
       final response = await http.post(
         Uri.parse('$baseurl/app-users/update-app-users-ug-g-status'),
-        body:{
+        body: {
           'isUG': graduate ? '0' : '1',
           'isGraduated': graduate ? '1' : '0',
           'yearOfGraduation': yearOfStudy.text,
@@ -50,14 +92,9 @@ class _SelectCourseState extends State<SelectCourse> {
         },
       );
 
-      print("Response: ${response.body}");
-      // print("Status Code:++++++++++++++++++++++++++++++++++++++++++");
-
       if (response.statusCode == 200) {
-        // Success - navigate to home page
         Navigator.pushNamed(context, "/home_page");
       } else {
-        // Handle error
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: ${response.body}')),
         );
@@ -205,41 +242,28 @@ class _SelectCourseState extends State<SelectCourse> {
                 ),
               ),
               const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () {
-                  selectCourseList[2] = false;
-                  selectCourseList[1] = false;
-                  selectCourseList[0] = true;
-                  setState(() {});
-                },
-                child: createSelectCourseCard(
-                    "NEET-PG (2025)",
-                    "class 11 | class 12",
-                    "microscope.svg",
-                    selectCourseList[0]),
-              ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () {
-                  selectCourseList[2] = false;
-                  selectCourseList[1] = true;
-                  selectCourseList[0] = false;
-                  setState(() {});
-                },
-                child: createSelectCourseCard("FMGE (JUNE-2025)", "MMBS Prof",
-                    "microscope.svg", selectCourseList[1]),
-              ),
-              const SizedBox(height: 16),
-              GestureDetector(
-                onTap: () {
-                  selectCourseList[2] = true;
-                  selectCourseList[1] = false;
-                  selectCourseList[0] = false;
-                  setState(() {});
-                },
-                child: createSelectCourseCard("FMGE (DEC-2025)",
-                    "class 11 | class 12", "list (2).svg", selectCourseList[2]),
-              ),
+              isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : Column(
+                      children: courses.map((course) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedCourseId = course['id'];
+                              });
+                            },
+                            child: createSelectCourseCard(
+                              course['course_name'],
+                              "Critical steps (crash course)", // Added the static subtitle here
+                              "microscope.svg", // Default icon
+                              selectedCourseId == course['id'],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
             ],
           ),
         ),

@@ -389,23 +389,26 @@ Widget buidSelectCourseBottomSheet(StateSetter modalSetState,
           const SizedBox(
             height: 12,
           ),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-              backgroundColor: const Color(0xFF247E80),
-            ),
-            child: const Text(
-              'Apply',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w500,
-                height: 1.50,
-              ),
-            ),
-          ),
+          // ElevatedButton(
+          //   onPressed: () {
+          //     // Navigator.pop();
+
+          //   },
+          //   style: ElevatedButton.styleFrom(
+          //     minimumSize: const Size(double.infinity, 50),
+          //     backgroundColor: const Color(0xFF247E80),
+          //   ),
+          //   child: const Text(
+          //     'Apply',
+          //     style: TextStyle(
+          //       color: Colors.white,
+          //       fontSize: 16,
+          //       fontFamily: 'SF Pro Display',
+          //       fontWeight: FontWeight.w500,
+          //       height: 1.50,
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     ),
