@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:step_mobile/views/dry.dart';
 import 'package:step_mobile/widgets/common_widgets.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:step_mobile/views/urlconfig.dart';
 
 Widget buildStatusCard(
     bool complete, String icon, bool selected, String title) {
@@ -177,7 +182,7 @@ Widget buildVedioLearnCard(
 }
 
 Widget buildStepWiseCourseCard(
-    String num, int unlocked, String title, BuildContext context) {
+    String num, int unlocked, String title, String id, BuildContext context) {
   String icon = "locked.svg";
   Color color = Colors.transparent;
   String status = '';
@@ -191,8 +196,74 @@ Widget buildStepWiseCourseCard(
     status = "Completed";
     color = const Color(0xFF34C759);
   }
+
+  Future<void> _makeApiCallAndNavigate() async {
+    const storage = FlutterSecureStorage();
+    String token = await storage.read(key: 'token') ?? '';
+    String selectedCourseId = await storage.read(key: 'selectedCourseId') ?? '';
+    print('variables sending: ${{
+      'token': token,
+      'courseId': selectedCourseId,
+      'subjectId': id,
+    }}');
+
+    try {
+      final response = await http.post(
+        Uri.parse('$baseurl/app/insert-course-subject-selection'),
+        body: {
+          'token': token,
+          'courseId': selectedCourseId,
+          'subjectId': id,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('Response data: $data');
+        if (data['errFlag'] == 0) {
+          Navigator.pushNamed(context, "/course_screen", arguments: {
+            'courseId': selectedCourseId,
+            'subjectId': id,
+          });
+          showCustomSnackBar(
+            context: context,
+            message: data['message'],
+            isSuccess: true,
+          );
+        } else if (data['errFlag'] == 2) {
+          Navigator.pushNamed(context, "/course_screen", arguments: {
+            'courseId': selectedCourseId,
+            'subjectId': id,
+          });
+          showCustomSnackBar(
+            context: context,
+            message: data['message'],
+            isSuccess: true,
+          );
+        } else {
+          showCustomSnackBar(
+            context: context,
+            message: "Failed to update selection, please try again",
+            isSuccess: false,
+          );
+        }
+      } else {
+        showCustomSnackBar(
+          context: context,
+          message: "Failed to update selection, please try again",
+          isSuccess: false,
+        );
+      }
+    } catch (e) {
+      showCustomSnackBar(
+        context: context,
+        message: "An error occurred: $e",
+        isSuccess: false,
+      );
+    }
+  }
+
   return Container(
-    // width: 358,
     height: 80,
     clipBehavior: Clip.antiAlias,
     decoration: BoxDecoration(
@@ -211,7 +282,6 @@ Widget buildStepWiseCourseCard(
               bottom: BorderSide(width: 1, color: Color(0xFFDDDDDD)),
             ),
     ),
-
     child: Row(
       children: [
         Stack(
@@ -219,7 +289,6 @@ Widget buildStepWiseCourseCard(
             SvgPicture.asset("assets/icons/$icon"),
             SizedBox(
               width: 60,
-              // color: Colors.red,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -231,7 +300,6 @@ Widget buildStepWiseCourseCard(
                       fontSize: 20,
                       fontFamily: 'SF Pro Display',
                       fontWeight: FontWeight.w700,
-                      // height: 1.20,
                     ),
                   ),
                 ],
@@ -299,7 +367,6 @@ Widget buildStepWiseCourseCard(
           margin: const EdgeInsets.only(right: 16),
           width: 30,
           height: 30,
-          // padding: const EdgeInsets.all(10),
           decoration: ShapeDecoration(
             color: unlocked == 0
                 ? const Color(0xFFEAEAEA)
@@ -316,8 +383,8 @@ Widget buildStepWiseCourseCard(
                     size: 20,
                   )
                 : GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, "/course_screen");
+                    onTap: () async {
+                      await _makeApiCallAndNavigate(); // Make API call before navigating
                     },
                     child: const Icon(
                       Icons.arrow_forward_ios_rounded,
@@ -332,8 +399,12 @@ Widget buildStepWiseCourseCard(
   );
 }
 
-Widget buidSelectCourseBottomSheet(StateSetter modalSetState,
-    List<Map> selectCourseList, List<int> selected, String bottomSheetTitle) {
+Widget buidSelectCourseBottomSheet(
+    BuildContext context,
+    StateSetter modalSetState,
+    List<Map> selectCourseList,
+    List<int> selected,
+    String bottomSheetTitle) {
   return Stack(clipBehavior: Clip.none, children: [
     Container(
       padding: const EdgeInsets.only(top: 16, left: 20, right: 20, bottom: 16),
@@ -389,26 +460,25 @@ Widget buidSelectCourseBottomSheet(StateSetter modalSetState,
           const SizedBox(
             height: 12,
           ),
-          // ElevatedButton(
-          //   onPressed: () {
-          //     // Navigator.pop();
-
-          //   },
-          //   style: ElevatedButton.styleFrom(
-          //     minimumSize: const Size(double.infinity, 50),
-          //     backgroundColor: const Color(0xFF247E80),
-          //   ),
-          //   child: const Text(
-          //     'Apply',
-          //     style: TextStyle(
-          //       color: Colors.white,
-          //       fontSize: 16,
-          //       fontFamily: 'SF Pro Display',
-          //       fontWeight: FontWeight.w500,
-          //       height: 1.50,
-          //     ),
-          //   ),
-          // ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 50),
+              backgroundColor: const Color(0xFF247E80),
+            ),
+            child: const Text(
+              'Apply',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontFamily: 'SF Pro Display',
+                fontWeight: FontWeight.w500,
+                height: 1.50,
+              ),
+            ),
+          ),
         ],
       ),
     ),
@@ -419,10 +489,7 @@ Widget buidSelectCourseBottomSheet(StateSetter modalSetState,
         backgroundColor: Colors.white,
         child: IconButton(
           icon: const Icon(Icons.close, color: Colors.black),
-          // onPressed: () => Navigator.pop(context),
-          onPressed: () {
-            print("clicked");
-          },
+          onPressed: () => Navigator.pop(context),
         ),
       ),
     ),

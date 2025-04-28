@@ -84,6 +84,7 @@ class _ProfileState extends State<Profile> {
                                       (BuildContext context,
                                           StateSetter modalSetState) {
                                     return buidSelectCourseBottomSheet(
+                                        context,
                                         modalSetState,
                                         selectCourseData,
                                         selectedCourse,

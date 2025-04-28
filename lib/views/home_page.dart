@@ -8,6 +8,7 @@ import 'package:step_mobile/widgets/navbar.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:step_mobile/views/urlconfig.dart';
 import 'dart:math' as math;
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -16,6 +17,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final storage = const FlutterSecureStorage();
+
   List<Map<String, dynamic>> courses = [];
   bool isLoadingCourses = true;
   String courseError = '';
@@ -29,8 +32,18 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _initializeState();
+  }
+
+  Future<void> _initializeState() async {
     _fetchCourses();
     _fetchSubjects();
+    final storedId = await storage.read(key: 'selectedCourseId');
+    setState(() {
+      selectedCourseIds = storedId != null
+          ? [int.parse(storedId)]
+          : [1]; // Default to course ID 1 if not found
+    });
   }
 
   Future<void> _fetchCourses() async {
@@ -38,8 +51,6 @@ class _HomePageState extends State<HomePage> {
       isLoadingCourses = true;
       courseError = '';
     });
-
-    final storage = const FlutterSecureStorage();
 
     try {
       String token = await storage.read(key: 'token') ?? '';
@@ -72,16 +83,19 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _fetchSubjects() async {
+    final storedCourseId = await storage.read(key: 'selectedCourseId');
     setState(() {
       isLoadingSubjects = true;
       subjectError = '';
     });
 
-    final storage = const FlutterSecureStorage();
-
     try {
       String token = await storage.read(key: 'token') ?? '';
-      int courseId = selectedCourseIds.isNotEmpty ? selectedCourseIds.first : 1;
+      int courseId = selectedCourseIds.isNotEmpty
+          ? selectedCourseIds.first
+          : storedCourseId != null
+              ? int.parse(storedCourseId)
+              : 1;
 
       final response = await http.get(
         Uri.parse(
@@ -199,6 +213,7 @@ class _HomePageState extends State<HomePage> {
                                     builder: (BuildContext context,
                                         StateSetter modalSetState) {
                                       return buidSelectCourseBottomSheet(
+                                          context,
                                           modalSetState,
                                           courses,
                                           selectedCourseIds,
@@ -206,8 +221,14 @@ class _HomePageState extends State<HomePage> {
                                     },
                                   );
                                 },
-                              ).then((_) {
+                              ).then((_) async {
                                 // When course selection changes, fetch subjects for the new course
+
+                                await storage.write(
+                                  key: 'selectedCourseId',
+                                  value: selectedCourseIds.first.toString(),
+                                );
+
                                 _fetchSubjects();
                               });
                             },
@@ -401,12 +422,14 @@ class _HomePageState extends State<HomePage> {
                   ...subjects.asMap().entries.map((entry) {
                     int index = entry.key;
                     var subject = entry.value;
+                    print('value: ${subject}');
                     return Column(
                       children: [
                         buildStepWiseCourseCard(
                           (index + 1).toString().padLeft(2, '0'),
-                          0, // All steps set to 0 as requested
+                          index == 0 ? 1 : 0, // All steps set to 0 as requested
                           subject['name'],
+                          subject['id'].toString(),
                           context,
                         ),
                         const SizedBox(height: 8),
@@ -943,6 +966,5 @@ WidgetStateProperty<Color> getColor() {
 }
 
 WidgetStateProperty<Size> getFullWidth() {
-  return WidgetStateProperty.all(
-      const Size(double.infinity, double.maxFinite));
+  return WidgetStateProperty.all(const Size(double.infinity, double.maxFinite));
 }

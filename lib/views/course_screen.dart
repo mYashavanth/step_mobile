@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:step_mobile/widgets/common_widgets.dart';
 import 'package:step_mobile/widgets/course_screen_widgets.dart';
 import 'package:step_mobile/widgets/homepage_widgets.dart';
+import 'package:step_mobile/views/urlconfig.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class CourseScreen extends StatefulWidget {
   const CourseScreen({super.key});
@@ -13,7 +17,10 @@ class CourseScreen extends StatefulWidget {
 
 class _CourseScreenState extends State<CourseScreen>
     with SingleTickerProviderStateMixin {
+  final storage = const FlutterSecureStorage();
   late TabController _tabController;
+  Map<String, dynamic> courseStepDetails = {}; // Initialize with an empty map
+  var authToken = '';
 
   List<int> stepTabSelectedIndex = [0];
 
@@ -27,13 +34,45 @@ class _CourseScreenState extends State<CourseScreen>
 
   @override
   void initState() {
-    // TODO: implement initState
     _tabController = TabController(length: 5, vsync: this);
     super.initState();
+    fetchCourseStepDetails();
+  }
+
+  Future<void> fetchCourseStepDetails() async {
+    final token = await storage.read(key: 'token');
+    authToken = token ?? '';
+    if (authToken.isEmpty) {
+      // Handle the case when the token is not available
+      print("Token is not available");
+      return;
+    }
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final courseId = args['courseId'];
+    final subjectId = args['subjectId'];
+    try {
+      final url = Uri.parse(
+          '$baseurl/app/get-course-step-details-details/$token/$courseId/$subjectId');
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          courseStepDetails = data.isNotEmpty ? data[0] : {};
+        });
+      } else {
+        // Handle error response
+        print("Error fetching course step details: ${response.statusCode}");
+      }
+    } catch (e) {
+      // Handle error
+      print("Error fetching course step details: $e");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    print("Course Step Details: $courseStepDetails");
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -42,10 +81,15 @@ class _CourseScreenState extends State<CourseScreen>
             SizedBox(
               height: 300,
               width: double.maxFinite,
-              child: Image.asset(
-                "assets/image/vedio_image.png",
-                fit: BoxFit.cover,
-              ),
+              child: courseStepDetails.isNotEmpty
+                  ? Image.network(
+                      '$baseurl/app/course-step-detail-banner-image/${courseStepDetails['banner_image_name']}/$authToken',
+                      fit: BoxFit.cover,
+                    )
+                  : Image.asset(
+                      "assets/image/vedio_image.png",
+                      fit: BoxFit.cover,
+                    ),
             ),
             Padding(
               padding: const EdgeInsets.all(12),
@@ -62,9 +106,11 @@ class _CourseScreenState extends State<CourseScreen>
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
-                        child: const Text(
-                          'ANATOMY',
-                          style: TextStyle(
+                        child: Text(
+                          courseStepDetails.isNotEmpty
+                              ? courseStepDetails['subject_name']
+                              : "Subject Name",
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
                             fontFamily: 'SF Pro Display',
@@ -105,6 +151,7 @@ class _CourseScreenState extends State<CourseScreen>
                                       (BuildContext context,
                                           StateSetter modalSetState) {
                                     return buidSelectCourseBottomSheet(
+                                        context,
                                         modalSetState,
                                         selectStepList,
                                         chooseStepList,
@@ -137,12 +184,14 @@ class _CourseScreenState extends State<CourseScreen>
                   const SizedBox(
                     height: 8,
                   ),
-                  const Text.rich(
+                  Text.rich(
                     TextSpan(
                       children: [
                         TextSpan(
-                          text: 'EMBRYOLOGY: ',
-                          style: TextStyle(
+                          text: courseStepDetails.isNotEmpty
+                              ? '${courseStepDetails['course_step_title']}: '
+                              : "Step name: ",
+                          style: const TextStyle(
                             color: Color(0xFF1A1A1A),
                             fontSize: 20,
                             fontFamily: 'SF Pro Display',
@@ -151,9 +200,10 @@ class _CourseScreenState extends State<CourseScreen>
                           ),
                         ),
                         TextSpan(
-                          text:
-                              'Fertilization, early embryonic development, germ layers, organogenesis, congenital anomalies.',
-                          style: TextStyle(
+                          text: courseStepDetails.isNotEmpty
+                              ? courseStepDetails['course_step_description']
+                              : "step description",
+                          style: const TextStyle(
                             color: Color(0xFF1A1A1A),
                             fontSize: 20,
                             fontFamily: 'SF Pro Display',
@@ -166,7 +216,8 @@ class _CourseScreenState extends State<CourseScreen>
                   ),
 
                   const SizedBox(height: 12),
-                  buildFacultyCard(), // faculty card
+                  buildFacultyCard(
+                      courseStepDetails, authToken), // faculty card
 
                   const SizedBox(height: 12),
                   const Text(
@@ -181,15 +232,28 @@ class _CourseScreenState extends State<CourseScreen>
                   ),
                   const SizedBox(height: 8),
                   buildCourseOverViewCard(
-                      "4 hours on-demand video", "play2.svg"),
+                      courseStepDetails.isNotEmpty
+                          ? '${courseStepDetails['course_overview_hours_text']} hours on-demand video'
+                          : "4 hours on-demand video",
+                      "play2.svg"),
                   const SizedBox(height: 8),
                   buildCourseOverViewCard(
-                      "5 downloadable resources", "Download.svg"),
-                  const SizedBox(height: 8),
-                  buildCourseOverViewCard("Full lifetime access", "Time.svg"),
+                      courseStepDetails.isNotEmpty
+                          ? '${courseStepDetails['course_overview_downloadable_text']} downloadable resources'
+                          : "5 downloadable resources",
+                      "Download.svg"),
                   const SizedBox(height: 8),
                   buildCourseOverViewCard(
-                      "4 tests included for assessment", "Time (1).svg"),
+                      courseStepDetails.isNotEmpty
+                          ? '${courseStepDetails['course_overview_access_time_text']} access'
+                          : "Full lifetime access",
+                      "Time.svg"),
+                  const SizedBox(height: 8),
+                  buildCourseOverViewCard(
+                      courseStepDetails.isNotEmpty
+                          ? '${courseStepDetails['no_of_test_text']} tests included for assessment'
+                          : "4 tests included for assessment",
+                      "Time (1).svg"),
                   const SizedBox(height: 8),
                 ],
               ),
@@ -207,7 +271,7 @@ class _CourseScreenState extends State<CourseScreen>
   }
 }
 
-Widget buildFacultyCard() {
+Widget buildFacultyCard(courseStepDetails, String authToken) {
   return Container(
     padding: const EdgeInsets.all(12),
     clipBehavior: Clip.antiAlias,
@@ -229,8 +293,11 @@ Widget buildFacultyCard() {
           height: 50,
           clipBehavior: Clip.antiAlias,
           decoration: ShapeDecoration(
-            image: const DecorationImage(
-              image: AssetImage("assets/image/profile.jpg"),
+            image: DecorationImage(
+              image: courseStepDetails.isNotEmpty
+                  ? NetworkImage(
+                      '$baseurl/app/doctor-image/${courseStepDetails['doctor_profile_pic']}/$authToken')
+                  : const AssetImage("assets/image/profile.jpg"),
               fit: BoxFit.cover,
             ),
             shape: RoundedRectangleBorder(
@@ -238,15 +305,17 @@ Widget buildFacultyCard() {
             ),
           ),
         ),
-        const Column(
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text.rich(
               TextSpan(
                 children: [
                   TextSpan(
-                    text: 'Dr. Kalyan Vedas ',
-                    style: TextStyle(
+                    text: courseStepDetails.isNotEmpty
+                        ? '${courseStepDetails['doctor_full_name']} '
+                        : "Doctor Name ",
+                    style: const TextStyle(
                       color: Color(0xFF1A1A1A),
                       fontSize: 14,
                       fontFamily: 'SF Pro Display',
@@ -255,8 +324,10 @@ Widget buildFacultyCard() {
                     ),
                   ),
                   TextSpan(
-                    text: '( Radiologist specialist )',
-                    style: TextStyle(
+                    text: courseStepDetails.isNotEmpty
+                        ? ' ${courseStepDetails['doctor_practice_profession']} '
+                        : "( Doctor Profession )",
+                    style: const TextStyle(
                       color: Color(0xFF737373),
                       fontSize: 14,
                       fontFamily: 'SF Pro Display',
@@ -267,16 +338,46 @@ Widget buildFacultyCard() {
                 ],
               ),
             ),
-            Text(
-              'MBBS | 15 years exp',
-              style: TextStyle(
-                color: Color(0xFF737373),
-                fontSize: 14,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w400,
-                height: 1.57,
+            // Text(
+            //   'MBBS | 15 years exp',
+            //   style: TextStyle(
+            //     color: Color(0xFF737373),
+            //     fontSize: 14,
+            //     fontFamily: 'SF Pro Display',
+            //     fontWeight: FontWeight.w400,
+            //     height: 1.57,
+            //   ),
+            // )
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: courseStepDetails.isNotEmpty
+                        ? '${courseStepDetails['doctor_education']} | '
+                        : "Doctor Education | ",
+                    style: const TextStyle(
+                      color: Color(0xFF737373),
+                      fontSize: 14,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w400,
+                      height: 1.57,
+                    ),
+                  ),
+                  TextSpan(
+                    text: courseStepDetails.isNotEmpty
+                        ? '${courseStepDetails['years_of_experience']} exp'
+                        : "15 years exp",
+                    style: const TextStyle(
+                      color: Color(0xFF737373),
+                      fontSize: 14,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w400,
+                      height: 1.57,
+                    ),
+                  ),
+                ],
               ),
-            )
+            ),
           ],
         )
       ],

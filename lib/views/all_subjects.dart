@@ -43,65 +43,68 @@ class _AllSubjectsScreenState extends State<AllSubjectsScreen> {
               const SizedBox(
                 height: 8,
               ),
-              buildStepWiseCourseCard("01", 2, "Anatomy", context),
+              buildStepWiseCourseCard("01", 2, "Anatomy", '1', context),
               const SizedBox(
                 height: 8,
               ),
-              buildStepWiseCourseCard("02", 1, "Physiology", context),
+              buildStepWiseCourseCard("02", 1, "Physiology", '1', context),
               const SizedBox(
                 height: 8,
               ),
-              buildStepWiseCourseCard("03", 0, "Biochemistry", context),
+              buildStepWiseCourseCard("03", 0, "Biochemistry", '1', context),
               const SizedBox(
                 height: 8,
               ),
-              buildStepWiseCourseCard("04", 0, "Pathology", context),
+              buildStepWiseCourseCard("04", 0, "Pathology", '1', context),
               const SizedBox(
                 height: 8,
               ),
-              buildStepWiseCourseCard("05", 0, "Parmacology", context),
+              buildStepWiseCourseCard("05", 0, "Parmacology", '1', context),
               const SizedBox(
                 height: 8,
               ),
-              buildStepWiseCourseCard("06", 0, "Comunity Medicine", context),
+              buildStepWiseCourseCard(
+                  "06", 0, "Comunity Medicine", '1', context),
               const SizedBox(
                 height: 8,
               ),
-              buildStepWiseCourseCard("07", 0, "Forensic Medicine", context),
-              const SizedBox(
-                height: 24,
-              ),
-              buildStepWiseCourseCard("08", 0, "General Medicine", context),
-              const SizedBox(
-                height: 24,
-              ),
-              buildStepWiseCourseCard("09", 0, "Pediatrics", context),
+              buildStepWiseCourseCard(
+                  "07", 0, "Forensic Medicine", '1', context),
               const SizedBox(
                 height: 24,
               ),
               buildStepWiseCourseCard(
-                  "10", 0, "Dermatology, Venereol...", context),
+                  "08", 0, "General Medicine", '1', context),
               const SizedBox(
                 height: 24,
               ),
-              buildStepWiseCourseCard("11", 0, "Psychiatry", context),
-              const SizedBox(
-                height: 24,
-              ),
-              buildStepWiseCourseCard("12", 0, "Orthopedics", context),
-              const SizedBox(
-                height: 24,
-              ),
-              buildStepWiseCourseCard("13", 0, "Anesthesiology", context),
-              const SizedBox(
-                height: 24,
-              ),
-              buildStepWiseCourseCard("14", 0, "Radiology", context),
+              buildStepWiseCourseCard("09", 0, "Pediatrics", '1', context),
               const SizedBox(
                 height: 24,
               ),
               buildStepWiseCourseCard(
-                  "15", 0, "Obstetrics & Gynecology", context),
+                  "10", 0, "Dermatology, Venereol...", '1', context),
+              const SizedBox(
+                height: 24,
+              ),
+              buildStepWiseCourseCard("11", 0, "Psychiatry", '1', context),
+              const SizedBox(
+                height: 24,
+              ),
+              buildStepWiseCourseCard("12", 0, "Orthopedics", '1', context),
+              const SizedBox(
+                height: 24,
+              ),
+              buildStepWiseCourseCard("13", 0, "Anesthesiology", '1', context),
+              const SizedBox(
+                height: 24,
+              ),
+              buildStepWiseCourseCard("14", 0, "Radiology", '1', context),
+              const SizedBox(
+                height: 24,
+              ),
+              buildStepWiseCourseCard(
+                  "15", 0, "Obstetrics & Gynecology", '1', context),
               const SizedBox(
                 height: 24,
               ),
