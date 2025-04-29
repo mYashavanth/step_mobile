@@ -55,13 +55,76 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
         final data = jsonDecode(response.body);
         setState(() {
           preCourseTestData = data.isNotEmpty ? data[0] : {};
-
         });
       } else {
         print("Failed to fetch data. Status code: ${response.statusCode}");
       }
     } catch (e) {
       print("Error fetching pre-course test details: $e");
+    }
+  }
+
+  Future<void> _startTest() async {
+    try {
+      String? token = await storage.read(key: "token");
+      String? preCourseTestId = preCourseTestData['id'].toString();
+
+      if (token == null || preCourseTestId == null) {
+        print("Missing required data to start the test.");
+        return;
+      }
+
+      String apiUrl =
+          "$baseurl/app/start-pre-course-test/$token/$preCourseTestId";
+
+      final response = await http.post(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['errFlag'] == 0) {
+          print("Test started successfully: ${data['message']}");
+
+          // Save the pre_course_test_transaction_id to secure storage
+          await storage.write(
+              key: "preCourseTestTransactionId",
+              value: data['pre_course_test_transaction_id'].toString());
+
+          // Navigate to the test screen and pass the transaction ID
+          Navigator.pushNamed(
+            context,
+            "/test_screen",
+            arguments: {
+              "preCourseTestTransactionId":
+                  data['pre_course_test_transaction_id'],
+            },
+          );
+        } else {
+          print("Error starting test: ${data['message']}");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(data['message']),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else {
+        print("Failed to start test. Status code: ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Failed to start test. Please try again."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print("Error starting test: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("An error occurred: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -99,9 +162,9 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                       const SizedBox(
                         height: 12,
                       ),
-                       Text(
-                         'Anatomy : ${preCourseTestData["pre_course_test_title"]}',
-                        style: TextStyle(
+                      Text(
+                        '${preCourseTestData["pre_course_test_title"]}',
+                        style: const TextStyle(
                           color: Color(0xFF1A1A1A),
                           fontSize: 20,
                           fontFamily: 'SF Pro Display',
@@ -112,9 +175,9 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                       const SizedBox(
                         height: 12,
                       ),
-                       Text(
+                      Text(
                         "PYQ's - Anatomy for NEET PG \n${preCourseTestData['no_of_questions']} Questions • ${preCourseTestData['pre_course_test_duration_minutes']} minutes",
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Color(0xFF737373),
                           fontSize: 14,
                           fontFamily: 'SF Pro Display',
@@ -156,9 +219,12 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                               Row(
                                 children: [
                                   SvgPicture.asset("assets/icons/query.svg"),
-                                   Text(
+                                  const SizedBox(
+                                    width: 12,
+                                  ),
+                                  Text(
                                     '${preCourseTestData['no_of_questions']} full-length questions, ${preCourseTestData['max_marks']} marks',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: Color(0xFF1A1A1A),
                                       fontSize: 16,
                                       fontFamily: 'SF Pro Display',
@@ -262,15 +328,18 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                       const SizedBox(
                         height: 12,
                       ),
-                      listViewWithDot(preCourseTestData['syllabus_text_line_1']),
+                      listViewWithDot(
+                          preCourseTestData['syllabus_text_line_1']),
                       const SizedBox(
                         height: 12,
                       ),
-                      listViewWithDot(preCourseTestData['syllabus_text_line_2']),
+                      listViewWithDot(
+                          preCourseTestData['syllabus_text_line_2']),
                       const SizedBox(
                         height: 12,
                       ),
-                      listViewWithDot(preCourseTestData['syllabus_text_line_3']),
+                      listViewWithDot(
+                          preCourseTestData['syllabus_text_line_3']),
                     ],
                   ),
                 ),
@@ -322,8 +391,8 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: ElevatedButton(
-          onPressed: () {
-            Navigator.pushNamed(context, "/test_screen");
+          onPressed: () async {
+            await _startTest(); // Call the API to start the test before navigating
           },
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 50),

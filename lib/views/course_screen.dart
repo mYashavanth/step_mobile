@@ -33,7 +33,6 @@ class _CourseScreenState extends State<CourseScreen>
 
   List<int> chooseStepList = [0];
 
-
   @override
   void initState() {
     _tabController = TabController(length: 5, vsync: this);
@@ -65,20 +64,31 @@ class _CourseScreenState extends State<CourseScreen>
     final courseId = args['courseId'];
     final subjectId = args['subjectId'];
     try {
+      // print(
+      //     '$baseurl/app/get-course-step-details-details/$token/$courseId/$subjectId');
       final url = Uri.parse(
           '$baseurl/app/get-course-step-details-details/$token/$courseId/$subjectId');
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        setState(() async {
-          courseStepDetails = data.isNotEmpty ? data[0] : {};
-            if (courseStepDetails.isNotEmpty) {
-            selectedStepName = courseStepDetails['course_step_title'];
-            await storage.write(
-              key: "courseStepDetailId",
-              value: courseStepDetails['id'].toString());
-            }
-        });
+        if (data.isNotEmpty) {
+          final courseStepDetailsData = data[0];
+          final courseStepTitle = courseStepDetailsData['course_step_title'];
+          final courseStepId = courseStepDetailsData['id'].toString();
+
+          // Write to storage outside of setState
+          await storage.write(key: "courseStepDetailId", value: courseStepId);
+
+          // Update state synchronously
+          setState(() {
+            courseStepDetails = courseStepDetailsData;
+            selectedStepName = courseStepTitle;
+          });
+        } else {
+          setState(() {
+            courseStepDetails = {};
+          });
+        }
       } else {
         // Handle error response
         print("Error fetching course step details: ${response.statusCode}");

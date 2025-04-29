@@ -85,7 +85,7 @@ class _TestScreen extends State<TestScreen> {
             )
           ],
         ),
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
