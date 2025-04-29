@@ -496,6 +496,107 @@ Widget buidSelectCourseBottomSheet(
   ]);
 }
 
+Widget buidSelectCourseBottomSheetStep(
+    BuildContext context,
+    StateSetter modalSetState,
+    List<Map> selectStepList,
+    List<int> selected,
+    String bottomSheetTitle,
+    Function(String) onStepSelected) {
+  return Stack(clipBehavior: Clip.none, children: [
+    Container(
+      padding: const EdgeInsets.only(top: 16, left: 20, right: 20, bottom: 16),
+      clipBehavior: Clip.antiAlias,
+      decoration: const ShapeDecoration(
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            bottomSheetTitle,
+            style: const TextStyle(
+              color: Color(0xFF323836),
+              fontSize: 20,
+              fontFamily: 'SF Pro Display',
+              fontWeight: FontWeight.w500,
+              height: 1.10,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            width: 358,
+            decoration: const ShapeDecoration(
+              shape: RoundedRectangleBorder(
+                side: BorderSide(
+                  width: 1,
+                  strokeAlign: BorderSide.strokeAlignCenter,
+                  color: Color(0xFFEAEAEA),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Column(
+            children: List.generate(selectStepList.length, (int index) {
+              return buildSelectCourseRow(
+                  modalSetState, selectStepList[index], selected);
+            }),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () async {
+              const storage = FlutterSecureStorage();
+              // Get the selected step's id and name
+              Map selectedStep = selectStepList
+                  .firstWhere((step) => step['id'] == selected[0]);
+              String selectedStepId = selectedStep['id'].toString();
+              String selectedStepName = selectedStep['name'];
+              // Store the step id in Flutter Secure Storage
+              await storage.write(key: "selectedStepNo", value: selectedStepId);
+              // Update the UI with the step name
+              onStepSelected(selectedStepName);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 50),
+              backgroundColor: const Color(0xFF247E80),
+            ),
+            child: const Text(
+              'Apply',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontFamily: 'SF Pro Display',
+                fontWeight: FontWeight.w500,
+                height: 1.50,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+    Positioned(
+      right: 15,
+      top: -50,
+      child: CircleAvatar(
+        backgroundColor: Colors.white,
+        child: IconButton(
+          icon: const Icon(Icons.close, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+    ),
+  ]);
+}
+
 enum CoursesEnum { neet, jefferson }
 
 Widget buildSelectCourseRow(

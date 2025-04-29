@@ -21,6 +21,7 @@ class _CourseScreenState extends State<CourseScreen>
   late TabController _tabController;
   Map<String, dynamic> courseStepDetails = {}; // Initialize with an empty map
   var authToken = '';
+  String selectedStepName = "STEP 1"; // Default value
 
   List<int> stepTabSelectedIndex = [0];
 
@@ -32,11 +33,23 @@ class _CourseScreenState extends State<CourseScreen>
 
   List<int> chooseStepList = [0];
 
+
   @override
   void initState() {
     _tabController = TabController(length: 5, vsync: this);
     super.initState();
+    _loadSelectedStep();
     fetchCourseStepDetails();
+  }
+
+  Future<void> _loadSelectedStep() async {
+    const storage = FlutterSecureStorage();
+    String? stepName = await storage.read(key: "selectedStepNo");
+    if (stepName != null) {
+      setState(() {
+        selectedStepName = stepName;
+      });
+    }
   }
 
   Future<void> fetchCourseStepDetails() async {
@@ -57,8 +70,14 @@ class _CourseScreenState extends State<CourseScreen>
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        setState(() {
+        setState(() async {
           courseStepDetails = data.isNotEmpty ? data[0] : {};
+            if (courseStepDetails.isNotEmpty) {
+            selectedStepName = courseStepDetails['course_step_title'];
+            await storage.write(
+              key: "courseStepDetailId",
+              value: courseStepDetails['id'].toString());
+            }
         });
       } else {
         // Handle error response
@@ -144,26 +163,31 @@ class _CourseScreenState extends State<CourseScreen>
                             showModalBottomSheet(
                                 isScrollControlled: true,
                                 context: context,
-                                //  isScrollControlled: true,
                                 backgroundColor: Colors.transparent,
                                 builder: (context) {
                                   return StatefulBuilder(builder:
                                       (BuildContext context,
                                           StateSetter modalSetState) {
-                                    return buidSelectCourseBottomSheet(
-                                        context,
-                                        modalSetState,
-                                        selectStepList,
-                                        chooseStepList,
-                                        "Select your Course");
+                                    return buidSelectCourseBottomSheetStep(
+                                      context,
+                                      modalSetState,
+                                      selectStepList,
+                                      chooseStepList,
+                                      "Select your Course",
+                                      (String stepName) {
+                                        setState(() {
+                                          selectedStepName = stepName;
+                                        });
+                                      },
+                                    );
                                   });
                                 });
                           },
-                          child: const Row(
+                          child: Row(
                             children: [
                               Text(
-                                'STEP 1',
-                                style: TextStyle(
+                                selectedStepName,
+                                style: const TextStyle(
                                   color: Color(0xFF247E80),
                                   fontSize: 14,
                                   fontFamily: 'SF Pro Display',
@@ -171,7 +195,7 @@ class _CourseScreenState extends State<CourseScreen>
                                   height: 1.71,
                                 ),
                               ),
-                              Icon(
+                              const Icon(
                                 Icons.keyboard_arrow_down_rounded,
                                 color: Color(0xFF247E80),
                               ),
@@ -338,16 +362,6 @@ Widget buildFacultyCard(courseStepDetails, String authToken) {
                 ],
               ),
             ),
-            // Text(
-            //   'MBBS | 15 years exp',
-            //   style: TextStyle(
-            //     color: Color(0xFF737373),
-            //     fontSize: 14,
-            //     fontFamily: 'SF Pro Display',
-            //     fontWeight: FontWeight.w400,
-            //     height: 1.57,
-            //   ),
-            // )
             Text.rich(
               TextSpan(
                 children: [

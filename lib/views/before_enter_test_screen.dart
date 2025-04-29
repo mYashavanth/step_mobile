@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:step_mobile/widgets/common_widgets.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import 'urlconfig.dart';
 
 class BeforeEnterTestScreen extends StatefulWidget {
   const BeforeEnterTestScreen({super.key});
@@ -10,7 +15,56 @@ class BeforeEnterTestScreen extends StatefulWidget {
 }
 
 class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
-  //  List<Map> examDetailsData = [{"icon":"query.svg","title":""},{},{}];
+  final FlutterSecureStorage storage = const FlutterSecureStorage();
+
+  @override
+  void initState() {
+    _fetchPreCourseTestDetails();
+    super.initState();
+  }
+
+  Map<String, dynamic> preCourseTestData = {};
+
+  Future<void> _fetchPreCourseTestDetails() async {
+    try {
+      // Retrieve values from Flutter Secure Storage
+      String? token = await storage.read(key: "token");
+      String? courseStepDetailsId =
+          await storage.read(key: "courseStepDetailId");
+      String? stepNo = await storage.read(key: "selectedStepNo");
+
+      // Ensure all required values are available
+      if (token == null || courseStepDetailsId == null || stepNo == null) {
+        print("Missing required data in Flutter Secure Storage.");
+        return;
+      }
+
+      // Construct the API URL
+      // Replace with your actual base URL
+      String apiUrl =
+          "$baseurl/app/get-pre-course-test-by-course-step-details-id/$token/$courseStepDetailsId/$stepNo";
+
+      // Make the GET request
+      final response = await http.get(Uri.parse(apiUrl));
+
+// {"course_step_details_master_id":4,"created_date":"Mon, 28 Apr 2025 00:00:00 GMT","created_time":"17:36:47","id":5,"marks_per_question":4,"max_marks":0,"negative_marks":1,"no_of_questions":0,"pre_course_test_duration_minutes":50,"pre_course_test_title":"pre course test title","status":1,"step_no":1,"syllabus_text_line_1":"asdfasdfasdf","syllabus_text_line_2":"asdfasdf","syllabus_text_line_3":"asdfasdfas"}
+      // Check the response status
+      if (response.statusCode == 200) {
+        print("API Response: ${response.body}");
+
+        final data = jsonDecode(response.body);
+        setState(() {
+          preCourseTestData = data.isNotEmpty ? data[0] : {};
+
+        });
+      } else {
+        print("Failed to fetch data. Status code: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error fetching pre-course test details: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,9 +86,9 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'PRE COURSE TEST • ANATOMY - STEP 1',
-                        style: TextStyle(
+                      Text(
+                        'PRE COURSE TEST • ANATOMY - STEP ${preCourseTestData['step_no']}',
+                        style: const TextStyle(
                           color: Color(0xFF247E80),
                           fontSize: 12,
                           fontFamily: 'SF Pro Display',
@@ -45,8 +99,8 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                       const SizedBox(
                         height: 12,
                       ),
-                      const Text(
-                        'Anatomy Challenge: Ace the Basics',
+                       Text(
+                         'Anatomy : ${preCourseTestData["pre_course_test_title"]}',
                         style: TextStyle(
                           color: Color(0xFF1A1A1A),
                           fontSize: 20,
@@ -58,8 +112,8 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                       const SizedBox(
                         height: 12,
                       ),
-                      const Text(
-                        "PYQ's - Anatomy for NEET PG \n50 Questions • 45 minutes",
+                       Text(
+                        "PYQ's - Anatomy for NEET PG \n${preCourseTestData['no_of_questions']} Questions • ${preCourseTestData['pre_course_test_duration_minutes']} minutes",
                         style: TextStyle(
                           color: Color(0xFF737373),
                           fontSize: 14,
@@ -102,8 +156,8 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                               Row(
                                 children: [
                                   SvgPicture.asset("assets/icons/query.svg"),
-                                  const Text(
-                                    '50 full-length questions, 200 marks',
+                                   Text(
+                                    '${preCourseTestData['no_of_questions']} full-length questions, ${preCourseTestData['max_marks']} marks',
                                     style: TextStyle(
                                       color: Color(0xFF1A1A1A),
                                       fontSize: 16,
@@ -208,24 +262,18 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                       const SizedBox(
                         height: 12,
                       ),
-                      listViewWithDot(
-                          "General Anatomy: Basic Terminology, Tissues: Types and Functions & Bone and Cartilage Structure."),
+                      listViewWithDot(preCourseTestData['syllabus_text_line_1']),
                       const SizedBox(
                         height: 12,
                       ),
-                      listViewWithDot(
-                          "Upper Limb Anatomy: Brachial Plexus, Shoulder Joint and Movements & Muscles of the Arm and Forearm."),
+                      listViewWithDot(preCourseTestData['syllabus_text_line_2']),
                       const SizedBox(
                         height: 12,
                       ),
-                      listViewWithDot(
-                          "Lower Limb Anatomy: Hip Joint and Movements, Femoral Triangle and Popliteal Fossa & Nerve Supply of the Lower Limb."),
+                      listViewWithDot(preCourseTestData['syllabus_text_line_3']),
                     ],
                   ),
                 ),
-                // const SizedBox(
-                //   height: 16,
-                // ),
                 borderHorizontal(),
                 Padding(
                   padding: const EdgeInsets.all(12),
@@ -263,26 +311,6 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                       const SizedBox(
                         height: 20,
                       ),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Handle login with mobile number
-                          Navigator.pushNamed(context, "/test_screen");
-                        },
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                          backgroundColor: const Color(0xFF247E80),
-                        ),
-                        child: const Text(
-                          'Start test',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontFamily: 'SF Pro Display',
-                            fontWeight: FontWeight.w500,
-                            height: 1.50,
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -291,11 +319,34 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.pushNamed(context, "/test_screen");
+          },
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size(double.infinity, 50),
+            backgroundColor: const Color(0xFF247E80),
+          ),
+          child: const Text(
+            'Start test',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontFamily: 'SF Pro Display',
+              fontWeight: FontWeight.w500,
+              height: 1.50,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
 
 Widget listViewWithDot(String data) {
+  print(data);
   return Padding(
     padding: const EdgeInsets.only(left: 8.0),
     child: Row(
@@ -339,7 +390,6 @@ Widget testAtemptedCard(String title, BuildContext context) {
       ),
     ),
     child: ListTile(
-      // isThreeLine: true,
       leading: SvgPicture.asset(
         "assets/icons/list_icon.svg",
         colorFilter: const ColorFilter.mode(Color(0xFF5C5C5C), BlendMode.srcIn),

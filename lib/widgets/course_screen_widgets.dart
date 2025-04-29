@@ -456,13 +456,13 @@ class _StepContentState extends State<StepContent> {
         const SizedBox(height: 20),
         preCourseCard(true,context),
         const SizedBox(height: 20),
-        preCourseCard(false,context),
-        const SizedBox(height: 20),
         Column(
           children: List.generate(4, (i) {
             return collapseStepClassCard(i + 1, showCardBoolList, setState);
           }),
-        )
+        ),
+        const SizedBox(height: 20),
+        preCourseCard(false,context),
       ],
     );
   }
