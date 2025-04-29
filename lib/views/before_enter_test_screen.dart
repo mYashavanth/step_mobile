@@ -2,10 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:step_mobile/views/dry.dart';
 import 'package:step_mobile/widgets/common_widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-import 'urlconfig.dart';
+import 'package:step_mobile/views/urlconfig.dart';
+
 
 class BeforeEnterTestScreen extends StatefulWidget {
   const BeforeEnterTestScreen({super.key});
@@ -58,9 +60,19 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
         });
       } else {
         print("Failed to fetch data. Status code: ${response.statusCode}");
+        showCustomSnackBar(
+          context: context,
+          message: "Failed to fetch data. Please try again.",
+          isSuccess: false,
+        );
       }
     } catch (e) {
       print("Error fetching pre-course test details: $e");
+      showCustomSnackBar(
+        context: context,
+        message: "An error occurred: $e",
+        isSuccess: false,
+      );
     }
   }
 
@@ -76,14 +88,20 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
 
       String apiUrl =
           "$baseurl/app/start-pre-course-test/$token/$preCourseTestId";
+      print("API URL: $apiUrl");
 
-      final response = await http.post(Uri.parse(apiUrl));
+      final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
         if (data['errFlag'] == 0) {
-          print("Test started successfully: ${data['message']}");
+          print("Test started successfully: $data");
+          showCustomSnackBar(
+            context: context,
+            message: "Test started successfully.",
+            isSuccess: true,
+          );
 
           // Save the pre_course_test_transaction_id to secure storage
           await storage.write(
@@ -100,30 +118,27 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
             },
           );
         } else {
-          print("Error starting test: ${data['message']}");
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(data['message']),
-              backgroundColor: Colors.red,
-            ),
+          print("Error starting test: $data");
+          showCustomSnackBar(
+            context: context,
+            message: data['message'],
+            isSuccess: false,
           );
         }
       } else {
         print("Failed to start test. Status code: ${response.statusCode}");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Failed to start test. Please try again."),
-            backgroundColor: Colors.red,
-          ),
+        showCustomSnackBar(
+          context: context,
+          message: "Failed to start test. Please try again.",
+          isSuccess: false,
         );
       }
     } catch (e) {
       print("Error starting test: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("An error occurred: $e"),
-          backgroundColor: Colors.red,
-        ),
+      showCustomSnackBar(
+        context: context,
+        message: "An error occurred: $e",
+        isSuccess: false,
       );
     }
   }

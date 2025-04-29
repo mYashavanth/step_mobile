@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:step_mobile/widgets/common_widgets.dart';
 
-PreferredSizeWidget testScreenAppBar(BuildContext context) {
+PreferredSizeWidget testScreenAppBar(
+    BuildContext context, void Function() _endTest) {
   return AppBar(
     automaticallyImplyLeading: false,
     flexibleSpace: SafeArea(
@@ -87,7 +88,7 @@ PreferredSizeWidget testScreenAppBar(BuildContext context) {
               onPressed: () {
                 // Handle login with mobile number
                 // Navigator.pushNamed(context, "/test_screen");
-                submitTestDialog(context);
+                submitTestDialog(context, _endTest);
               },
               style: ElevatedButton.styleFrom(
                 // minimumSize: const Size(double.infinity, 50),
@@ -111,7 +112,7 @@ PreferredSizeWidget testScreenAppBar(BuildContext context) {
   );
 }
 
-void submitTestDialog(BuildContext context) {
+void submitTestDialog(BuildContext context, void Function() _endTest) {
   showDialog(
     context: context,
     builder: (BuildContext context) => AlertDialog(
@@ -276,6 +277,7 @@ void submitTestDialog(BuildContext context) {
                   Expanded(
                     child: InkWell(
                       onTap: () {
+                        _endTest();
                         Navigator.pushNamed(context, "/result_test_screen");
                       },
                       child: Container(
