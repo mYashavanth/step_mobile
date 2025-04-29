@@ -118,93 +118,97 @@ class _DetailsFormState extends State<DetailsForm> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              formInputWithLabel(
-                _nameController,
-                "Enter your name",
-                "Name",
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              formInputWithLabel(
-                TextEditingController(text: mobile),
-                "Mobile Number",
-                "Mobile",
-                readOnly: true, // Make the field non-editable
-              ),
-              const SizedBox(height: 20),
-              formInputWithLabel(
-                _emailController,
-                "Enter your email",
-                "Email",
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                    return 'Please enter a valid email address';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "College name",
-                style: TextStyle(
-                  color: Color(0xFF323836),
-                  fontSize: 16,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w400,
-                  height: 1.38,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.maxFinite,
-                height: 52,
-                clipBehavior: Clip.antiAlias,
-                decoration: ShapeDecoration(
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(width: 1, color: Color(0xFFDDDDDD)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: DropdownButton<String>(
-                  isExpanded: true,
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                  icon: const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: Color(0xFF9CA3AF),
-                  ),
-                  value: _selectedCollege,
-                  hint: const Text('Enter college name'),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedCollege = newValue;
-                    });
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                formInputWithLabel(
+                  _nameController,
+                  "Enter your name",
+                  "Name",
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your name';
+                    }
+                    return null;
                   },
-                  items:
-                      _colleges.map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                  underline: Container(), // Remove the underline
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                formInputWithLabel(
+                  TextEditingController(text: mobile),
+                  "Mobile Number",
+                  "Mobile",
+                  readOnly: true, // Make the field non-editable
+                ),
+                const SizedBox(height: 20),
+                formInputWithLabel(
+                  _emailController,
+                  "Enter your email",
+                  "Email",
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email';
+                    } else if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                        .hasMatch(value)) {
+                      return 'Please enter a valid email address';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "College name",
+                  style: TextStyle(
+                    color: Color(0xFF323836),
+                    fontSize: 16,
+                    fontFamily: 'SF Pro Display',
+                    fontWeight: FontWeight.w400,
+                    height: 1.38,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.maxFinite,
+                  height: 52,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: ShapeDecoration(
+                    shape: RoundedRectangleBorder(
+                      side:
+                          const BorderSide(width: 1, color: Color(0xFFDDDDDD)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    icon: const Icon(
+                      Icons.keyboard_arrow_down,
+                      color: Color(0xFF9CA3AF),
+                    ),
+                    value: _selectedCollege,
+                    hint: const Text('Enter college name'),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedCollege = newValue;
+                      });
+                    },
+                    items:
+                        _colleges.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    underline: Container(), // Remove the underline
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
