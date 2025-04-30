@@ -19,9 +19,9 @@ class _CourseScreenState extends State<CourseScreen>
     with SingleTickerProviderStateMixin {
   final storage = const FlutterSecureStorage();
   late TabController _tabController;
-  Map<String, dynamic> courseStepDetails = {}; // Initialize with an empty map
+  Map<String, dynamic> courseStepDetails = {};
   var authToken = '';
-  String selectedStepName = "STEP 1"; // Default value
+  int selectedStepId = 1; // Track selected step by ID
 
   List<int> stepTabSelectedIndex = [0];
 
@@ -42,20 +42,25 @@ class _CourseScreenState extends State<CourseScreen>
   }
 
   Future<void> _loadSelectedStep() async {
-    const storage = FlutterSecureStorage();
-    String? stepName = await storage.read(key: "selectedStepNo");
-    if (stepName != null) {
-      setState(() {
-        selectedStepName = stepName;
-      });
+    // Read the stored step ID
+    String? stepId = await storage.read(key: "selectedStepNo");
+
+    // If no step ID exists in storage, set and store the default value (1)
+    if (stepId == null) {
+      await storage.write(key: "selectedStepNo", value: "1");
+      stepId = "1"; // Use "1" as the default value
     }
+
+    // Update the state with the step ID (either from storage or default)
+    setState(() {
+      selectedStepId = int.parse(stepId!);
+    });
   }
 
   Future<void> fetchCourseStepDetails() async {
     final token = await storage.read(key: 'token');
     authToken = token ?? '';
     if (authToken.isEmpty) {
-      // Handle the case when the token is not available
       print("Token is not available");
       return;
     }
@@ -64,8 +69,6 @@ class _CourseScreenState extends State<CourseScreen>
     final courseId = args['courseId'];
     final subjectId = args['subjectId'];
     try {
-      // print(
-      //     '$baseurl/app/get-course-step-details-details/$token/$courseId/$subjectId');
       final url = Uri.parse(
           '$baseurl/app/get-course-step-details-details/$token/$courseId/$subjectId');
       final response = await http.get(url);
@@ -73,16 +76,12 @@ class _CourseScreenState extends State<CourseScreen>
         final data = jsonDecode(response.body);
         if (data.isNotEmpty) {
           final courseStepDetailsData = data[0];
-          final courseStepTitle = courseStepDetailsData['course_step_title'];
           final courseStepId = courseStepDetailsData['id'].toString();
 
-          // Write to storage outside of setState
           await storage.write(key: "courseStepDetailId", value: courseStepId);
 
-          // Update state synchronously
           setState(() {
             courseStepDetails = courseStepDetailsData;
-            selectedStepName = courseStepTitle;
           });
         } else {
           setState(() {
@@ -90,18 +89,15 @@ class _CourseScreenState extends State<CourseScreen>
           });
         }
       } else {
-        // Handle error response
         print("Error fetching course step details: ${response.statusCode}");
       }
     } catch (e) {
-      // Handle error
       print("Error fetching course step details: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    print("Course Step Details: $courseStepDetails");
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -185,9 +181,18 @@ class _CourseScreenState extends State<CourseScreen>
                                       chooseStepList,
                                       "Select your Course",
                                       (String stepName) {
+                                        final selectedStep =
+                                            selectStepList.firstWhere(
+                                          (step) => step["name"] == stepName,
+                                          orElse: () => selectStepList[0],
+                                        );
                                         setState(() {
-                                          selectedStepName = stepName;
+                                          selectedStepId = selectedStep["id"];
                                         });
+                                        storage.write(
+                                          key: "selectedStepNo",
+                                          value: selectedStep["id"].toString(),
+                                        );
                                       },
                                     );
                                   });
@@ -196,7 +201,7 @@ class _CourseScreenState extends State<CourseScreen>
                           child: Row(
                             children: [
                               Text(
-                                selectedStepName,
+                                "STEP $selectedStepId",
                                 style: const TextStyle(
                                   color: Color(0xFF247E80),
                                   fontSize: 14,
@@ -215,9 +220,7 @@ class _CourseScreenState extends State<CourseScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(
-                    height: 8,
-                  ),
+                  const SizedBox(height: 8),
                   Text.rich(
                     TextSpan(
                       children: [
@@ -248,11 +251,8 @@ class _CourseScreenState extends State<CourseScreen>
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 12),
-                  buildFacultyCard(
-                      courseStepDetails, authToken), // faculty card
-
+                  buildFacultyCard(courseStepDetails, authToken),
                   const SizedBox(height: 12),
                   const Text(
                     'Course overview',

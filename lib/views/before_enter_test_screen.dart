@@ -37,6 +37,9 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
 
       // Ensure all required values are available
       if (token == null || courseStepDetailsId == null || stepNo == null) {
+        if(token == null) print("Token is null");
+        if(courseStepDetailsId == null) print("courseStepDetailsId is null");
+        if(stepNo == null) print("stepNo is null");
         print("Missing required data in Flutter Secure Storage.");
         return;
       }
