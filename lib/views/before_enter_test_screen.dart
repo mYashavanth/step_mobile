@@ -57,7 +57,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
       if (response.statusCode == 200) {
         print("API Response: ${response.body}");
         final data = jsonDecode(response.body);
-      await storage.write(key: "preCourseTestTransactionId", value: data["pre_course_test_transaction_id"]);
+     
         setState(() {
           preCourseTestData = data.isNotEmpty ? data[0] : {};
         });
@@ -97,6 +97,9 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+           print(data);
+        print("data printing in before enter test screen ^");
+        await storage.write(key: "preCourseTestTransactionId", value: data["pre_course_test_transaction_id"].toString());
 
         if (data['errFlag'] == 0) {
           print("Test started successfully: $data");

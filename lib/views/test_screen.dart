@@ -20,6 +20,7 @@ class _TestScreen extends State<TestScreen> {
   final PageController _pageController = PageController();
   int currentPage = 0;
   int totalQuestions = 3; // Hardcoded total number of questions
+  String pre_course_test_question_id = '';
   List<Map<String, dynamic>> questions = [];
   List<int?> selectedOptions =
       []; // To track selected options for each question
@@ -56,23 +57,33 @@ class _TestScreen extends State<TestScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        pre_course_test_question_id =
+            data[0]['pre_course_test_question_id'].toString();
 
         if (data is List && data.isNotEmpty) {
           final questionData = data[0];
-          List<String> options = [];
+          List<Map<String, dynamic>> options = [];
 
-          // Extract options from the response
+          // Extract options from the response including their IDs
           for (var option in questionData['options']) {
-            options.add(option['option_text']);
+            options.add({
+              'option_text': option['option_text'],
+              'pre_course_test_questions_options_id':
+                  option['pre_course_test_questions_options_id'],
+            });
           }
 
           // Create question map in the format expected by your TestScreenWidgets
           Map<String, dynamic> question = {
             'question': questionData['question'],
-            'options': options,
-            'correctAnswer':
-                options[0], // Assuming first option is correct for now
+            'options': options.map((opt) => opt['option_text']).toList(),
+            'options_data':
+                options, // Store the full options data including IDs
+            'correctAnswer': options[0]
+                ['option_text'], // Assuming first option is correct for now
             'question_no': questionData['question_no'],
+            'pre_course_test_question_id':
+                questionData['pre_course_test_question_id'],
           };
 
           // If we already have this question (from going back), update it
@@ -108,38 +119,77 @@ class _TestScreen extends State<TestScreen> {
     }
   }
 
+  Future<void> _saveResponse(int questionIndex, int? optionIndex) async {
+    try {
+      String? token = await storage.read(key: "token");
+      String? preCourseTestTransactionId =
+          await storage.read(key: "preCourseTestTransactionId");
+
+      if (token == null || preCourseTestTransactionId == null) {
+        print("Missing required data to save response");
+        return;
+      }
+
+      if (questionIndex >= questions.length) {
+        print("Question data not loaded yet");
+        return;
+      }
+
+      final question = questions[questionIndex];
+      final questionId = question['pre_course_test_question_id'];
+      final optionId = optionIndex != null
+          ? question['options_data'][optionIndex]
+              ['pre_course_test_questions_options_id']
+          : 0; // 0 means no option selected
+
+      String apiUrl =
+          "$baseurl/app/save-update-pre-course-test-questions-response/" +
+              "$token/$preCourseTestTransactionId/$questionId/$optionId";
+
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print(data);
+        print(
+            "data printing in save response for save and updateing ++++++++++++++++++++++++++++ ^");
+        if (data['errFlag'] == 0) {
+          print("Response saved successfully for question $questionId");
+        } else {
+          print("Error saving response: ${data['message']}");
+        }
+      } else {
+        print("Failed to save response. Status code: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error saving response: $e");
+    }
+  }
+
   // Callback function to update selected option
   void _onOptionSelected(int questionIndex, int optionIndex) {
     setState(() {
       selectedOptions[questionIndex] = optionIndex;
     });
 
-    // Print the selected answer and its ID
-    final selectedAnswer = questions[questionIndex]['options'][optionIndex];
-    final questionId = questions[questionIndex]['question_no'];
-    print("Selected Answer: $selectedAnswer, Question ID: $questionId");
+    // Save the response to API
+    _saveResponse(questionIndex, optionIndex);
   }
 
   void nextPage() {
     if (currentPage < totalQuestions - 1) {
-      // Check if no option is selected for the current question
-      if (selectedOptions[currentPage] == null) {
-        final questionId = questions[currentPage]['question_no'];
-        print("No option selected for Question ID: $questionId, Answer: 0");
-      }
-
       setState(() {
         currentPage++;
       });
       _pageController.nextPage(
           duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
 
-      // Only fetch next question if we don't have it and it exists
+      // Only fetch the next question if we don't have it and it exists
       if (currentPage >= questions.length && currentPage < totalQuestions) {
         _fetchQuestion(currentPage + 1); // Questions are 1-indexed
       }
     } else {
-      // User is on last question - you could add a submit button here
+      // User is on the last question - you could add a submit button here
       submitTestDialog(context, _endTest);
     }
   }
@@ -345,6 +395,8 @@ class _TestScreen extends State<TestScreen> {
                   setState(() {
                     selectedOptions[currentPage] = null;
                   });
+                  // Save the cleared response
+                  _saveResponse(currentPage, null);
                 },
                 child: Container(
                   height: 40,
