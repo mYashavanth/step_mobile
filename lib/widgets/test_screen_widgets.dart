@@ -441,20 +441,32 @@ class TestScreenWidgets extends StatefulWidget {
   final Map questionData;
   final int index;
   final int questionLength;
-  const TestScreenWidgets(
-      {super.key,
-      required this.index,
-      required this.questionData,
-      required this.questionLength});
+  final int? selectedOption; // Add this parameter
+  final Function(int, int) onOptionSelected; // Add this parameter
+
+  const TestScreenWidgets({
+    super.key,
+    required this.index,
+    required this.questionData,
+    required this.questionLength,
+    required this.selectedOption, // Include in the constructor
+    required this.onOptionSelected, // Include in the constructor
+  });
 
   @override
   State<TestScreenWidgets> createState() => _TestScreenWidgetsState();
 }
 
 class _TestScreenWidgetsState extends State<TestScreenWidgets> {
-  int ansSel = 0;
-  int selectListOrGrid = 0; // 0 - list; 1 - grid
-  List statusList = generateRandomNumbers(40, 1, 4);
+  late int? ansSel;
+  int selectListOrGrid = 0; // Initialize selectListOrGrid with a default value
+  List<int> statusList = List.generate(40, (index) => 0); // Initialize statusList with default statuses
+
+  @override
+  void initState() {
+    super.initState();
+    ansSel = widget.selectedOption; // Initialize with the selected option
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -494,38 +506,50 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
                 height: 20,
               ),
               InkWell(
-                  onTap: () {
+                onTap: () {
+                  setState(() {
+                    ansSel = 0;
+                  });
+                  widget.onOptionSelected(widget.index, 0); // Notify parent
+                },
+                child: answerCard(ansSel == 0, 'A', options[0]),
+              ),
+              const SizedBox(
+                height: 12,
+              ),
+              InkWell(
+                onTap: () {
+                  setState(() {
                     ansSel = 1;
-                    setState(() {});
-                  },
-                  child: answerCard(ansSel == 1, 'A', options[0])),
+                  });
+                  widget.onOptionSelected(widget.index, 1); // Notify parent
+                },
+                child: answerCard(ansSel == 1, 'B', options[1]),
+              ),
               const SizedBox(
                 height: 12,
               ),
               InkWell(
-                  onTap: () {
+                onTap: () {
+                  setState(() {
                     ansSel = 2;
-                    setState(() {});
-                  },
-                  child: answerCard(ansSel == 2, 'B', options[1])),
+                  });
+                  widget.onOptionSelected(widget.index, 2); // Notify parent
+                },
+                child: answerCard(ansSel == 2, 'C', options[2]),
+              ),
               const SizedBox(
                 height: 12,
               ),
               InkWell(
-                  onTap: () {
+                onTap: () {
+                  setState(() {
                     ansSel = 3;
-                    setState(() {});
-                  },
-                  child: answerCard(ansSel == 3, 'C', options[2])),
-              const SizedBox(
-                height: 12,
+                  });
+                  widget.onOptionSelected(widget.index, 3); // Notify parent
+                },
+                child: answerCard(ansSel == 3, 'D', options[3]),
               ),
-              InkWell(
-                  onTap: () {
-                    ansSel = 4;
-                    setState(() {});
-                  },
-                  child: answerCard(ansSel == 4, 'D', options[3])),
             ],
           ),
         )
@@ -791,7 +815,6 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
                       onTap: () {
                         selectListOrGrid = 0;
                         setModeState(() {});
-                        // setState((){});
                       },
                       child: Container(
                         height: 40,
@@ -835,8 +858,6 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
                       onTap: () {
                         selectListOrGrid = 1;
                         setModeState(() {});
-
-                        // setState((){});
                       },
                       child: Container(
                         height: 40,
@@ -883,7 +904,6 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
                   height: 12,
                 ),
                 Wrap(
-                  // direction: Axis.vertical,
                   spacing: 40,
                   runAlignment: WrapAlignment.start,
                   runSpacing: 12,
@@ -933,7 +953,6 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
             backgroundColor: Colors.white,
             child: IconButton(
               icon: const Icon(Icons.close, color: Colors.black),
-              // onPressed: () => Navigator.pop(context),
               onPressed: () {
                 Navigator.pop(context);
               },
