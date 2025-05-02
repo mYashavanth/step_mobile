@@ -1,9 +1,14 @@
 import 'dart:math';
-
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import 'package:step_mobile/views/urlconfig.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:step_mobile/widgets/common_widgets.dart';
+import 'package:step_mobile/views/dry.dart';
+
 
 PreferredSizeWidget testScreenAppBar(
     BuildContext context, void Function() _endTest) {
@@ -112,13 +117,25 @@ PreferredSizeWidget testScreenAppBar(
   );
 }
 
-void submitTestDialog(BuildContext context, void Function() _endTest) {
+void submitTestDialog(BuildContext context, void Function() _endTest) async {
+  // Fetch the result data from the API
+  Map<String, dynamic>? resultData = await _fetchTestResults();
+
+  // If the result data is null, show an error message
+  if (resultData == null) {
+    showCustomSnackBar(
+      context: context,
+      message: "Failed to fetch test results. Please try again.",
+      isSuccess: false,
+    );
+    return;
+  }
+
   showDialog(
     context: context,
     builder: (BuildContext context) => AlertDialog(
       contentPadding: const EdgeInsets.all(0),
       content: Container(
-        // margin: EdgeInsets.all(12),
         clipBehavior: Clip.antiAlias,
         decoration: ShapeDecoration(
           color: Colors.white,
@@ -164,39 +181,6 @@ void submitTestDialog(BuildContext context, void Function() _endTest) {
                   const SizedBox(
                     height: 12,
                   ),
-                  SizedBox(
-                    height: 35,
-                    child: Stack(
-                        alignment: AlignmentDirectional.center,
-                        children: [
-                          SvgPicture.asset("assets/icons/gold_badge.svg"),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                height: 35,
-                                width: double.maxFinite,
-                                // color: const Color.fromARGB(151, 76, 175, 79),
-                                child: const Center(
-                                  child: Text(
-                                    '2025-26',
-                                    style: TextStyle(
-                                      color: Color(0xFF1A1A1A),
-                                      fontSize: 14,
-                                      fontFamily: 'SF Pro Display',
-                                      fontWeight: FontWeight.w700,
-                                      height: 1.57,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        ]),
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
                   const Text(
                     'Are you sure you want to submit your test?',
                     textAlign: TextAlign.center,
@@ -228,10 +212,12 @@ void submitTestDialog(BuildContext context, void Function() _endTest) {
                 children: [
                   submitTestRow(
                       "clock_red.svg", "Time left", "20 mins 56 secs"),
-                  submitTestRow(
-                      "done_green_icon.svg", "Attempted", "2 questions"),
-                  submitTestRow("unanswered.svg", "Unanswered", "19"),
-                  submitTestRow("not_visited.svg", "Not visited", "9"),
+                  submitTestRow("done_green_icon.svg", "Attempted",
+                      "${resultData['answered_questions']} questions"),
+                  submitTestRow("unanswered.svg", "Unanswered",
+                      "${resultData['unanswered_questions']}"),
+                  submitTestRow("not_visited.svg", "Not visited",
+                      "${resultData['total_questions'] - resultData['answered_questions']}"),
                   submitTestRow("flag_marked.svg", "Marked for review", "1"),
                 ],
               ),
@@ -313,21 +299,38 @@ void submitTestDialog(BuildContext context, void Function() _endTest) {
         ),
       ),
     ),
-    //  AlertDialog(
-    //   title: const Text('AlertDialog Title'),
-    //   content: const Text('AlertDialog description'),
-    //   actions: <Widget>[
-    //     TextButton(
-    //       onPressed: () => Navigator.pop(context, 'Cancel'),
-    //       child: const Text('Cancel'),
-    //     ),
-    //     TextButton(
-    //       onPressed: () => Navigator.pop(context, 'OK'),
-    //       child: const Text('OK'),
-    //     ),
-    //   ],
-    // ),
   );
+}
+
+Future<Map<String, dynamic>?> _fetchTestResults() async {
+  try {
+    final storage = const FlutterSecureStorage();
+    String? token = await storage.read(key: "token");
+    String? preCourseTestTransactionId =
+        await storage.read(key: "preCourseTestTransactionId");
+
+    if (token == null || preCourseTestTransactionId == null) {
+      print("Missing required data to fetch test results.");
+      return null;
+    }
+
+    String apiUrl =
+        "$baseurl/app/get-pre-course-test-response/$token/$preCourseTestTransactionId";
+    final response = await http.get(Uri.parse(apiUrl));
+
+    if (response.statusCode == 200) {
+      print(response.body);
+      print("++++++++++++++++++++++++++++++++++++++++++ line  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+      return jsonDecode(response.body);
+    } else {
+      print(
+          "Failed to fetch test results. Status code: ${response.statusCode}");
+      return null;
+    }
+  } catch (e) {
+    print("Error fetching test results: $e");
+    return null;
+  }
 }
 
 Widget submitTestRow(String icon, String title, String subTitle) {
@@ -460,7 +463,8 @@ class TestScreenWidgets extends StatefulWidget {
 class _TestScreenWidgetsState extends State<TestScreenWidgets> {
   late int? ansSel;
   int selectListOrGrid = 0; // Initialize selectListOrGrid with a default value
-  List<int> statusList = List.generate(40, (index) => 0); // Initialize statusList with default statuses
+  List<int> statusList = List.generate(
+      40, (index) => 0); // Initialize statusList with default statuses
 
   @override
   void initState() {

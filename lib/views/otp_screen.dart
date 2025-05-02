@@ -15,7 +15,7 @@ class OTPScreen extends StatefulWidget {
 
 class _OTPScreenState extends State<OTPScreen> {
   final storage = const FlutterSecureStorage();
-  late String mobile;
+  String? mobile;
   late String appUserId;
   String enteredOtp = ""; // Variable to store the entered OTP
   bool clearOtpField = false; // Flag to clear the OTP field
@@ -27,7 +27,7 @@ class _OTPScreenState extends State<OTPScreen> {
   }
 
   Future<void> _loadUserData() async {
-    mobile = await storage.read(key: 'mobile') ?? '';
+    mobile = await storage.read(key: 'mobile');
     appUserId = await storage.read(key: 'appUserId') ?? '';
     setState(() {});
   }
@@ -149,7 +149,8 @@ class _OTPScreenState extends State<OTPScreen> {
               ),
             ),
             Text(
-              mobile,
+              mobile ??
+                  'Loading...', // Display a placeholder while mobile is null
               style: const TextStyle(
                 color: Color(0xFF737373),
                 fontSize: 16,
