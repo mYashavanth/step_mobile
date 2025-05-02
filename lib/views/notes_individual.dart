@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:step_mobile/widgets/course_screen_widgets.dart';
+import 'package:ghastep/widgets/course_screen_widgets.dart';
 
 class NotesIndividual extends StatefulWidget {
   const NotesIndividual({super.key});

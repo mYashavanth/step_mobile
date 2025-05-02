@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:step_mobile/views/dry.dart';
-import 'package:step_mobile/widgets/common_widgets.dart';
+import 'package:ghastep/views/dry.dart';
+import 'package:ghastep/widgets/common_widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-import 'package:step_mobile/views/urlconfig.dart';
-
+import 'package:ghastep/views/urlconfig.dart';
 
 class BeforeEnterTestScreen extends StatefulWidget {
   const BeforeEnterTestScreen({super.key});
@@ -36,9 +35,9 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
 
       // Ensure all required values are available
       if (token == null || courseStepDetailsId == null || stepNo == null) {
-        if(token == null) print("Token is null");
-        if(courseStepDetailsId == null) print("courseStepDetailsId is null");
-        if(stepNo == null) print("stepNo is null");
+        if (token == null) print("Token is null");
+        if (courseStepDetailsId == null) print("courseStepDetailsId is null");
+        if (stepNo == null) print("stepNo is null");
         print("Missing required data in Flutter Secure Storage.");
         return;
       }
@@ -50,13 +49,13 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
 
       // Make the GET request
       final response = await http.get(Uri.parse(apiUrl));
-      
+
 // {"course_step_details_master_id":4,"created_date":"Mon, 28 Apr 2025 00:00:00 GMT","created_time":"17:36:47","id":5,"marks_per_question":4,"max_marks":0,"negative_marks":1,"no_of_questions":0,"pre_course_test_duration_minutes":50,"pre_course_test_title":"pre course test title","status":1,"step_no":1,"syllabus_text_line_1":"asdfasdfasdf","syllabus_text_line_2":"asdfasdf","syllabus_text_line_3":"asdfasdfas"}
       // Check the response status
       if (response.statusCode == 200) {
         print("API Response: ${response.body}");
         final data = jsonDecode(response.body);
-     
+
         setState(() {
           preCourseTestData = data.isNotEmpty ? data[0] : {};
         });
@@ -96,9 +95,11 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-           print(data);
+        print(data);
         print("data printing in before enter test screen ^");
-        await storage.write(key: "preCourseTestTransactionId", value: data["pre_course_test_transaction_id"].toString());
+        await storage.write(
+            key: "preCourseTestTransactionId",
+            value: data["pre_course_test_transaction_id"].toString());
 
         if (data['errFlag'] == 0) {
           print("Test started successfully: $data");

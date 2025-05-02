@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:step_mobile/widgets/common_widgets.dart';
-import 'package:step_mobile/widgets/homepage_widgets.dart';
-import 'package:step_mobile/widgets/navbar.dart';
-import 'package:step_mobile/widgets/test_result_widgets.dart';
+import 'package:ghastep/widgets/common_widgets.dart';
+import 'package:ghastep/widgets/homepage_widgets.dart';
+import 'package:ghastep/widgets/navbar.dart';
+import 'package:ghastep/widgets/test_result_widgets.dart';
 
 class RankingLeaderBoardScreen extends StatefulWidget {
   const RankingLeaderBoardScreen({super.key});

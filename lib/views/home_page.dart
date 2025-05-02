@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:step_mobile/views/notes.dart';
-import 'package:step_mobile/widgets/homepage_widgets.dart';
-import 'package:step_mobile/widgets/navbar.dart';
+import 'package:ghastep/views/notes.dart';
+import 'package:ghastep/widgets/homepage_widgets.dart';
+import 'package:ghastep/widgets/navbar.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:step_mobile/views/urlconfig.dart';
+import 'package:ghastep/views/urlconfig.dart';
 import 'dart:math' as math;
 
 class HomePage extends StatefulWidget {

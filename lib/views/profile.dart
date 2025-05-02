@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:step_mobile/widgets/homepage_widgets.dart';
-import 'package:step_mobile/widgets/navbar.dart';
+import 'package:ghastep/widgets/homepage_widgets.dart';
+import 'package:ghastep/widgets/navbar.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});

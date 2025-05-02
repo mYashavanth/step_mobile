@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:step_mobile/widgets/common_widgets.dart';
-import 'package:step_mobile/widgets/inputs.dart';
+import 'package:ghastep/widgets/common_widgets.dart';
+import 'package:ghastep/widgets/inputs.dart';
 
 class ProfileDetails extends StatefulWidget {
   const ProfileDetails({super.key});

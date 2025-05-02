@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:step_mobile/widgets/view_solutions_widgets.dart';
+import 'package:ghastep/widgets/view_solutions_widgets.dart';
 
 class BookmarkQuestionScreen extends StatefulWidget {
   const BookmarkQuestionScreen({super.key});

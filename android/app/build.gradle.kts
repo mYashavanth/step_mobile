@@ -6,7 +6,7 @@ plugins {
 import java.util.Properties
 import java.io.File
 android {
-    namespace = "com.example.step_mobile"
+    namespace = "com.ghastep"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
@@ -34,7 +34,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.step_mobile"
+        applicationId = "com.ghastep"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode.toInt()  // Add .toInt() for type safety

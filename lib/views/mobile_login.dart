@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:step_mobile/views/dry.dart';
+import 'package:ghastep/views/dry.dart';
 import 'dart:convert';
-import 'package:step_mobile/views/urlconfig.dart';
+import 'package:ghastep/views/urlconfig.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class MobileLogin extends StatefulWidget {
@@ -36,7 +36,8 @@ class _MobileLoginState extends State<MobileLogin> {
           if (data['errFlag'] == 0) {
             // Store the mobile number securely
             await storage.write(key: 'mobile', value: mobile);
-            await storage.write(key: 'appUserId', value: data['appUserId'].toString());
+            await storage.write(
+                key: 'appUserId', value: data['appUserId'].toString());
             // Handle success
             Navigator.pushNamed(
               context,
