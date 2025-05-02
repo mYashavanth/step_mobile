@@ -1,10 +1,10 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
-
+import java.util.Properties
+import java.io.File
 android {
     namespace = "com.example.step_mobile"
     compileSdk = flutter.compileSdkVersion
@@ -19,26 +19,56 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
+    // Add this new block for signing configurations
+    signingConfigs {
+        create("release") {
+            val keystoreProperties = Properties().apply {
+                load(File(rootProject.projectDir, "key.properties").reader())
+            }
+            
+            storeFile = file(keystoreProperties.getProperty("storeFile"))
+            storePassword = keystoreProperties.getProperty("storePassword")
+            keyAlias = keystoreProperties.getProperty("keyAlias")
+            keyPassword = keystoreProperties.getProperty("keyPassword")
+        }
+    }
+
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.step_mobile"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
+        versionCode = flutter.versionCode.toInt()  // Add .toInt() for type safety
         versionName = flutter.versionName
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Replace debug signing with your release config
+            signingConfig = signingConfigs.getByName("release")
+            
+            // Add these optimization flags
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
+    }
+
+    // Optional: Enable build features if needed
+    buildFeatures {
+        buildConfig = true
     }
 }
 
 flutter {
     source = "../.."
+}
+
+// Optional: Add this if you want to enable Java 11 features
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        jvmTarget = "11"
+    }
 }
