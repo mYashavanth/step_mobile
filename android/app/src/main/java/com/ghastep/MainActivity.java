@@ -1,4 +1,4 @@
-package com.example.ghastep;
+package com.ghastep;
 
 import io.flutter.embedding.android.FlutterActivity;
 
