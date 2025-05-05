@@ -26,13 +26,31 @@ class _TestScreen extends State<TestScreen> {
       []; // To track selected options for each question
   bool isLoading = true;
   String? errorMessage;
+  bool isPreCourse = true;
 
   @override
   void initState() {
     super.initState();
     // Initialize selectedOptions with null values
     selectedOptions = List<int?>.filled(totalQuestions, null);
-    _fetchQuestion(1); // Fetch first question when the screen loads
+    _loadIsPreCourseFlag();
+  }
+
+  Future<void> _loadIsPreCourseFlag() async {
+    try {
+      String? isPreCourseFlag = await storage.read(key: "isPreCourse");
+      setState(() {
+        isPreCourse = isPreCourseFlag == "true";
+      });
+      _fetchQuestion(1);
+    } catch (e) {
+      print("Error loading isPreCourse flag: $e");
+      showCustomSnackBar(
+        context: context,
+        message: "An error occurred while loading test details.",
+        isSuccess: false,
+      );
+    }
   }
 
   Future<void> _fetchQuestion(int questionNo) async {
@@ -216,16 +234,20 @@ class _TestScreen extends State<TestScreen> {
   Future<void> _endTest() async {
     try {
       String? token = await storage.read(key: "token");
-      String? preCourseTestTransactionId =
-          await storage.read(key: "preCourseTestTransactionId");
+      String? testTransactionId = isPreCourse
+          ? await storage.read(key: "preCourseTestTransactionId")
+          : await storage.read(key: "postCourseTestTransactionId");
 
-      if (token == null || preCourseTestTransactionId == null) {
+      if (token == null || testTransactionId == null) {
         print("Missing required data to end the test.");
         return;
       }
 
-      String apiUrl =
-          "$baseurl/app/end-pre-course-test/$token/$preCourseTestTransactionId";
+      // Determine the API endpoint based on isPreCourse flag
+      String apiUrl = isPreCourse
+          ? "$baseurl/app/end-pre-course-test/$token/$testTransactionId"
+          : "$baseurl/app/end-post-course-test/$token/$testTransactionId";
+
       print("API URL: $apiUrl");
 
       final response = await http.get(Uri.parse(apiUrl));
@@ -234,7 +256,7 @@ class _TestScreen extends State<TestScreen> {
         final data = jsonDecode(response.body);
 
         if (data['errFlag'] == 0) {
-          print("Test ended successfully: ${data}");
+          print("Test ended successfully: $data");
           showCustomSnackBar(
             context: context,
             message: "Test ended successfully",

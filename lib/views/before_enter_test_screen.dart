@@ -16,16 +16,33 @@ class BeforeEnterTestScreen extends StatefulWidget {
 
 class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
   final FlutterSecureStorage storage = const FlutterSecureStorage();
+  Map<String, dynamic> testData = {};
+  bool isPreCourse = true; // Default to pre-course test
 
   @override
   void initState() {
-    _fetchPreCourseTestDetails();
     super.initState();
+    _loadIsPreCourseFlag(); // Load the isPreCourse flag from secure storage
   }
 
-  Map<String, dynamic> preCourseTestData = {};
+  Future<void> _loadIsPreCourseFlag() async {
+    try {
+      String? isPreCourseFlag = await storage.read(key: "isPreCourse");
+      setState(() {
+        isPreCourse = isPreCourseFlag == "true"; // Convert string to boolean
+      });
+      _fetchTestDetails(); // Fetch test details after loading the flag
+    } catch (e) {
+      print("Error loading isPreCourse flag: $e");
+      showCustomSnackBar(
+        context: context,
+        message: "An error occurred while loading test details.",
+        isSuccess: false,
+      );
+    }
+  }
 
-  Future<void> _fetchPreCourseTestDetails() async {
+  Future<void> _fetchTestDetails() async {
     try {
       // Retrieve values from Flutter Secure Storage
       String? token = await storage.read(key: "token");
@@ -42,22 +59,23 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
         return;
       }
 
-      // Construct the API URL
-      // Replace with your actual base URL
-      String apiUrl =
-          "$baseurl/app/get-pre-course-test-by-course-step-details-id/$token/$courseStepDetailsId/$stepNo";
+      // Determine the API endpoint based on isPreCourse flag
+      String apiUrl = isPreCourse
+          ? "$baseurl/app/get-pre-course-test-by-course-step-details-id/$token/$courseStepDetailsId/$stepNo"
+          : "$baseurl/app/get-post-course-test-by-course-step-details-id/$token/$courseStepDetailsId/$stepNo";
+
+      print("API URL: $apiUrl");
 
       // Make the GET request
       final response = await http.get(Uri.parse(apiUrl));
 
-// {"course_step_details_master_id":4,"created_date":"Mon, 28 Apr 2025 00:00:00 GMT","created_time":"17:36:47","id":5,"marks_per_question":4,"max_marks":0,"negative_marks":1,"no_of_questions":0,"pre_course_test_duration_minutes":50,"pre_course_test_title":"pre course test title","status":1,"step_no":1,"syllabus_text_line_1":"asdfasdfasdf","syllabus_text_line_2":"asdfasdf","syllabus_text_line_3":"asdfasdfas"}
       // Check the response status
       if (response.statusCode == 200) {
         print("API Response: ${response.body}");
         final data = jsonDecode(response.body);
 
         setState(() {
-          preCourseTestData = data.isNotEmpty ? data[0] : {};
+          testData = data.isNotEmpty ? data[0] : {};
         });
       } else {
         print("Failed to fetch data. Status code: ${response.statusCode}");
@@ -68,7 +86,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
         );
       }
     } catch (e) {
-      print("Error fetching pre-course test details: $e");
+      print("Error fetching test details: $e");
       showCustomSnackBar(
         context: context,
         message: "An error occurred: $e",
@@ -80,15 +98,18 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
   Future<void> _startTest() async {
     try {
       String? token = await storage.read(key: "token");
-      String? preCourseTestId = preCourseTestData['id'].toString();
+      String? testId = testData['id'].toString();
 
-      if (token == null || preCourseTestId == null) {
+      if (token == null || testId == null) {
         print("Missing required data to start the test.");
         return;
       }
 
-      String apiUrl =
-          "$baseurl/app/start-pre-course-test/$token/$preCourseTestId";
+      // Determine the API endpoint based on isPreCourse flag
+      String apiUrl = isPreCourse
+          ? "$baseurl/app/start-pre-course-test/$token/$testId"
+          : "$baseurl/app/start-post-course-test/$token/$testId";
+
       print("API URL: $apiUrl");
 
       final response = await http.get(Uri.parse(apiUrl));
@@ -96,33 +117,27 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         print(data);
-        print("data printing in before enter test screen ^");
-        await storage.write(
-            key: "preCourseTestTransactionId",
-            value: data["pre_course_test_transaction_id"].toString());
 
         if (data['errFlag'] == 0) {
           print("Test started successfully: $data");
+
+          // Save the transaction ID to secure storage
+          await storage.write(
+              key: isPreCourse
+                  ? "preCourseTestTransactionId"
+                  : "postCourseTestTransactionId",
+              value: isPreCourse
+                  ? data['pre_course_test_transaction_id'].toString()
+                  : data['post_course_test_transaction_id'].toString());
+
           showCustomSnackBar(
             context: context,
             message: "Test started successfully.",
             isSuccess: true,
           );
 
-          // Save the pre_course_test_transaction_id to secure storage
-          await storage.write(
-              key: "preCourseTestTransactionId",
-              value: data['pre_course_test_transaction_id'].toString());
-
           // Navigate to the test screen and pass the transaction ID
-          Navigator.pushNamed(
-            context,
-            "/test_screen",
-            arguments: {
-              "preCourseTestTransactionId":
-                  data['pre_course_test_transaction_id'],
-            },
-          );
+          Navigator.pushNamed(context, "/test_screen");
         } else {
           print("Error starting test: $data");
           showCustomSnackBar(
@@ -159,7 +174,9 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
           children: [
             SafeArea(
               child: IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.pop(context);
+                },
                 icon: const Icon(Icons.arrow_back_ios_new),
               ),
             ),
@@ -171,7 +188,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'PRE COURSE TEST • ANATOMY - STEP ${preCourseTestData['step_no']}',
+                        '${isPreCourse ? "PRE COURSE TEST" : "POST COURSE TEST"} • ANATOMY - STEP ${testData['step_no']}',
                         style: const TextStyle(
                           color: Color(0xFF247E80),
                           fontSize: 12,
@@ -184,7 +201,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                         height: 12,
                       ),
                       Text(
-                        '${preCourseTestData["pre_course_test_title"]}',
+                        '${isPreCourse ? testData["pre_course_test_title"] : testData["post_course_test_title"]}',
                         style: const TextStyle(
                           color: Color(0xFF1A1A1A),
                           fontSize: 20,
@@ -197,7 +214,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                         height: 12,
                       ),
                       Text(
-                        "PYQ's - Anatomy for NEET PG \n${preCourseTestData['no_of_questions']} Questions • ${preCourseTestData['pre_course_test_duration_minutes']} minutes",
+                        "PYQ's - Anatomy for NEET PG \n${testData['no_of_questions']} Questions • ${isPreCourse ? testData['pre_course_test_duration_minutes'] : testData['post_course_test_duration_minutes']} minutes",
                         style: const TextStyle(
                           color: Color(0xFF737373),
                           fontSize: 14,
@@ -244,7 +261,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                                     width: 12,
                                   ),
                                   Text(
-                                    '${preCourseTestData['no_of_questions']} full-length questions, ${preCourseTestData['max_marks']} marks',
+                                    '${testData['no_of_questions']} full-length questions, ${testData['max_marks']} marks',
                                     style: const TextStyle(
                                       color: Color(0xFF1A1A1A),
                                       fontSize: 16,
@@ -349,18 +366,15 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                       const SizedBox(
                         height: 12,
                       ),
-                      listViewWithDot(
-                          preCourseTestData['syllabus_text_line_1']),
+                      listViewWithDot(testData['syllabus_text_line_1'] ?? ''),
                       const SizedBox(
                         height: 12,
                       ),
-                      listViewWithDot(
-                          preCourseTestData['syllabus_text_line_2']),
+                      listViewWithDot(testData['syllabus_text_line_2'] ?? ''),
                       const SizedBox(
                         height: 12,
                       ),
-                      listViewWithDot(
-                          preCourseTestData['syllabus_text_line_3']),
+                      listViewWithDot(testData['syllabus_text_line_3'] ?? ''),
                     ],
                   ),
                 ),
@@ -436,7 +450,6 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
 }
 
 Widget listViewWithDot(String data) {
-  print(data);
   return Padding(
     padding: const EdgeInsets.only(left: 8.0),
     child: Row(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/svg.dart';
 
 Widget buildTabBarCourse(TabController tabController,
@@ -227,25 +228,33 @@ Widget courseNotes(String docName, int page, bool locked, String icon) {
   );
 }
 
-Widget preCourseCard(bool pending,BuildContext context , bool isPreCourse) {
-  // isPreCourse = 0 for pre-course and 1 for course
+Widget preCourseCard(bool pending, BuildContext context, bool isPreCourse) {
+  // isPreCourse = true for pre-course and false for post-course
   return InkWell(
     borderRadius: BorderRadius.circular(8),
-    onTap: () {
+    onTap: () async {
+      final storage = FlutterSecureStorage();
+      await storage.write(key: "isPreCourse", value: isPreCourse.toString());
       Navigator.pushNamed(context, "/before_enter_test");
     },
     child: Container(
       decoration: ShapeDecoration(
-        color: const Color(0x0C31B5B9),
+        color: isPreCourse
+            ? const Color(0x1A31B5B9)
+            : const Color(0x1AFE860A), // Light color matching the border
         shape: RoundedRectangleBorder(
-          side:  BorderSide(width: 1, color: isPreCourse ? const Color(0xFF31B5B9) : const Color(0xFFFE860A)),
+          side: BorderSide(
+              width: 1,
+              color: isPreCourse
+                  ? const Color(0xFF31B5B9)
+                  : const Color(0xFFFE860A)),
           borderRadius: BorderRadius.circular(8),
         ),
       ),
       child: ListTile(
         leading: SvgPicture.asset("assets/icons/list_icon.svg"),
         title: Text(
-          isPreCourse ? "Pre-course" : "Post Course",
+          isPreCourse ? "Pre-course test" : "Post-course test",
           style: const TextStyle(
             color: Color(0xFF1A1A1A),
             fontSize: 16,
@@ -454,7 +463,7 @@ class _StepContentState extends State<StepContent> {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(height: 20),
-        preCourseCard(true,context, true),
+        preCourseCard(true, context, true),
         const SizedBox(height: 20),
         Column(
           children: List.generate(4, (i) {
@@ -462,8 +471,7 @@ class _StepContentState extends State<StepContent> {
           }),
         ),
         const SizedBox(height: 20),
-        // preCourseCard(false,context),
-        preCourseCard(false,context, false),
+        preCourseCard(true, context, false),
       ],
     );
   }
