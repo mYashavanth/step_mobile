@@ -227,73 +227,73 @@ Widget courseNotes(String docName, int page, bool locked, String icon) {
   );
 }
 
-Widget preCourseCard(bool pending,BuildContext context) {
-  return Container(
-    decoration: ShapeDecoration(
-      color: const Color(0x0C31B5B9),
-      shape: RoundedRectangleBorder(
-        side: const BorderSide(width: 1, color: Color(0xFF8FE1E3)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-    ),
-    child: ListTile(
-      // isThreeLine: true,
-      leading: SvgPicture.asset("assets/icons/list_icon.svg"),
-      title: const Text(
-        'PYQ Test (2020-24)',
-        style: TextStyle(
-          color: Color(0xFF1A1A1A),
-          fontSize: 16,
-          fontFamily: 'SF Pro Display',
-          fontWeight: FontWeight.w400,
-          height: 1.50,
+Widget preCourseCard(bool pending,BuildContext context , bool isPreCourse) {
+  // isPreCourse = 0 for pre-course and 1 for course
+  return InkWell(
+    borderRadius: BorderRadius.circular(8),
+    onTap: () {
+      Navigator.pushNamed(context, "/before_enter_test");
+    },
+    child: Container(
+      decoration: ShapeDecoration(
+        color: const Color(0x0C31B5B9),
+        shape: RoundedRectangleBorder(
+          side:  BorderSide(width: 1, color: isPreCourse ? const Color(0xFF31B5B9) : const Color(0xFFFE860A)),
+          borderRadius: BorderRadius.circular(8),
         ),
       ),
-      subtitle: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '1h 30m • 35 MCQS',
-            style: TextStyle(
-              color: Color(0xFF737373),
-              fontSize: 12,
-              fontFamily: 'SF Pro Display',
-              fontWeight: FontWeight.w400,
-              height: 1.67,
-            ),
+      child: ListTile(
+        leading: SvgPicture.asset("assets/icons/list_icon.svg"),
+        title: Text(
+          isPreCourse ? "Pre-course" : "Post Course",
+          style: const TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontSize: 16,
+            fontFamily: 'SF Pro Display',
+            fontWeight: FontWeight.w400,
+            height: 1.50,
           ),
-          Container(
-            width: 75,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: ShapeDecoration(
-              color:
-                  pending ? const Color(0xFFFF9500) : const Color(0xFF34C759),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+        ),
+        subtitle: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '1h 30m • 35 MCQS',
+              style: TextStyle(
+                color: Color(0xFF737373),
+                fontSize: 12,
+                fontFamily: 'SF Pro Display',
+                fontWeight: FontWeight.w400,
+                height: 1.67,
               ),
             ),
-            child: Center(
-              child: Text(
-                pending ? 'Pending' : "Completed",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w400,
-                  height: 1.67,
+            Container(
+              width: 75,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: ShapeDecoration(
+                color:
+                    pending ? const Color(0xFFFF9500) : const Color(0xFF34C759),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
                 ),
               ),
-            ),
-          )
-        ],
-      ),
-      trailing: InkWell(
-        borderRadius: BorderRadius.circular(50),
-        onTap: (){
-          Navigator.pushNamed(context, "/before_enter_test");
-        },
-        child: const Icon(Icons.arrow_forward_ios, size: 16),
+              child: Center(
+                child: Text(
+                  pending ? 'Pending' : "Completed",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontFamily: 'SF Pro Display',
+                    fontWeight: FontWeight.w400,
+                    height: 1.67,
+                  ),
+                ),
+              ),
+            )
+          ],
+        ),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       ),
     ),
   );
@@ -454,7 +454,7 @@ class _StepContentState extends State<StepContent> {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(height: 20),
-        preCourseCard(true,context),
+        preCourseCard(true,context, true),
         const SizedBox(height: 20),
         Column(
           children: List.generate(4, (i) {
@@ -462,7 +462,8 @@ class _StepContentState extends State<StepContent> {
           }),
         ),
         const SizedBox(height: 20),
-        preCourseCard(false,context),
+        // preCourseCard(false,context),
+        preCourseCard(false,context, false),
       ],
     );
   }
