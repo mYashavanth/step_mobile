@@ -267,7 +267,7 @@ class _CourseScreenState extends State<CourseScreen>
                   const SizedBox(height: 8),
                   buildCourseOverViewCard(
                       courseStepDetails.isNotEmpty
-                          ? '${courseStepDetails['course_overview_hours_text']} hours on-demand video'
+                          ? '${courseStepDetails['course_overview_hours_text']} on-demand video'
                           : "4 hours on-demand video",
                       "play2.svg"),
                   const SizedBox(height: 8),
