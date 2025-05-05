@@ -1,4 +1,4 @@
-package com.example.step_mobile;
+package com.example.ghastep;
 
 import io.flutter.embedding.android.FlutterActivity;
 

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:step_mobile/views/urlconfig.dart';
+import 'package:ghastep/views/urlconfig.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:step_mobile/views/dry.dart';
+import 'package:ghastep/views/dry.dart';
 
 class OTPScreen extends StatefulWidget {
   const OTPScreen({super.key});

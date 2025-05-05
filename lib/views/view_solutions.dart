@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:step_mobile/widgets/common_widgets.dart';
-import 'package:step_mobile/widgets/view_solutions_widgets.dart';
+import 'package:ghastep/widgets/common_widgets.dart';
+import 'package:ghastep/widgets/view_solutions_widgets.dart';
 
 class ViewSolution extends StatefulWidget {
   const ViewSolution({super.key});

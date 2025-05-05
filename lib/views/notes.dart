@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:step_mobile/widgets/navbar.dart';
-import 'package:step_mobile/widgets/notes_widgets.dart';
+import 'package:ghastep/widgets/navbar.dart';
+import 'package:ghastep/widgets/notes_widgets.dart';
 
 class NotesScreen extends StatefulWidget {
   const NotesScreen({super.key});

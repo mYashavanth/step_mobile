@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:step_mobile/widgets/common_widgets.dart';
+import 'package:ghastep/widgets/common_widgets.dart';
 
 class UpdatesScreen extends StatefulWidget {
   const UpdatesScreen({super.key});

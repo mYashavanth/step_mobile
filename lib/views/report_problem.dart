@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:step_mobile/widgets/common_widgets.dart';
+import 'package:ghastep/widgets/common_widgets.dart';
 
 class ReportProblem extends StatefulWidget {
   const ReportProblem({super.key});

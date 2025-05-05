@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:step_mobile/widgets/common_widgets.dart';
-import 'package:step_mobile/widgets/test_result_widgets.dart';
+import 'package:ghastep/widgets/common_widgets.dart';
+import 'package:ghastep/widgets/test_result_widgets.dart';
 
 class ResultScreenTest extends StatefulWidget {
   const ResultScreenTest({super.key});

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:step_mobile/widgets/common_widgets.dart';
-import 'package:step_mobile/widgets/course_screen_widgets.dart';
-import 'package:step_mobile/widgets/homepage_widgets.dart';
-import 'package:step_mobile/views/urlconfig.dart';
+import 'package:ghastep/widgets/common_widgets.dart';
+import 'package:ghastep/widgets/course_screen_widgets.dart';
+import 'package:ghastep/widgets/homepage_widgets.dart';
+import 'package:ghastep/views/urlconfig.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -431,5 +431,3 @@ Widget buildCourseOverViewCard(String title, String icon) {
     ],
   );
 }
-
-

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:step_mobile/widgets/homepage_widgets.dart';
+import 'package:ghastep/widgets/homepage_widgets.dart';
 
 class AllSubjectsScreen extends StatefulWidget {
   const AllSubjectsScreen({super.key});

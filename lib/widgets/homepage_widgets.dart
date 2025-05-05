@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:step_mobile/views/dry.dart';
-import 'package:step_mobile/widgets/common_widgets.dart';
+import 'package:ghastep/views/dry.dart';
+import 'package:ghastep/widgets/common_widgets.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:step_mobile/views/urlconfig.dart';
+import 'package:ghastep/views/urlconfig.dart';
 
 Widget buildStatusCard(
     bool complete, String icon, bool selected, String title) {
