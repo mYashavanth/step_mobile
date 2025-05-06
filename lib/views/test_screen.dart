@@ -17,7 +17,7 @@ class _TestScreenState extends State<TestScreen> {
   final storage = const FlutterSecureStorage();
   final PageController _pageController = PageController();
   int currentPage = 0;
-  int totalQuestions = 8; 
+  int totalQuestions = 3; 
   String pre_course_test_question_id = '';
   List<Map<String, dynamic>> questions = [];
   List<int?> selectedOptions =
@@ -70,7 +70,7 @@ class _TestScreenState extends State<TestScreen> {
 
       String apiUrl = isPreCourse ?
           "$baseurl/app/get-pre-course-test-questions/$token/1/$questionNo" :
-          "$baseurl/app/get-post-course-test-questions/$token/1/$questionNo";
+          "$baseurl/app/get-post-course-test-questions/$token/3/$questionNo";
       final response = await http.get(Uri.parse(apiUrl));
 
         print(response.body);
@@ -144,9 +144,11 @@ class _TestScreenState extends State<TestScreen> {
     try {
       String? token = await storage.read(key: "token");
       String? preCourseTestTransactionId =
-          await storage.read(key: "preCourseTestTransactionId");
+          await storage.read(key: isPreCourse ? "preCourseTestTransactionId" : "postCourseTestTransactionId");
 
       if (token == null || preCourseTestTransactionId == null) {
+        print(token);
+        print(preCourseTestTransactionId);
         print("Missing required data to save response");
         return;
       }
@@ -163,14 +165,21 @@ class _TestScreenState extends State<TestScreen> {
               ['pre_course_test_questions_options_id']
           : 0; // 0 means no option selected
 
-      String apiUrl =
+      String apiUrl = 
+      isPreCourse ?
           "$baseurl/app/save-update-pre-course-test-questions-response/" +
+              "$token/$preCourseTestTransactionId/$questionId/$optionId" : 
+          "$baseurl/app/save-update-post-course-test-questions-response/" +
               "$token/$preCourseTestTransactionId/$questionId/$optionId";
 
       final response = await http.get(Uri.parse(apiUrl));
 
+      print(response.body);
+      print(
+          "data printing in save response for save and updateing ++++++++++++++++++++++++++++ ^");
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+
         print(data);
         print(
             "data printing in save response for save and updateing ++++++++++++++++++++++++++++ ^");
