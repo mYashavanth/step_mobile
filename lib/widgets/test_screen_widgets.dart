@@ -219,7 +219,7 @@ void submitTestDialog(BuildContext context, void Function() _endTest) async {
                       "${resultData['unanswered_questions']}"),
                   submitTestRow("not_visited.svg", "Not visited",
                       "${resultData['total_questions'] - resultData['answered_questions']}"),
-                  // submitTestRow("flag_marked.svg", "Marked for review", "1"),
+                  submitTestRow("flag_marked.svg", "Marked for review", resultData['marked_for_review'].toString()),
                 ],
               ),
             ),
@@ -309,18 +309,25 @@ Future<Map<String, dynamic>?> _fetchTestResults() async {
     String? token = await storage.read(key: "token");
     String? preCourseTestTransactionId =
         await storage.read(key: "preCourseTestTransactionId");
-        
 
+    bool? isPreCourseFlag = await storage.read(key: "isPreCourse") == "true";
+    
     if (token == null || preCourseTestTransactionId == null) {
       print("Missing required data to fetch test results.");
       return null;
     }
 
-    String apiUrl = 
-        "$baseurl/app/get-pre-course-test-response/$token/$preCourseTestTransactionId";
+    String apiUrl = isPreCourseFlag ?
+        "$baseurl/app/get-pre-course-test-response/$token/$preCourseTestTransactionId" :
+        "$baseurl/app/get-post-course-test-response/$token/$preCourseTestTransactionId";
     final response = await http.get(Uri.parse(apiUrl));
 
     if (response.statusCode == 200) {
+
+       final Map<String, dynamic> resultData = jsonDecode(response.body);
+
+      // Store the results in secure storage
+      await storage.write(key: "test_results", value: jsonEncode(resultData));
       print(response.body);
       print(
           "++++++++++++++++++++++++++++++++++++++++++ line  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++");

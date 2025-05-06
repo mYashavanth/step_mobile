@@ -60,8 +60,11 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
       }
 
       // Determine the API endpoint based on isPreCourse flag
+      //  String apiUrl = isPreCourse
+      //     ? "$baseurl/app/get-pre-course-test-by-course-step-details-id/$token/$courseStepDetailsId/$stepNo"
+      //     : "$baseurl/app/get-post-course-test-by-course-step-details-id/$token/$courseStepDetailsId/$stepNo";
       String apiUrl = isPreCourse
-          ? "$baseurl/app/get-pre-course-test-by-course-step-details-id/$token/$courseStepDetailsId/$stepNo"
+          ? "$baseurl/app/get-pre-course-test-by-course-step-details-id/$token/$courseStepDetailsId"
           : "$baseurl/app/get-post-course-test-by-course-step-details-id/$token/$courseStepDetailsId/$stepNo";
 
       print("API URL: $apiUrl");
@@ -81,7 +84,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
               ? data[0]["pre_course_test_title"]
               : data[0]["post_course_test_title"],
         );
-        
+
           await storage.write(
             key: isPreCourse ? "preCourseTestId" : "postCourseTestId",
             value: testData['id'].toString(),

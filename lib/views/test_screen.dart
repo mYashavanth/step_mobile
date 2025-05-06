@@ -17,7 +17,7 @@ class _TestScreenState extends State<TestScreen> {
   final storage = const FlutterSecureStorage();
   final PageController _pageController = PageController();
   int currentPage = 0;
-  int totalQuestions = 8; 
+  int totalQuestions = 3; 
   String pre_course_test_question_id = '';
   List<Map<String, dynamic>> questions = [];
   List<int?> selectedOptions =
