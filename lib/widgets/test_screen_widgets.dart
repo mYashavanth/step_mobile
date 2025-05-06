@@ -309,13 +309,14 @@ Future<Map<String, dynamic>?> _fetchTestResults() async {
     String? token = await storage.read(key: "token");
     String? preCourseTestTransactionId =
         await storage.read(key: "preCourseTestTransactionId");
+        
 
     if (token == null || preCourseTestTransactionId == null) {
       print("Missing required data to fetch test results.");
       return null;
     }
 
-    String apiUrl =
+    String apiUrl = 
         "$baseurl/app/get-pre-course-test-response/$token/$preCourseTestTransactionId";
     final response = await http.get(Uri.parse(apiUrl));
 
