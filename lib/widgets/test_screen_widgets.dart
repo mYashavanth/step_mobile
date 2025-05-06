@@ -307,12 +307,14 @@ Future<Map<String, dynamic>?> _fetchTestResults() async {
   try {
     final storage = const FlutterSecureStorage();
     String? token = await storage.read(key: "token");
-    String? preCourseTestTransactionId =
-        await storage.read(key: "preCourseTestTransactionId");
 
     bool? isPreCourseFlag = await storage.read(key: "isPreCourse") == "true";
+    String? preCourseTestTransactionId =
+        await storage.read(key: isPreCourseFlag ? "preCourseTestTransactionId" : "postCourseTestTransactionId");
     
     if (token == null || preCourseTestTransactionId == null) {
+      print(token);
+      print(preCourseTestTransactionId);
       print("Missing required data to fetch test results.");
       return null;
     }
