@@ -10,16 +10,14 @@ class TestScreen extends StatefulWidget {
   const TestScreen({super.key});
 
   @override
-  State<TestScreen> createState() {
-    return _TestScreen();
-  }
+  State<TestScreen> createState() => _TestScreenState();
 }
 
-class _TestScreen extends State<TestScreen> {
+class _TestScreenState extends State<TestScreen> {
   final storage = const FlutterSecureStorage();
   final PageController _pageController = PageController();
   int currentPage = 0;
-  int totalQuestions = 3; // Hardcoded total number of questions
+  int totalQuestions = 8; 
   String pre_course_test_question_id = '';
   List<Map<String, dynamic>> questions = [];
   List<int?> selectedOptions =
@@ -64,15 +62,20 @@ class _TestScreen extends State<TestScreen> {
 
       String? token = await storage.read(key: "token");
       String? preCourseTestId = await storage.read(key: "preCourseTestId");
+      String? postCourseTestId = await storage.read(key: "postCourseTestId");
 
       if (token == null) {
         print("Missing required data to fetch questions.");
       }
 
-      String apiUrl =
-          "$baseurl/app/get-pre-course-test-questions/$token/1/$questionNo";
+      String apiUrl = isPreCourse ?
+          "$baseurl/app/get-pre-course-test-questions/$token/1/$questionNo" :
+          "$baseurl/app/get-post-course-test-questions/$token/1/$questionNo";
       final response = await http.get(Uri.parse(apiUrl));
 
+        print(response.body);
+      print(
+          "data printing in fetch question ++++++++++++++++++++++++++++ ^");
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         pre_course_test_question_id =
@@ -181,6 +184,109 @@ class _TestScreen extends State<TestScreen> {
       }
     } catch (e) {
       print("Error saving response: $e");
+    }
+  }
+
+  Future<void> submitReview(
+      List<int> selectedOptions, String additionalFeedback) async {
+    try {
+      // Ensure the current question is loaded
+      if (currentPage >= questions.length) {
+        print("Question data not loaded yet");
+        showCustomSnackBar(
+          context: context,
+          message: "Please wait while the question loads",
+          isSuccess: false,
+        );
+        return;
+      }
+
+      // Fetch required data from storage
+      String? token = await storage.read(key: "token");
+      String? preCourseTestTransactionId =
+          await storage.read(key: "preCourseTestTransactionId");
+
+      if (token == null || preCourseTestTransactionId == null) {
+        print("Missing required data to submit review");
+        showCustomSnackBar(
+          context: context,
+          message: "Session expired. Please restart the test.",
+          isSuccess: false,
+        );
+        return;
+      }
+
+      // Get the current question's ID
+      final currentQuestion = questions[currentPage];
+      final questionId = currentQuestion['pre_course_test_question_id'];
+
+      if (questionId == null) {
+        print("Missing question ID");
+        showCustomSnackBar(
+          context: context,
+          message: "Invalid question data",
+          isSuccess: false,
+        );
+        return;
+      }
+
+      // Prepare the feedback type (using the first selected option)
+      int feedbackType = selectedOptions.isNotEmpty ? selectedOptions[0] : 0;
+
+      // Construct the API URL
+      final apiUrl = Uri.parse("$baseurl/app/pre-course-test-mark-review/" +
+              "$token/$preCourseTestTransactionId/$questionId")
+          .replace(
+        queryParameters: {
+          'feedback_type': feedbackType.toString(),
+          if (additionalFeedback.isNotEmpty)
+            'additional_feedback': additionalFeedback,
+        },
+      );
+
+      // Make the API call
+      final response = await http.get(apiUrl);
+      print("pre-course-test- transaction id: $preCourseTestTransactionId");
+      print("question id: $questionId");
+      print("feedback type: $feedbackType");
+      print(response.body);
+      print("data printing in submit review ++++++++++++++++++++++++++++ ^"); 
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['errFlag'] == 0) {
+          print("Review submitted successfully");
+          if (context.mounted) {
+            Navigator.pop(context); // Close the review sheet
+            showModalBottomSheet(
+              isScrollControlled: true,
+              context: context,
+              builder: (context) => buildQuestionReportedBotomSheet(context),
+            );
+          }
+        } else {
+          print("Error submitting review: ${data['message']}");
+          if (context.mounted) {
+            showCustomSnackBar(
+              context: context,
+              message: data['message'] ?? "Failed to submit review",
+              isSuccess: false,
+            );
+          }
+        }
+      } else {
+        throw Exception(
+            "Failed to submit review. Status code: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error submitting review: $e");
+      if (context.mounted) {
+        showCustomSnackBar(
+          context: context,
+          message: "Error submitting review. Please try again.",
+          isSuccess: false,
+        );
+      }
     }
   }
 
@@ -372,20 +478,28 @@ class _TestScreen extends State<TestScreen> {
               InkWell(
                 onTap: () {
                   showModalBottomSheet(
-                      isScrollControlled: true,
-                      context: context,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) {
-                        return StatefulBuilder(builder:
+                    isScrollControlled: true,
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) {
+                      return StatefulBuilder(
+                        builder:
                             (BuildContext context, StateSetter modalSetState) {
                           return buidQuestionReviewBottomSheet(
-                              modalSetState,
-                              feedbackReviewData,
-                              selectedReviewoption,
-                              "Select your Course",
-                              context);
-                        });
-                      });
+                            modalSetState,
+                            feedbackReviewData,
+                            selectedReviewoption,
+                            "Select your Course",
+                            context,
+                            onSubmitReview:
+                                (selectedOptions, additionalFeedback) {
+                              submitReview(selectedOptions, additionalFeedback);
+                            }, // Pass the required callback here
+                          );
+                        },
+                      );
+                    },
+                  );
                 },
                 child: Container(
                   height: 40,

@@ -9,6 +9,8 @@ import 'package:flutter_svg/svg.dart';
 import 'package:ghastep/widgets/common_widgets.dart';
 import 'package:ghastep/views/dry.dart';
 
+String title = "Exam title name should go here";
+
 PreferredSizeWidget testScreenAppBar(
     BuildContext context, void Function() _endTest) {
   return AppBar(
@@ -217,7 +219,7 @@ void submitTestDialog(BuildContext context, void Function() _endTest) async {
                       "${resultData['unanswered_questions']}"),
                   submitTestRow("not_visited.svg", "Not visited",
                       "${resultData['total_questions'] - resultData['answered_questions']}"),
-                  submitTestRow("flag_marked.svg", "Marked for review", "1"),
+                  // submitTestRow("flag_marked.svg", "Marked for review", "1"),
                 ],
               ),
             ),
@@ -475,6 +477,7 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
   @override
   Widget build(BuildContext context) {
     Map data = widget.questionData;
+
     List options = widget.questionData['options'];
     return Column(
       children: [
@@ -561,7 +564,18 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
     );
   }
 
+  Future<void> loadTitle() async {
+    final storage = const FlutterSecureStorage();
+    final value = await storage.read(key: "test_title");
+    if (value != null && mounted) {
+      setState(() {
+        title = value;
+      });
+    }
+  }
+
   Widget buildTestScreenTopBar(int number, int length, BuildContext context) {
+    loadTitle(); // Call the function to load the title
     return Column(
       children: [
         Padding(
@@ -570,9 +584,9 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
             children: [
               Row(
                 children: [
-                  const Text(
-                    'Exam title name here',
-                    style: TextStyle(
+                  Text(
+                    title,
+                    style: const TextStyle(
                       color: Color(0xFF1A1A1A),
                       fontSize: 20,
                       fontFamily: 'SF Pro Display',
@@ -735,30 +749,30 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
         ),
         SizedBox(
           height: 36,
-          child: Stack(
-            children: [
-              SvgPicture.asset("assets/icons/bookmark_rectangle.svg"),
-              // ignore: prefer_const_constructors
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: const Center(
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Marked for Review',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w400,
-                        height: 1.50,
-                      ),
-                    ),
-                  ),
-                ),
-              )
-            ],
-          ),
+          // child: Stack(
+          //   children: [
+          //     SvgPicture.asset("assets/icons/bookmark_rectangle.svg"),
+          //     // ignore: prefer_const_constructors
+          //     Padding(
+          //       padding: const EdgeInsets.only(left: 8.0),
+          //       child: const Center(
+          //         child: Align(
+          //           alignment: Alignment.centerLeft,
+          //           child: Text(
+          //             'Marked for Review',
+          //             style: TextStyle(
+          //               color: Colors.white,
+          //               fontSize: 16,
+          //               fontFamily: 'SF Pro Display',
+          //               fontWeight: FontWeight.w400,
+          //               height: 1.50,
+          //             ),
+          //           ),
+          //         ),
+          //       ),
+          //     )
+          //   ],
+          // ),
         )
       ],
     );
@@ -1042,181 +1056,102 @@ Widget buidQuestionReviewBottomSheet(
     List<Map> feedbackReviewData,
     List<int> selected,
     String bottomSheetTitle,
-    BuildContext context) {
-  return Stack(clipBehavior: Clip.none, children: [
-    Padding(
-      padding: MediaQuery.of(context).viewInsets,
-      child: Container(
-        padding:
-            const EdgeInsets.only(top: 16, left: 20, right: 20, bottom: 16),
-        // margin: EdgeInsets.only(top: 50),
-        clipBehavior: Clip.antiAlias,
-        decoration: const ShapeDecoration(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
+    BuildContext context,
+    {required Function(List<int>, String) onSubmitReview}) {
+  // Add this parameter
+
+  TextEditingController feedbackController = TextEditingController();
+
+  return Stack(
+    clipBehavior: Clip.none,
+    children: [
+      Padding(
+        padding: MediaQuery.of(context).viewInsets,
+        child: Container(
+          padding:
+              const EdgeInsets.only(top: 16, left: 20, right: 20, bottom: 16),
+          clipBehavior: Clip.antiAlias,
+          decoration: const ShapeDecoration(
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(24),
+                topRight: Radius.circular(24),
+              ),
             ),
           ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Opacity(
-              opacity: 0.20,
-              child: Text(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
                 'What seems to be the problem?',
                 style: TextStyle(
                   color: Color(0xFF323836),
                   fontSize: 20,
-                  fontFamily: 'SF Pro Display',
                   fontWeight: FontWeight.w500,
-                  height: 1.10,
                 ),
               ),
-            ),
-            const Text(
-              'Your feedback will help us to improve your test taking experience',
-              style: TextStyle(
-                color: Color(0xFF737373),
-                fontSize: 14,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w400,
-                height: 1.57,
+              const SizedBox(height: 8),
+              Column(
+                children: List.generate(feedbackReviewData.length, (index) {
+                  return buildFeedbackRow(
+                      modalSetState, feedbackReviewData[index], selected);
+                }),
               ),
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            Container(
-              width: 358,
-              decoration: const ShapeDecoration(
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(
-                    width: 1,
-                    strokeAlign: BorderSide.strokeAlignCenter,
-                    color: Color(0xFFEAEAEA),
+              const SizedBox(height: 12),
+              const Text(
+                'Additional feedback',
+                style: TextStyle(
+                  color: Color(0xFF737373),
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: feedbackController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  hintText: "You can type your text here...",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  // Use the provided callback to submit the review
+                  onSubmitReview(selected, feedbackController.text);
+                },
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: const Color(0xFF247E80),
+                ),
+                child: const Text(
+                  'Apply',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            Column(
-              children: List.generate(feedbackReviewData.length, (int) {
-                return buildFeedbackRow(
-                    modalSetState, feedbackReviewData[int], selected);
-              }),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            const Text(
-              'Additional feedback',
-              style: TextStyle(
-                color: Color(0xFF737373),
-                fontSize: 14,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w400,
-                height: 1.57,
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              decoration: ShapeDecoration(
-                shape: RoundedRectangleBorder(
-                  side: const BorderSide(width: 1, color: Color(0xFFDDDDDD)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: TextFormField(
-                maxLines: 3,
-                controller: TextEditingController(),
-                style: const TextStyle(
-                  color: Color(0xFF1A1A1A),
-                  fontSize: 16,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w400,
-                  height: 1.50,
-                ),
-                decoration: const InputDecoration(
-                    // labelText: labelText,
-                    hintText: "You can type your text here..",
-                    hintStyle: TextStyle(
-                      color: Color(0xFF9CA3AF),
-                      fontSize: 16,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      height: 1.50,
-                    ),
-                    border: InputBorder.none
-                    // const OutlineInputBorder(
-                    //   gapPadding: 0,
-                    //   borderRadius: BorderRadius.all(
-                    //     Radius.circular(8),
-                    //   ),
-                    //   borderSide: BorderSide(
-                    //     width: 1,
-                    //     color: Color(0xFFDDDDDD),
-                    //   ),
-                    // ),
-                    ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  return null;
-                },
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                showModalBottomSheet(
-                    isScrollControlled: true,
-                    context: context,
-                    builder: (context) {
-                      return buildQuestionReportedBotomSheet(context);
-                    });
-              },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: const Color(0xFF247E80),
-              ),
-              child: const Text(
-                'Apply',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w500,
-                  height: 1.50,
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-    Positioned(
-      right: 15,
-      top: -50,
-      child: CircleAvatar(
-        backgroundColor: Colors.white,
-        child: IconButton(
-          icon: const Icon(Icons.close, color: Colors.black),
-          // onPressed: () => Navigator.pop(context),
-          onPressed: () {
-            print("clicked");
-          },
+      Positioned(
+        right: 15,
+        top: -50,
+        child: CircleAvatar(
+          backgroundColor: Colors.white,
+          child: IconButton(
+            icon: const Icon(Icons.close, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
       ),
-    ),
-  ]);
+    ],
+  );
 }
 
 Widget buildQuestionReportedBotomSheet(BuildContext context) {
