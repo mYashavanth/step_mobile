@@ -449,8 +449,7 @@ Widget collapseStepClassCard(
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          VideoPlayerScreen(videoUrl: videoUrl),
+                      builder: (context) => const VideoPlayerScreen(),
                     ),
                   );
                 },
@@ -552,117 +551,59 @@ class _StepContentState extends State<StepContent> {
   }
 }
 
-class VideoPlayerScreen extends StatelessWidget {
-  final String videoUrl;
+class VideoPlayerScreen extends StatefulWidget {
+  const VideoPlayerScreen({super.key});
 
-  const VideoPlayerScreen({super.key, required this.videoUrl});
+  @override
+  State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
+}
 
-  Future<void> _launchVideoPlayer() async {
-    final Uri url = Uri.parse(videoUrl);
-    if (!await launchUrl(
-      url,
-      mode: LaunchMode.externalApplication, // This opens in default player
-    )) {
-      throw Exception('Could not launch $url');
-    }
+class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
+  late VideoPlayerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    // Hardcoded video URL
+    const videoUrl = "https://customer-bo58a3euqp8nmzzt.cloudflarestream.com/b524deed1bb964475f330a704f5b0b31/iframe?poster=https%3A%2F%2Fcustomer-bo58a3euqp8nmzzt.cloudflarestream.com%2Fb524deed1bb964475f330a704f5b0b31%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600";
+
+    _controller = VideoPlayerController.network(videoUrl)
+      ..initialize().then((_) {
+        setState(() {});
+        _controller.play(); // Auto-play the video
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Immediately launch the video player when the screen loads
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _launchVideoPlayer();
-      // Close this screen since the video will play in external player
-      Navigator.pop(context);
-    });
-
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: const Center(
-        child: CircularProgressIndicator(),
+      appBar: AppBar(
+        title: const Text("Video Player"),
+      ),
+      body: Center(
+        child: _controller.value.isInitialized
+            ? AspectRatio(
+                aspectRatio: _controller.value.aspectRatio,
+                child: VideoPlayer(_controller),
+              )
+            : const CircularProgressIndicator(),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            _controller.value.isPlaying ? _controller.pause() : _controller.play();
+          });
+        },
+        child: Icon(
+          _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+        ),
       ),
     );
   }
 }
-
-// class VideoPlayerScreen extends StatefulWidget {
-//   final String videoUrl;
-
-//   const VideoPlayerScreen({super.key, required this.videoUrl});
-
-//   @override
-//   State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
-// }
-
-// class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-//   late VideoPlayerController _controller;
-//   bool _isFullscreen = false;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     print("Video URL: ${widget.videoUrl}");
-//     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
-//       ..initialize().then((_) {
-//         setState(() {});
-//         // Auto-play when initialized
-//         _controller.play();
-//         // Force landscape orientation
-//         _setLandscape();
-//       });
-//   }
-
-//   void _setLandscape() async {
-//     await SystemChrome.setPreferredOrientations([
-//       DeviceOrientation.landscapeLeft,
-//       DeviceOrientation.landscapeRight,
-//     ]);
-//     setState(() {
-//       _isFullscreen = true;
-//     });
-//   }
-
-//   void _setPortrait() async {
-//     await SystemChrome.setPreferredOrientations([
-//       DeviceOrientation.portraitUp,
-//     ]);
-//     setState(() {
-//       _isFullscreen = false;
-//     });
-//   }
-
-//   @override
-//   void dispose() {
-//     _controller.dispose();
-//     // Reset orientation when disposing
-//     _setPortrait();
-//     super.dispose();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.black,
-//       body: Center(
-//         child: _controller.value.isInitialized
-//             ? AspectRatio(
-//                 aspectRatio: _controller.value.aspectRatio,
-//                 child: VideoPlayer(_controller),
-//               )
-//             : const CircularProgressIndicator(),
-//       ),
-//       floatingActionButton: FloatingActionButton(
-//         onPressed: () {
-//           setState(() {
-//             _controller.value.isPlaying
-//                 ? _controller.pause()
-//                 : _controller.play();
-//           });
-//         },
-//         child: Icon(
-//           _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
-//         ),
-//       ),
-//     );
-//   }
-// }

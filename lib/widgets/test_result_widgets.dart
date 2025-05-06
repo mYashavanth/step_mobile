@@ -87,7 +87,7 @@ Widget buildResultScreenOverviewtable() {
             children: [
               columnOneCard1and2(1),
               columnOneCard1and2(2),
-              rowCard3(1),
+              // rowCard3(1),
             ],
           ),
         ),
@@ -96,7 +96,7 @@ Widget buildResultScreenOverviewtable() {
             children: [
               columnTwoCard1and2(1),
               columnTwoCard1and2(2),
-              rowCard3(2),
+              // rowCard3(2),
             ],
           ),
         )
