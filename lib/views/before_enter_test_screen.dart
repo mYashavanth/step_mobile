@@ -74,6 +74,14 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
         print("API Response: ${response.body}");
         final data = jsonDecode(response.body);
 
+        // Store the test title in Flutter Secure Storage
+        await storage.write(
+          key: "test_title",
+          value: isPreCourse
+              ? data[0]["pre_course_test_title"]
+              : data[0]["post_course_test_title"],
+        );
+
         setState(() {
           testData = data.isNotEmpty ? data[0] : {};
         });

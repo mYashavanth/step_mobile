@@ -9,6 +9,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:ghastep/widgets/common_widgets.dart';
 import 'package:ghastep/views/dry.dart';
 
+
+String title = "Exam title name should go here";
+
 PreferredSizeWidget testScreenAppBar(
     BuildContext context, void Function() _endTest) {
   return AppBar(
@@ -217,7 +220,7 @@ void submitTestDialog(BuildContext context, void Function() _endTest) async {
                       "${resultData['unanswered_questions']}"),
                   submitTestRow("not_visited.svg", "Not visited",
                       "${resultData['total_questions'] - resultData['answered_questions']}"),
-                  submitTestRow("flag_marked.svg", "Marked for review", "1"),
+                  // submitTestRow("flag_marked.svg", "Marked for review", "1"),
                 ],
               ),
             ),
@@ -475,6 +478,7 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
   @override
   Widget build(BuildContext context) {
     Map data = widget.questionData;
+  
     List options = widget.questionData['options'];
     return Column(
       children: [
@@ -561,7 +565,18 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
     );
   }
 
+  Future<void> loadTitle() async {
+    final storage = const FlutterSecureStorage();
+    final value = await storage.read(key: "test_title");
+    if (value != null && mounted) {
+      setState(() {
+        title = value;
+      });
+    }
+  }
+
   Widget buildTestScreenTopBar(int number, int length, BuildContext context) {
+    loadTitle(); // Call the function to load the title
     return Column(
       children: [
         Padding(
@@ -570,9 +585,9 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
             children: [
               Row(
                 children: [
-                  const Text(
-                    'Exam title name here',
-                    style: TextStyle(
+                   Text(
+                    title,
+                    style: const TextStyle(
                       color: Color(0xFF1A1A1A),
                       fontSize: 20,
                       fontFamily: 'SF Pro Display',
@@ -734,31 +749,31 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
           ),
         ),
         SizedBox(
-          height: 36,
-          child: Stack(
-            children: [
-              SvgPicture.asset("assets/icons/bookmark_rectangle.svg"),
-              // ignore: prefer_const_constructors
-              Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: const Center(
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Marked for Review',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w400,
-                        height: 1.50,
-                      ),
-                    ),
-                  ),
-                ),
-              )
-            ],
-          ),
+            height: 36,
+          // child: Stack(
+          //   children: [
+          //     SvgPicture.asset("assets/icons/bookmark_rectangle.svg"),
+          //     // ignore: prefer_const_constructors
+          //     Padding(
+          //       padding: const EdgeInsets.only(left: 8.0),
+          //       child: const Center(
+          //         child: Align(
+          //           alignment: Alignment.centerLeft,
+          //           child: Text(
+          //             'Marked for Review',
+          //             style: TextStyle(
+          //               color: Colors.white,
+          //               fontSize: 16,
+          //               fontFamily: 'SF Pro Display',
+          //               fontWeight: FontWeight.w400,
+          //               height: 1.50,
+          //             ),
+          //           ),
+          //         ),
+          //       ),
+          //     )
+          //   ],
+          // ),
         )
       ],
     );
