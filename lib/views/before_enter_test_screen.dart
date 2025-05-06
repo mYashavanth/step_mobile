@@ -81,8 +81,13 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
               ? data[0]["pre_course_test_title"]
               : data[0]["post_course_test_title"],
         );
+        
+          await storage.write(
+            key: isPreCourse ? "preCourseTestId" : "postCourseTestId",
+            value: testData['id'].toString(),
+          );
 
-        setState(() {
+        setState((){
           testData = data.isNotEmpty ? data[0] : {};
         });
       } else {

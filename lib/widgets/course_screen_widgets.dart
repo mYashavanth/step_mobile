@@ -354,7 +354,7 @@ Widget collapseStepClassCard(
                 children: [
                   const Expanded(
                     child: Text(
-                      'Blood supply, lymphatic drainage, and innervation',
+                      'Video 1: Introduction',
                       style: TextStyle(
                         color: Color(0xFF1A1A1A),
                         fontSize: 16,
@@ -466,7 +466,7 @@ class _StepContentState extends State<StepContent> {
         preCourseCard(true, context, true),
         const SizedBox(height: 20),
         Column(
-          children: List.generate(4, (i) {
+          children: List.generate(1, (i) {
             return collapseStepClassCard(i + 1, showCardBoolList, setState);
           }),
         ),
