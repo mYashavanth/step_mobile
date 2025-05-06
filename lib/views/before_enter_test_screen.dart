@@ -65,7 +65,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
       //     : "$baseurl/app/get-post-course-test-by-course-step-details-id/$token/$courseStepDetailsId/$stepNo";
       String apiUrl = isPreCourse
           ? "$baseurl/app/get-pre-course-test-by-course-step-details-id/$token/$courseStepDetailsId"
-          : "$baseurl/app/get-post-course-test-by-course-step-details-id/$token/$courseStepDetailsId/$stepNo";
+          : "$baseurl/app/get-post-course-test-by-course-step-details-id/$token/$courseStepDetailsId";
 
       print("API URL: $apiUrl");
 

@@ -70,7 +70,7 @@ class _TestScreenState extends State<TestScreen> {
 
       String apiUrl = isPreCourse ?
           "$baseurl/app/get-pre-course-test-questions/$token/1/$questionNo" :
-          "$baseurl/app/get-post-course-test-questions/$token/3/$questionNo";
+          "$baseurl/app/get-post-course-test-questions/$token/1/$questionNo";
       final response = await http.get(Uri.parse(apiUrl));
 
         print(response.body);
