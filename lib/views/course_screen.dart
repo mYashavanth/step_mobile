@@ -22,15 +22,15 @@ class _CourseScreenState extends State<CourseScreen>
   Map<String, dynamic> courseStepDetails = {};
   var authToken = '';
   int selectedStepId = 1; // Track selected step by ID
+  String courseStepDetailId = '';
+  List<dynamic> videoData = []; // To store video data from API
 
   List<int> stepTabSelectedIndex = [0];
-
   List<Map> selectStepList = [
     {"name": "Step 1", "id": 1},
     {"name": "Step 2", "id": 2},
     {"name": "Step 3", "id": 3},
   ];
-
   List<int> chooseStepList = [0];
 
   @override
@@ -41,17 +41,21 @@ class _CourseScreenState extends State<CourseScreen>
     fetchCourseStepDetails();
   }
 
-  Future<void> _loadSelectedStep() async {
-    // Read the stored step ID
-    String? stepId = await storage.read(key: "selectedStepNo");
+  @override
+  void didUpdateWidget(covariant CourseScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Call API when selectedStepId changes
+    if (courseStepDetailId.isNotEmpty) {
+      fetchVideoData();
+    }
+  }
 
-    // If no step ID exists in storage, set and store the default value (1)
+  Future<void> _loadSelectedStep() async {
+    String? stepId = await storage.read(key: "selectedStepNo");
     if (stepId == null) {
       await storage.write(key: "selectedStepNo", value: "1");
-      stepId = "1"; // Use "1" as the default value
+      stepId = "1";
     }
-
-    // Update the state with the step ID (either from storage or default)
     setState(() {
       selectedStepId = int.parse(stepId!);
     });
@@ -77,12 +81,16 @@ class _CourseScreenState extends State<CourseScreen>
         if (data.isNotEmpty) {
           final courseStepDetailsData = data[0];
           final courseStepId = courseStepDetailsData['id'].toString();
+          courseStepDetailId = courseStepId;
 
           await storage.write(key: "courseStepDetailId", value: courseStepId);
 
           setState(() {
             courseStepDetails = courseStepDetailsData;
           });
+
+          // Fetch video data after getting courseStepDetailId
+          fetchVideoData();
         } else {
           setState(() {
             courseStepDetails = {};
@@ -93,6 +101,30 @@ class _CourseScreenState extends State<CourseScreen>
       }
     } catch (e) {
       print("Error fetching course step details: $e");
+    }
+  }
+
+  Future<void> fetchVideoData() async {
+    if (authToken.isEmpty || courseStepDetailId.isEmpty) return;
+
+    try {
+      final url = Uri.parse(
+          '$baseurl/app/get-video/$authToken/$courseStepDetailId/$selectedStepId');
+      print("Fetching video data from: $url");
+      final response = await http.get(url);
+
+      print("Video API Response: ${response.body}"); // Print response data
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          videoData = data;
+        });
+      } else {
+        print("Error fetching video data: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error fetching video data: $e");
     }
   }
 
@@ -296,7 +328,7 @@ class _CourseScreenState extends State<CourseScreen>
             Padding(
               padding: const EdgeInsets.all(12),
               child: buildTabBarCourse(
-                  _tabController, stepTabSelectedIndex, setState),
+                  _tabController, stepTabSelectedIndex, setState, videoData),
             ),
           ],
         ),

@@ -40,6 +40,8 @@ dependencies:
   flutter_localization: ^0.3.1
   image_picker: ^1.1.2
   flutter_secure_storage: ^9.2.4
+  video_player: ^2.8.0
+  url_launcher: ^6.1.11
 
 dev_dependencies:
   flutter_test:

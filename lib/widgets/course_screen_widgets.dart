@@ -1,9 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:video_player/video_player.dart';
+import 'package:flutter/services.dart'; // Add this import
+import 'package:url_launcher/url_launcher.dart';
 
-Widget buildTabBarCourse(TabController tabController,
-    List<int> stepTabSelectedIndex, StateSetter setState) {
+Widget buildTabBarCourse(
+  TabController tabController,
+  List<int> stepTabSelectedIndex,
+  StateSetter setState,
+  List<dynamic> videoData,
+) {
+  print("videoData in widget page: $videoData");
+  // Filter videos based on selected step
+  final filteredVideos = videoData.isEmpty
+      ? []
+      : videoData
+          .where((video) => video['step_no'] == stepTabSelectedIndex[0] + 1)
+          .toList();
   return Column(
     mainAxisSize: MainAxisSize.min,
     children: [
@@ -48,11 +62,11 @@ Widget buildTabBarCourse(TabController tabController,
           children: [
             Visibility(
               visible: stepTabSelectedIndex[0] == 0,
-              child: StepContent(),
+              child: StepContent(videos: filteredVideos),
             ),
             Visibility(
               visible: stepTabSelectedIndex[0] == 1,
-              child: StepContent(),
+              child: StepContent(videos: filteredVideos),
             ),
             Visibility(
               visible: stepTabSelectedIndex[0] == 2,
@@ -309,7 +323,16 @@ Widget preCourseCard(bool pending, BuildContext context, bool isPreCourse) {
 }
 
 Widget collapseStepClassCard(
-    int num, List<bool> showList, StateSetter setState) {
+  int num,
+  BuildContext context,
+  List<bool> showList,
+  StateSetter setState, {
+  required String videoTitle,
+  required String videoDescription,
+  required String videoDuration,
+  required bool isLocked,
+  required String videoUrl,
+}) {
   return Container(
     margin: const EdgeInsets.symmetric(vertical: 4),
     padding: const EdgeInsets.all(8),
@@ -352,10 +375,10 @@ Widget collapseStepClassCard(
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Video 1: Introduction',
-                      style: TextStyle(
+                      'Video $num: $videoTitle',
+                      style: const TextStyle(
                         color: Color(0xFF1A1A1A),
                         fontSize: 16,
                         fontFamily: 'SF Pro Display',
@@ -380,9 +403,9 @@ Widget collapseStepClassCard(
               ),
               Visibility(
                 visible: showList[num - 1],
-                child: const Text(
-                  'Blood supply provides nutrients and removes waste, lymphatic drainage clears excess fluid, and innervation controls bodily functions, all maintaining tissue health and homeostasis.',
-                  style: TextStyle(
+                child: Text(
+                  videoDescription,
+                  style: const TextStyle(
                     color: Color(0xFF737373),
                     fontSize: 12,
                     fontFamily: 'SF Pro Display',
@@ -391,19 +414,17 @@ Widget collapseStepClassCard(
                   ),
                 ),
               ),
-              const Row(
+              Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.access_time_filled_rounded,
                     color: Color(0xFF737373),
                     size: 16,
                   ),
-                  SizedBox(
-                    width: 4,
-                  ),
+                  const SizedBox(width: 4),
                   Text(
-                    '23:50 mins',
-                    style: TextStyle(
+                    videoDuration,
+                    style: const TextStyle(
                       color: Color(0xFF737373),
                       fontSize: 12,
                       fontFamily: 'SF Pro Display',
@@ -416,19 +437,27 @@ Widget collapseStepClassCard(
             ],
           ),
         ),
-        const SizedBox(
-          width: 8,
-        ),
-        num <= 3
-            ? const Icon(
-                Icons.play_circle_filled_rounded,
-                size: 40,
-                color: Color(0xFF737373),
+        const SizedBox(width: 8),
+        !isLocked
+            ? IconButton(
+                icon: const Icon(
+                  Icons.play_circle_filled_rounded,
+                  size: 40,
+                  color: Color(0xFF737373),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          VideoPlayerScreen(videoUrl: videoUrl),
+                    ),
+                  );
+                },
               )
             : Container(
                 width: 40,
                 height: 40,
-                // padding: const EdgeInsets.all(10),
                 decoration: ShapeDecoration(
                   color: const Color(0xFFEAEAEA),
                   shape: RoundedRectangleBorder(
@@ -448,14 +477,32 @@ Widget collapseStepClassCard(
 }
 
 class StepContent extends StatefulWidget {
-  const StepContent({super.key});
+  final List<dynamic> videos;
+  const StepContent({super.key, required this.videos});
 
   @override
   State<StepContent> createState() => _StepContentState();
 }
 
 class _StepContentState extends State<StepContent> {
-  List<bool> showCardBoolList = [true, false, false, false];
+  late List<bool> showCardBoolList;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with proper length (even if videos is empty)
+    showCardBoolList = List<bool>.filled(widget.videos.length, false);
+  }
+
+  @override
+  void didUpdateWidget(StepContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update the list if videos length changes
+    if (widget.videos.length != showCardBoolList.length) {
+      showCardBoolList = List<bool>.filled(widget.videos.length, false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -465,14 +512,157 @@ class _StepContentState extends State<StepContent> {
         const SizedBox(height: 20),
         preCourseCard(true, context, true),
         const SizedBox(height: 20),
-        Column(
-          children: List.generate(1, (i) {
-            return collapseStepClassCard(i + 1, showCardBoolList, setState);
-          }),
-        ),
+        if (widget.videos.isEmpty)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Text(
+                "No videos available for this step",
+                style: TextStyle(
+                  color: Color(0xFF737373),
+                  fontSize: 16,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+          )
+        else
+          Column(
+            children: List.generate(widget.videos.length, (i) {
+              final video = widget.videos[i];
+              return collapseStepClassCard(
+                i + 1,
+                context,
+                showCardBoolList,
+                setState,
+                videoTitle: video['video_title'] ?? 'No title',
+                videoDescription:
+                    video['video_description'] ?? 'No description',
+                videoDuration: '${video['video_duration_in_mins'] ?? 0} mins',
+                isLocked: false,
+                videoUrl: video['video_link'] ?? '',
+              );
+            }),
+          ),
         const SizedBox(height: 20),
         preCourseCard(true, context, false),
       ],
     );
   }
 }
+
+class VideoPlayerScreen extends StatelessWidget {
+  final String videoUrl;
+
+  const VideoPlayerScreen({super.key, required this.videoUrl});
+
+  Future<void> _launchVideoPlayer() async {
+    final Uri url = Uri.parse(videoUrl);
+    if (!await launchUrl(
+      url,
+      mode: LaunchMode.externalApplication, // This opens in default player
+    )) {
+      throw Exception('Could not launch $url');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Immediately launch the video player when the screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _launchVideoPlayer();
+      // Close this screen since the video will play in external player
+      Navigator.pop(context);
+    });
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+}
+
+// class VideoPlayerScreen extends StatefulWidget {
+//   final String videoUrl;
+
+//   const VideoPlayerScreen({super.key, required this.videoUrl});
+
+//   @override
+//   State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
+// }
+
+// class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
+//   late VideoPlayerController _controller;
+//   bool _isFullscreen = false;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     print("Video URL: ${widget.videoUrl}");
+//     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
+//       ..initialize().then((_) {
+//         setState(() {});
+//         // Auto-play when initialized
+//         _controller.play();
+//         // Force landscape orientation
+//         _setLandscape();
+//       });
+//   }
+
+//   void _setLandscape() async {
+//     await SystemChrome.setPreferredOrientations([
+//       DeviceOrientation.landscapeLeft,
+//       DeviceOrientation.landscapeRight,
+//     ]);
+//     setState(() {
+//       _isFullscreen = true;
+//     });
+//   }
+
+//   void _setPortrait() async {
+//     await SystemChrome.setPreferredOrientations([
+//       DeviceOrientation.portraitUp,
+//     ]);
+//     setState(() {
+//       _isFullscreen = false;
+//     });
+//   }
+
+//   @override
+//   void dispose() {
+//     _controller.dispose();
+//     // Reset orientation when disposing
+//     _setPortrait();
+//     super.dispose();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: Colors.black,
+//       body: Center(
+//         child: _controller.value.isInitialized
+//             ? AspectRatio(
+//                 aspectRatio: _controller.value.aspectRatio,
+//                 child: VideoPlayer(_controller),
+//               )
+//             : const CircularProgressIndicator(),
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         onPressed: () {
+//           setState(() {
+//             _controller.value.isPlaying
+//                 ? _controller.pause()
+//                 : _controller.play();
+//           });
+//         },
+//         child: Icon(
+//           _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+//         ),
+//       ),
+//     );
+//   }
+// }
