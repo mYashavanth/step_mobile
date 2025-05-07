@@ -5,6 +5,7 @@ import 'package:ghastep/widgets/test_screen_widgets.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:ghastep/views/urlconfig.dart';
+import 'dart:async';
 
 class TestScreen extends StatefulWidget {
   const TestScreen({super.key});
@@ -16,8 +17,11 @@ class TestScreen extends StatefulWidget {
 class _TestScreenState extends State<TestScreen> {
   final storage = const FlutterSecureStorage();
   final PageController _pageController = PageController();
+  Timer? countdownTimer;
+  Duration remainingTime = Duration.zero;
+  static Duration? sharedRemainingTime; // Shared state for the timer
   int currentPage = 0;
-  int totalQuestions = 3; 
+  int totalQuestions = 3;
   String pre_course_test_question_id = '';
   List<Map<String, dynamic>> questions = [];
   List<int?> selectedOptions =
@@ -31,7 +35,60 @@ class _TestScreenState extends State<TestScreen> {
     super.initState();
     // Initialize selectedOptions with null values
     selectedOptions = List<int?>.filled(totalQuestions, null);
+    _initializeTimer();
     _loadIsPreCourseFlag();
+  }
+
+  @override
+  void dispose() {
+    countdownTimer?.cancel(); // Cancel the timer when the widget is disposed
+    super.dispose();
+  }
+
+  Future<void> _initializeTimer() async {
+    if (sharedRemainingTime != null) {
+      // Use the shared remaining time if it exists
+      remainingTime = sharedRemainingTime!;
+    } else {
+      // Fetch the duration from Flutter Secure Storage
+      String? durationString = await storage.read(key: "test_duration");
+
+      if (durationString != null) {
+        int totalMinutes = int.tryParse(durationString) ?? 0;
+        setState(() {
+          remainingTime = Duration(minutes: totalMinutes);
+          sharedRemainingTime = remainingTime; // Save to shared state
+        });
+      } else {
+        setState(() {
+          remainingTime = Duration.zero;
+        });
+      }
+    }
+
+    _startCountdown();
+  }
+
+  void _startCountdown() {
+    countdownTimer?.cancel(); // Cancel any existing timer
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (remainingTime.inSeconds > 0) {
+        setState(() {
+          remainingTime -= const Duration(seconds: 1);
+          sharedRemainingTime = remainingTime; // Update shared state
+        });
+      } else {
+        timer.cancel(); // Stop the timer when it reaches 0
+      }
+    });
+  }
+
+  String _formatDuration(Duration duration) {
+    String minutes =
+        duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    String seconds =
+        duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return "$minutes:$seconds mins";
   }
 
   Future<void> _loadIsPreCourseFlag() async {
@@ -68,14 +125,13 @@ class _TestScreenState extends State<TestScreen> {
         print("Missing required data to fetch questions.");
       }
 
-      String apiUrl = isPreCourse ?
-          "$baseurl/app/get-pre-course-test-questions/$token/1/$questionNo" :
-          "$baseurl/app/get-post-course-test-questions/$token/1/$questionNo";
+      String apiUrl = isPreCourse
+          ? "$baseurl/app/get-pre-course-test-questions/$token/1/$questionNo"
+          : "$baseurl/app/get-post-course-test-questions/$token/1/$questionNo";
       final response = await http.get(Uri.parse(apiUrl));
 
-        print(response.body);
-      print(
-          "data printing in fetch question ++++++++++++++++++++++++++++ ^");
+      print(response.body);
+      print("data printing in fetch question ++++++++++++++++++++++++++++ ^");
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         pre_course_test_question_id =
@@ -143,8 +199,10 @@ class _TestScreenState extends State<TestScreen> {
   Future<void> _saveResponse(int questionIndex, int? optionIndex) async {
     try {
       String? token = await storage.read(key: "token");
-      String? preCourseTestTransactionId =
-          await storage.read(key: isPreCourse ? "preCourseTestTransactionId" : "postCourseTestTransactionId");
+      String? preCourseTestTransactionId = await storage.read(
+          key: isPreCourse
+              ? "preCourseTestTransactionId"
+              : "postCourseTestTransactionId");
 
       if (token == null || preCourseTestTransactionId == null) {
         print(token);
@@ -165,11 +223,10 @@ class _TestScreenState extends State<TestScreen> {
               ['pre_course_test_questions_options_id']
           : 0; // 0 means no option selected
 
-      String apiUrl = 
-      isPreCourse ?
-          "$baseurl/app/save-update-pre-course-test-questions-response/" +
-              "$token/$preCourseTestTransactionId/$questionId/$optionId" : 
-          "$baseurl/app/save-update-post-course-test-questions-response/" +
+      String apiUrl = isPreCourse
+          ? "$baseurl/app/save-update-pre-course-test-questions-response/" +
+              "$token/$preCourseTestTransactionId/$questionId/$optionId"
+          : "$baseurl/app/save-update-post-course-test-questions-response/" +
               "$token/$preCourseTestTransactionId/$questionId/$optionId";
 
       final response = await http.get(Uri.parse(apiUrl));
@@ -259,7 +316,7 @@ class _TestScreenState extends State<TestScreen> {
       print("question id: $questionId");
       print("feedback type: $feedbackType");
       print(response.body);
-      print("data printing in submit review ++++++++++++++++++++++++++++ ^"); 
+      print("data printing in submit review ++++++++++++++++++++++++++++ ^");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -372,6 +429,13 @@ class _TestScreenState extends State<TestScreen> {
 
         if (data['errFlag'] == 0) {
           print("Test ended successfully: $data");
+
+          // Reset the timer
+          setState(() {
+            remainingTime = Duration.zero;
+            sharedRemainingTime = null; // Reset shared state
+          });
+
           showCustomSnackBar(
             context: context,
             message: "Test ended successfully",
@@ -381,7 +445,7 @@ class _TestScreenState extends State<TestScreen> {
           // Navigate to the result screen
           Navigator.pushReplacementNamed(context, "/result_test_screen");
         } else {
-          print("Error ending test: ${data}");
+          print("Error ending test: ${data['message']}");
           showCustomSnackBar(
             context: context,
             message: data['message'],
@@ -412,13 +476,161 @@ class _TestScreenState extends State<TestScreen> {
     return false; // Prevents navigation by default
   }
 
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x0C23004C),
+            blurRadius: 12,
+            offset: Offset(0, -3),
+            spreadRadius: 0,
+          )
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(24),
+            onTap: () {
+              previousPage();
+            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: ShapeDecoration(
+                color: const Color(0xFFEDEEF0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              child: const Center(
+                child: Icon(Icons.arrow_back),
+              ),
+            ),
+          ),
+          InkWell(
+            onTap: () {
+              showModalBottomSheet(
+                isScrollControlled: true,
+                context: context,
+                backgroundColor: Colors.transparent,
+                builder: (context) {
+                  return StatefulBuilder(
+                    builder: (BuildContext context, StateSetter modalSetState) {
+                      return buidQuestionReviewBottomSheet(
+                        modalSetState,
+                        feedbackReviewData,
+                        selectedReviewoption,
+                        "Select your Course",
+                        context,
+                        onSubmitReview: (selectedOptions, additionalFeedback) {
+                          submitReview(selectedOptions, additionalFeedback);
+                        }, // Pass the required callback here
+                      );
+                    },
+                  );
+                },
+              );
+            },
+            child: Container(
+              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: ShapeDecoration(
+                color: const Color(0x19FE7D14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              child: const Center(
+                child: Text(
+                  'Mark for review',
+                  style: TextStyle(
+                    color: Color(0xFFFE7D14),
+                    fontSize: 16,
+                    fontFamily: 'SF Pro Display',
+                    fontWeight: FontWeight.w500,
+                    height: 1.50,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          InkWell(
+            onTap: () {
+              // Clear selected option for current question
+              setState(() {
+                selectedOptions[currentPage] = null;
+              });
+              // Save the cleared response
+              _saveResponse(currentPage, null);
+            },
+            child: Container(
+              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: ShapeDecoration(
+                color: const Color(0x1931B5B9),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              child: const Center(
+                  child: Text(
+                'Clear selected',
+                style: TextStyle(
+                  color: Color(0xFF289799),
+                  fontSize: 16,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w500,
+                  height: 1.50,
+                ),
+              )),
+            ),
+          ),
+          InkWell(
+            borderRadius: BorderRadius.circular(24),
+            onTap: currentPage == totalQuestions - 1
+                ? null // Disable the button on the last question
+                : () {
+                    nextPage();
+                  },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: ShapeDecoration(
+                color: currentPage == totalQuestions - 1
+                    ? const Color(0xFFE0E0E0) // Disabled color
+                    : const Color(0xFFEDEEF0), // Enabled color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              child: Center(
+                child: Icon(
+                  Icons.arrow_forward,
+                  color: currentPage == totalQuestions - 1
+                      ? Colors.grey // Disabled icon color
+                      : Colors.black, // Enabled icon color
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
         backgroundColor: Colors.white,
-        appBar: testScreenAppBar(context, _endTest),
+        appBar: testScreenAppBar(context, _endTest,
+            _formatDuration(remainingTime)), // Pass the formatted time
         body: isLoading && questions.isEmpty
             ? const Center(child: CircularProgressIndicator())
             : errorMessage != null
@@ -434,7 +646,6 @@ class _TestScreenState extends State<TestScreen> {
                       });
                     },
                     itemBuilder: (context, index) {
-                      // If we're at the last question and have all questions, show it
                       if (index < questions.length) {
                         return TestScreenWidgets(
                           questionData: questions[index],
@@ -444,159 +655,11 @@ class _TestScreenState extends State<TestScreen> {
                           onOptionSelected: _onOptionSelected,
                         );
                       }
-                      // Otherwise show loading only if we're not at the last question
                       return index == totalQuestions - 1
-                          ? Container() // Empty container for last question
+                          ? Container()
                           : const Center(child: CircularProgressIndicator());
                     }),
-        bottomNavigationBar: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x0C23004C),
-                blurRadius: 12,
-                offset: Offset(0, -3),
-                spreadRadius: 0,
-              )
-            ],
-          ),
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              InkWell(
-                borderRadius: BorderRadius.circular(24),
-                onTap: () {
-                  previousPage();
-                },
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: ShapeDecoration(
-                    color: const Color(0xFFEDEEF0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.arrow_back),
-                  ),
-                ),
-              ),
-              InkWell(
-                onTap: () {
-                  showModalBottomSheet(
-                    isScrollControlled: true,
-                    context: context,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) {
-                      return StatefulBuilder(
-                        builder:
-                            (BuildContext context, StateSetter modalSetState) {
-                          return buidQuestionReviewBottomSheet(
-                            modalSetState,
-                            feedbackReviewData,
-                            selectedReviewoption,
-                            "Select your Course",
-                            context,
-                            onSubmitReview:
-                                (selectedOptions, additionalFeedback) {
-                              submitReview(selectedOptions, additionalFeedback);
-                            }, // Pass the required callback here
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
-                child: Container(
-                  height: 40,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: ShapeDecoration(
-                    color: const Color(0x19FE7D14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Mark for review',
-                      style: TextStyle(
-                        color: Color(0xFFFE7D14),
-                        fontSize: 16,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w500,
-                        height: 1.50,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              InkWell(
-                onTap: () {
-                  // Clear selected option for current question
-                  setState(() {
-                    selectedOptions[currentPage] = null;
-                  });
-                  // Save the cleared response
-                  _saveResponse(currentPage, null);
-                },
-                child: Container(
-                  height: 40,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: ShapeDecoration(
-                    color: const Color(0x1931B5B9),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                  child: const Center(
-                      child: Text(
-                    'Clear selected',
-                    style: TextStyle(
-                      color: Color(0xFF289799),
-                      fontSize: 16,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w500,
-                      height: 1.50,
-                    ),
-                  )),
-                ),
-              ),
-              InkWell(
-                borderRadius: BorderRadius.circular(24),
-                onTap: currentPage == totalQuestions - 1
-                    ? null // Disable the button on the last question
-                    : () {
-                        nextPage();
-                      },
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: ShapeDecoration(
-                    color: currentPage == totalQuestions - 1
-                        ? const Color(0xFFE0E0E0) // Disabled color
-                        : const Color(0xFFEDEEF0), // Enabled color
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.arrow_forward,
-                      color: currentPage == totalQuestions - 1
-                          ? Colors.grey // Disabled icon color
-                          : Colors.black, // Enabled icon color
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        bottomNavigationBar: _buildBottomNavigationBar(),
       ),
     );
   }
