@@ -31,10 +31,12 @@ Widget buildUserRow(int num, String name) {
             Text(
               name,
               style: TextStyle(
-                color:num == 420 ?   const Color(0xFF247E80) :const Color(0xFF1A1A1A),
+                color: num == 420
+                    ? const Color(0xFF247E80)
+                    : const Color(0xFF1A1A1A),
                 fontSize: 16,
                 fontFamily: 'SF Pro Display',
-                fontWeight:num == 420 ? FontWeight.w700 : FontWeight.w400,
+                fontWeight: num == 420 ? FontWeight.w700 : FontWeight.w400,
                 height: 1.50,
               ),
             ),
@@ -67,7 +69,7 @@ Widget buildUserRow(int num, String name) {
   );
 }
 
-Widget buildResultScreenOverviewtable() {
+Widget buildResultScreenOverviewtable(Map<String, dynamic> resultData) {
   return Container(
     decoration: const ShapeDecoration(
       shape: RoundedRectangleBorder(
@@ -85,18 +87,16 @@ Widget buildResultScreenOverviewtable() {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              columnOneCard1and2(1),
-              columnOneCard1and2(2),
-              // rowCard3(1),
+              columnOneCard1and2(1, resultData),
+              columnOneCard1and2(2, resultData),
             ],
           ),
         ),
         Expanded(
           child: Column(
             children: [
-              columnTwoCard1and2(1),
-              columnTwoCard1and2(2),
-              // rowCard3(2),
+              columnTwoCard1and2(1, resultData),
+              columnTwoCard1and2(2, resultData),
             ],
           ),
         )
@@ -105,7 +105,7 @@ Widget buildResultScreenOverviewtable() {
   );
 }
 
-Widget columnOneCard1and2(int cardNo) {
+Widget columnOneCard1and2(int cardNo, Map<String, dynamic> resultData) {
   return Container(
     width: double.maxFinite,
     padding: const EdgeInsets.all(12),
@@ -138,7 +138,9 @@ Widget columnOneCard1and2(int cardNo) {
           TextSpan(
             children: [
               TextSpan(
-                text: cardNo == 1 ? '4 ' : "2 ",
+                text: cardNo == 1
+                    ? '${resultData["marks_obtained"]} '
+                    : '${resultData["total_questions"] - resultData["answered_questions"]} ',
                 style: const TextStyle(
                   color: Color(0xFF1A1A1A),
                   fontSize: 20,
@@ -165,7 +167,7 @@ Widget columnOneCard1and2(int cardNo) {
   );
 }
 
-Widget columnTwoCard1and2(int cardNo) {
+Widget columnTwoCard1and2(int cardNo, Map<String, dynamic> resultData) {
   return Container(
     width: double.maxFinite,
     padding: const EdgeInsets.all(12),
@@ -194,7 +196,9 @@ Widget columnTwoCard1and2(int cardNo) {
           TextSpan(
             children: [
               TextSpan(
-                text: cardNo == 1 ? '2 ' : "196 ",
+                text: cardNo == 1
+                    ? '${resultData["right_answers"]} '
+                    : '${resultData["unanswered_questions"]} ',
                 style: TextStyle(
                   color: cardNo == 1
                       ? const Color(0xFF34C759)

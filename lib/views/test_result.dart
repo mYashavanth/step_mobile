@@ -1,4 +1,6 @@
+import 'dart:convert'; // For JSON decoding
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ghastep/widgets/common_widgets.dart';
 import 'package:ghastep/widgets/test_result_widgets.dart';
 
@@ -10,6 +12,32 @@ class ResultScreenTest extends StatefulWidget {
 }
 
 class _ResultScreenTestState extends State<ResultScreenTest> {
+  final storage = const FlutterSecureStorage();
+  Map<String, dynamic>? resultData; // To store the result data
+
+  @override
+  void initState() {
+    super.initState();
+    _loadResultData(); // Load result data from storage
+  }
+
+  Future<void> _loadResultData() async {
+    try {
+      // Retrieve the result data from storage
+      String? resultJson = await storage.read(key: "test_results");
+
+      if (resultJson != null) {
+        setState(() {
+          resultData = jsonDecode(resultJson); // Parse the JSON data
+        });
+      } else {
+        print("No result data found in storage.");
+      }
+    } catch (e) {
+      print("Error loading result data: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,7 +46,9 @@ class _ResultScreenTestState extends State<ResultScreenTest> {
         surfaceTintColor: Colors.white,
         backgroundColor: Colors.white,
         leading: IconButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pop(context);
+          },
           icon: const Icon(Icons.arrow_back_ios_new_outlined),
         ),
         title: const Text(
@@ -63,174 +93,153 @@ class _ResultScreenTestState extends State<ResultScreenTest> {
           )
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(
-              height: 12,
-            ),
-            borderHorizontal(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+      body: resultData == null
+          ? const Center(
+              child:
+                  CircularProgressIndicator()) // Show loader until data is loaded
+          : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // const SizedBox(
-                  //   height: 12,
-                  // ),
-                  const Text(
-                    'Anatomy Challenge: Ace the Basics',
-                    style: TextStyle(
-                      color: Color(0xFF1A1A1A),
-                      fontSize: 20,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w500,
-                      // height: 1.40,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  const Text(
-                    'Pre course test - Step 1, Conducted on 23 Jan 25',
-                    style: TextStyle(
-                      color: Color(0xFF737373),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      // height: 1.57,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  const Text(
-                    '50 Questions • 45 minutes • 200 marks',
-                    style: TextStyle(
-                      color: Color(0xFF737373),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      height: 1.57,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 16,
-                  ),
-                  buildButton(context, "View solutions", '/view_solutions'),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                  buildBorderButton(context, "Re-attempt test", '')
-                ],
-              ),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            borderHorizontal(),
-            const SizedBox(
-              height: 12,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Overview',
-                    style: TextStyle(
-                      color: Color(0xFF1A1A1A),
-                      fontSize: 20,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w500,
-                      height: 1.40,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  const Text(
-                    'Summary of marks scored in “ Attempt 1 “ of the pre-course test attempted on 23 Jan',
-                    style: TextStyle(
-                      color: Color(0xFF737373),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      height: 1.57,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  buildResultScreenOverviewtable()
-                ],
-              ),
-            ),
-            borderHorizontal(),
-            const SizedBox(
-              height: 12,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Leaderboard',
-                    style: TextStyle(
-                      color: Color(0xFF1A1A1A),
-                      fontSize: 20,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w500,
-                      height: 1.40,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  const Text(
-                    'Ranking is based on marks. Time taken to answer the test is used to break the tie, incase marks are the same for learners',
-                    style: TextStyle(
-                      color: Color(0xFF737373),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      height: 1.57,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  buildUserRow(1, "Sushanth Raj"),
+                  const SizedBox(height: 12),
                   borderHorizontal(),
-                  buildUserRow(2, "Suhas R"),
-                  borderHorizontal(),
-                  buildUserRow(3, "Deepthi"),
-                  borderHorizontal(),
-                  buildUserRow(420, "You"),
-                  borderHorizontal(),
-                  TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, "/leader_board_screen");
-                      },
-                      child: const Text(
-                        'See full leaderboard',
-                        style: TextStyle(
-                          color: Color(0xFF007AFF),
-                          fontSize: 16,
-                          fontFamily: 'SF Pro Display',
-                          fontWeight: FontWeight.w700,
-                          height: 1.50,
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Anatomy Challenge: Ace the Basics',
+                          style: TextStyle(
+                            color: Color(0xFF1A1A1A),
+                            fontSize: 20,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ))
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Pre course test - Step 1, Conducted on 23 Jan 25',
+                          style: TextStyle(
+                            color: Color(0xFF737373),
+                            fontSize: 14,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          '50 Questions • 45 minutes • 200 marks',
+                          style: TextStyle(
+                            color: Color(0xFF737373),
+                            fontSize: 14,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w400,
+                            height: 1.57,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        buildButton(
+                            context, "View solutions", '/view_solutions'),
+                        const SizedBox(height: 12),
+                        buildBorderButton(context, "Re-attempt test", '')
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  borderHorizontal(),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Overview',
+                          style: TextStyle(
+                            color: Color(0xFF1A1A1A),
+                            fontSize: 20,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w500,
+                            height: 1.40,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Summary of marks scored in “ Attempt 1 “ of the pre-course test attempted on 23 Jan',
+                          style: TextStyle(
+                            color: Color(0xFF737373),
+                            fontSize: 14,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w400,
+                            height: 1.57,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        buildResultScreenOverviewtable(
+                            resultData!), // Pass resultData to the table
+                      ],
+                    ),
+                  ),
+                  borderHorizontal(),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Leaderboard',
+                          style: TextStyle(
+                            color: Color(0xFF1A1A1A),
+                            fontSize: 20,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w500,
+                            height: 1.40,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Ranking is based on marks. Time taken to answer the test is used to break the tie, incase marks are the same for learners',
+                          style: TextStyle(
+                            color: Color(0xFF737373),
+                            fontSize: 14,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w400,
+                            height: 1.57,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        buildUserRow(1, "Sushanth Raj"),
+                        borderHorizontal(),
+                        buildUserRow(2, "Suhas R"),
+                        borderHorizontal(),
+                        buildUserRow(3, "Deepthi"),
+                        borderHorizontal(),
+                        buildUserRow(420, "You"),
+                        borderHorizontal(),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(
+                                context, "/leader_board_screen");
+                          },
+                          child: const Text(
+                            'See full leaderboard',
+                            style: TextStyle(
+                              color: Color(0xFF007AFF),
+                              fontSize: 16,
+                              fontFamily: 'SF Pro Display',
+                              fontWeight: FontWeight.w700,
+                              height: 1.50,
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  )
                 ],
               ),
-            )
-          ],
-        ),
-      ),
+            ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -251,7 +260,6 @@ class _ResultScreenTestState extends State<ResultScreenTest> {
           },
           child: Container(
             height: 52,
-            // padding: const EdgeInsets.symmetric(horizontal: 156, vertical: 8),
             decoration: ShapeDecoration(
               color: const Color(0xFFC7F3F4),
               shape: RoundedRectangleBorder(

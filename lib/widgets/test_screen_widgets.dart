@@ -12,13 +12,12 @@ import 'package:ghastep/views/dry.dart';
 String title = "Exam title name should go here";
 
 PreferredSizeWidget testScreenAppBar(
-    BuildContext context, void Function() _endTest) {
+    BuildContext context, void Function() _endTest, String remainingTime) {
   return AppBar(
     automaticallyImplyLeading: false,
     flexibleSpace: SafeArea(
       child: Container(
         padding: const EdgeInsets.only(left: 12),
-        // color: Colors.green,
         child: Row(
           children: [
             InkWell(
@@ -77,9 +76,9 @@ PreferredSizeWidget testScreenAppBar(
                   const SizedBox(
                     width: 12,
                   ),
-                  const Text(
-                    '119:12 mins',
-                    style: TextStyle(
+                  Text(
+                    remainingTime, // Display the countdown timer here
+                    style: const TextStyle(
                       color: Color(0xFFFF3B30),
                       fontSize: 16,
                       fontFamily: 'SF Pro Display',
@@ -92,12 +91,9 @@ PreferredSizeWidget testScreenAppBar(
             ),
             ElevatedButton(
               onPressed: () {
-                // Handle login with mobile number
-                // Navigator.pushNamed(context, "/test_screen");
                 submitTestDialog(context, _endTest);
               },
               style: ElevatedButton.styleFrom(
-                // minimumSize: const Size(double.infinity, 50),
                 backgroundColor: const Color(0xFF247E80),
               ),
               child: const Text(
@@ -219,7 +215,8 @@ void submitTestDialog(BuildContext context, void Function() _endTest) async {
                       "${resultData['unanswered_questions']}"),
                   submitTestRow("not_visited.svg", "Not visited",
                       "${resultData['total_questions'] - resultData['answered_questions']}"),
-                  submitTestRow("flag_marked.svg", "Marked for review", resultData['marked_for_review'].toString()),
+                  submitTestRow("flag_marked.svg", "Marked for review",
+                      resultData['marked_for_review'].toString()),
                 ],
               ),
             ),
@@ -309,9 +306,11 @@ Future<Map<String, dynamic>?> _fetchTestResults() async {
     String? token = await storage.read(key: "token");
 
     bool? isPreCourseFlag = await storage.read(key: "isPreCourse") == "true";
-    String? preCourseTestTransactionId =
-        await storage.read(key: isPreCourseFlag ? "preCourseTestTransactionId" : "postCourseTestTransactionId");
-    
+    String? preCourseTestTransactionId = await storage.read(
+        key: isPreCourseFlag
+            ? "preCourseTestTransactionId"
+            : "postCourseTestTransactionId");
+
     if (token == null || preCourseTestTransactionId == null) {
       print(token);
       print(preCourseTestTransactionId);
@@ -319,14 +318,13 @@ Future<Map<String, dynamic>?> _fetchTestResults() async {
       return null;
     }
 
-    String apiUrl = isPreCourseFlag ?
-        "$baseurl/app/get-pre-course-test-response/$token/$preCourseTestTransactionId" :
-        "$baseurl/app/get-post-course-test-response/$token/$preCourseTestTransactionId";
+    String apiUrl = isPreCourseFlag
+        ? "$baseurl/app/get-pre-course-test-response/$token/$preCourseTestTransactionId"
+        : "$baseurl/app/get-post-course-test-response/$token/$preCourseTestTransactionId";
     final response = await http.get(Uri.parse(apiUrl));
 
     if (response.statusCode == 200) {
-
-       final Map<String, dynamic> resultData = jsonDecode(response.body);
+      final Map<String, dynamic> resultData = jsonDecode(response.body);
 
       // Store the results in secure storage
       await storage.write(key: "test_results", value: jsonEncode(resultData));
