@@ -385,7 +385,7 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      "Step-wise course",
+                      "Step-wise Subjects",
                       style: TextStyle(
                         color: Color(0xFF1A1A1A),
                         fontSize: 20,

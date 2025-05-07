@@ -79,6 +79,13 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
 
         // Store the test title in Flutter Secure Storage
         await storage.write(
+          key: "test_duration",
+          value: isPreCourse
+              ? data[0]["pre_course_test_duration_minutes"].toString()
+              : data[0]["post_course_test_duration_minutes"].toString(),
+        );
+
+        await storage.write(
           key: "test_title",
           value: isPreCourse
               ? data[0]["pre_course_test_title"]
