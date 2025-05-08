@@ -79,8 +79,23 @@ class _TestScreenState extends State<TestScreen> {
         });
       } else {
         timer.cancel(); // Stop the timer when it reaches 0
+        _handleTimerEnd(); // Handle timer end
       }
     });
+  }
+
+  Future<void> _handleTimerEnd() async {
+    try {
+      // End the test and fetch the result
+      await _endTest();
+    } catch (e) {
+      print("Error handling timer end: $e");
+      showCustomSnackBar(
+        context: context,
+        message: "An error occurred while ending the test.",
+        isSuccess: false,
+      );
+    }
   }
 
   String _formatDuration(Duration duration) {
@@ -436,14 +451,13 @@ class _TestScreenState extends State<TestScreen> {
             sharedRemainingTime = null; // Reset shared state
           });
 
-          showCustomSnackBar(
-            context: context,
-            message: "Test ended successfully",
-            isSuccess: true,
-          );
+          // Fetch and store the result
+          await _fetchTestResults();
 
           // Navigate to the result screen
-          Navigator.pushReplacementNamed(context, "/result_test_screen");
+          if (context.mounted) {
+            Navigator.pushReplacementNamed(context, "/result_test_screen");
+          }
         } else {
           print("Error ending test: ${data['message']}");
           showCustomSnackBar(
@@ -467,6 +481,44 @@ class _TestScreenState extends State<TestScreen> {
         message: "An error occurred: $e",
         isSuccess: false,
       );
+    }
+  }
+
+  Future<Map<String, dynamic>?> _fetchTestResults() async {
+    try {
+      String? token = await storage.read(key: "token");
+      bool? isPreCourseFlag = await storage.read(key: "isPreCourse") == "true";
+      String? testTransactionId = await storage.read(
+          key: isPreCourseFlag
+              ? "preCourseTestTransactionId"
+              : "postCourseTestTransactionId");
+
+      if (token == null || testTransactionId == null) {
+        print("Missing required data to fetch test results.");
+        return null;
+      }
+
+      String apiUrl = isPreCourseFlag
+          ? "$baseurl/app/get-pre-course-test-response/$token/$testTransactionId"
+          : "$baseurl/app/get-post-course-test-response/$token/$testTransactionId";
+
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> resultData = jsonDecode(response.body);
+
+        // Store the results in secure storage
+        await storage.write(key: "test_results", value: jsonEncode(resultData));
+        print("Test results fetched and stored successfully.");
+        return resultData;
+      } else {
+        print(
+            "Failed to fetch test results. Status code: ${response.statusCode}");
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching test results: $e");
+      return null;
     }
   }
 
