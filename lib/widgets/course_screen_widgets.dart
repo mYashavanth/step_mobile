@@ -435,7 +435,7 @@ Widget collapseStepClassCard(
                         MaterialPageRoute(
                           builder: (context) => FullScreenVideoPlayer(
                             videoUrl:
-                                "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+                                "https://customer-bo58a3euqp8nmzzt.cloudflarestream.com/b524deed1bb964475f330a704f5b0b31/manifest/video.m3u8",
                             videoTitle: videoTitle,
                           ),
                         ),
