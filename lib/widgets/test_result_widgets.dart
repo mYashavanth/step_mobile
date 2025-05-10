@@ -140,7 +140,7 @@ Widget columnOneCard1and2(int cardNo, Map<String, dynamic> resultData) {
               TextSpan(
                 text: cardNo == 1
                     ? '${resultData["marks_obtained"]} '
-                    : '${resultData["total_questions"] - resultData["answered_questions"]} ',
+                    : '${resultData["total_questions"] - resultData["right_answers"] - resultData["unanswered_questions"]}',
                 style: const TextStyle(
                   color: Color(0xFF1A1A1A),
                   fontSize: 20,
@@ -150,7 +150,7 @@ Widget columnOneCard1and2(int cardNo, Map<String, dynamic> resultData) {
                 ),
               ),
               const TextSpan(
-                text: '/200 marks',
+                text: ' marks',
                 style: TextStyle(
                   color: Color(0xFF737373),
                   fontSize: 12,
