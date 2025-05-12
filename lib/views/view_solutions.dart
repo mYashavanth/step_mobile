@@ -1,6 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ghastep/widgets/common_widgets.dart';
 import 'package:ghastep/widgets/view_solutions_widgets.dart';
+import 'package:http/http.dart' as http;
+import 'package:ghastep/views/urlconfig.dart';
 
 class ViewSolution extends StatefulWidget {
   const ViewSolution({super.key});
@@ -10,15 +14,52 @@ class ViewSolution extends StatefulWidget {
 }
 
 class _ViewSolutionState extends State<ViewSolution> {
+  List<Map<String, dynamic>> solutionData = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchSolutionData();
+  }
+
+  Future<void> fetchSolutionData() async {
+    const storage = FlutterSecureStorage();
+    String? token = await storage.read(key: 'token');
+    String? courseTestTransactionId =
+        await storage.read(key: 'preCourseTestTransactionId');
+
+    if (token != null && courseTestTransactionId != null) {
+      final url =
+          '$baseurl/app/get-pre-course-test-user-reponses/$token/$courseTestTransactionId';
+      try {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          setState(() {
+            solutionData =
+                List<Map<String, dynamic>>.from(json.decode(response.body));
+            isLoading = false;
+          });
+        } else {
+          // Handle error
+          print('Failed to fetch data: ${response.statusCode}');
+        }
+      } catch (e) {
+        print('Error: $e');
+      }
+    } else {
+      print('Token or Transaction ID is missing');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: Color.fromARGB(255, 236, 234, 234),
       appBar: AppBar(
         surfaceTintColor: Colors.white,
         backgroundColor: Colors.white,
         leading: IconButton(
-          onPressed: () {},
+          onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back_ios_new),
         ),
         title: const Text(
@@ -32,29 +73,30 @@ class _ViewSolutionState extends State<ViewSolution> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              color: Colors.white,
-              height: 42,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Column(
                 children: [
-                  buildTopSelectCards(true, "All Solutions"),
-                  buildTopSelectCards(false, "Correct"),
-                  buildTopSelectCards(false, "Incorrect"),
-                  buildTopSelectCards(false, "Un answered"),
+                  Container(
+                    color: Colors.white,
+                    height: 42,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        buildTopSelectCards(true, "All Solutions"),
+                        buildTopSelectCards(false, "Correct"),
+                        buildTopSelectCards(false, "Incorrect"),
+                        buildTopSelectCards(false, "Unanswered"),
+                      ],
+                    ),
+                  ),
+                  Container(height: 12, color: Colors.white),
+                  borderHorizontal(),
+                  QuestAnsSolWidget(solutionData: solutionData),
                 ],
               ),
             ),
-            // const SizedBox(height: 12,),
-            Container(height: 12, color: Colors.white),
-            borderHorizontal(),
-            const QuestAnsSolWidget(),
-          ],
-        ),
-      ),
     );
   }
 }
