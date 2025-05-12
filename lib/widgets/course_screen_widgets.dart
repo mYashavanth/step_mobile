@@ -4,6 +4,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/services.dart'; // Add this import
 import 'package:url_launcher/url_launcher.dart';
+import 'package:ghastep/views/urlconfig.dart';
+import 'package:http/http.dart' as http; // Add this import
+import 'package:ghastep/widgets/full_screen_video_player.dart';
 
 Widget buildTabBarCourse(
   TabController tabController,
@@ -22,43 +25,9 @@ Widget buildTabBarCourse(
     mainAxisSize: MainAxisSize.min,
     children: [
       buildStepTabButton(setState, stepTabSelectedIndex),
-      // Container(
-      //   color: Colors.white,
-      //   child: TabBar(
-      //     controller: _tabController,
-      //     labelColor: Colors.black,
-      //     indicatorColor: Colors.black,
-      //     unselectedLabelColor: Colors.grey,
-      //     dividerColor: Colors.transparent,
-      //     onTap: (i) {
-      //       stepTabSelectedIndex[0] = i;
-      //       setState(() {});
-      //       print(i);
-      //     },
-      //     tabs: const [
-      //       Tab(text: "Step 1"),
-      //       Tab(text: "Step 2"),
-      //       Tab(text: "Step 3"),
-      //       Tab(text: "Notes"),
-      //       Tab(text: "Subject test"),
-      //     ],
-      //   ),
-      // ),
       Container(
         padding: const EdgeInsets.only(left: 12, right: 12),
-        // height: 300,
-        child:
-            // TabBarView(
-            //   controller: _tabController,
-            //   children: [
-            //     SingleChildScrollView(child: StepContent()),
-            //     const Center(child: Text("Step 2 Content")),
-            //     const Center(child: Text("Step 3 Content")),
-            //     const Center(child: Text("Notes Content")),
-            //   ],
-            // ),
-
-            Column(
+        child: Column(
           children: [
             Visibility(
               visible: stepTabSelectedIndex[0] == 0,
@@ -88,11 +57,9 @@ Widget buildTabBarCourse(
                   courseNotes("Name of document here", 29, false, "excel.svg"),
                   courseNotes("Name of document here if it exceeds 1 lines", 31,
                       true, "excel.svg"),
-
                   const SizedBox(
                     height: 28,
                   ),
-                  //
                   InkWell(
                     borderRadius: BorderRadius.circular(24),
                     onTap: () {},
@@ -107,7 +74,6 @@ Widget buildTabBarCourse(
                           borderRadius: BorderRadius.circular(24),
                         ),
                       ),
-                      // ignore: prefer_const_constructors
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -157,15 +123,11 @@ Widget buildStepTabButton(
         setState(() {});
       },
       child: Container(
-        // ignore: prefer_const_constructors
         margin: EdgeInsets.only(right: 12),
         padding: const EdgeInsets.only(bottom: 4),
         decoration: BoxDecoration(
           border: stepTabSelectedIndex[0] == i
               ? const Border(
-                  // left: BorderSide(color: Colors.transparent),
-                  // top: BorderSide(color: Color.fromARGB(0, 26, 26, 26)),
-                  // right: BorderSide(color: Color(0xFF1A1A1A)),
                   bottom: BorderSide(width: 2, color: Color(0xFF1A1A1A)),
                 )
               : null,
@@ -201,7 +163,6 @@ Widget courseNotes(String docName, int page, bool locked, String icon) {
       ),
     ),
     child: ListTile(
-      // isThreeLine: true,
       leading: Container(
         width: 40,
         height: 40,
@@ -234,7 +195,6 @@ Widget courseNotes(String docName, int page, bool locked, String icon) {
           height: 1.67,
         ),
       ),
-
       trailing: locked
           ? const Icon(Icons.lock, color: Color(0xFF1A1A1A), size: 24)
           : null,
@@ -243,7 +203,6 @@ Widget courseNotes(String docName, int page, bool locked, String icon) {
 }
 
 Widget preCourseCard(bool pending, BuildContext context, bool isPreCourse) {
-  // isPreCourse = true for pre-course and false for post-course
   return InkWell(
     borderRadius: BorderRadius.circular(8),
     onTap: () async {
@@ -253,9 +212,7 @@ Widget preCourseCard(bool pending, BuildContext context, bool isPreCourse) {
     },
     child: Container(
       decoration: ShapeDecoration(
-        color: isPreCourse
-            ? const Color(0x1A31B5B9)
-            : const Color(0x1AFE860A), // Light color matching the border
+        color: isPreCourse ? const Color(0x1A31B5B9) : const Color(0x1AFE860A),
         shape: RoundedRectangleBorder(
           side: BorderSide(
               width: 1,
@@ -431,9 +388,9 @@ Widget collapseStepClassCard(
                       fontWeight: FontWeight.w400,
                       height: 1.67,
                     ),
-                  )
+                  ),
                 ],
-              )
+              ),
             ],
           ),
         ),
@@ -445,13 +402,51 @@ Widget collapseStepClassCard(
                   size: 40,
                   color: Color(0xFF737373),
                 ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const VideoPlayerScreen(),
-                    ),
-                  );
+                onPressed: () async {
+                  try {
+                    // Fetch required data from Flutter Secure Storage
+                    final storage = const FlutterSecureStorage();
+                    String? token = await storage.read(key: "token");
+                    String? courseStepDetailsId =
+                        await storage.read(key: "courseStepDetailId");
+                    String? stepNo = await storage.read(key: "selectedStepNo");
+
+                    if (token == null ||
+                        courseStepDetailsId == null ||
+                        stepNo == null) {
+                      print("Missing required data in Flutter Secure Storage.");
+                      return;
+                    }
+
+                    // Construct the API URL
+                    String apiUrl =
+                        "$baseurl/app/get-video/$token/$courseStepDetailsId/$stepNo";
+
+                    // Make the API call
+                    final response = await http.get(Uri.parse(apiUrl));
+
+                    if (response.statusCode == 200) {
+                      // Print the API response
+                      print("API Response: ${response.body}");
+
+                      // Navigate to full-screen player with Cloudflare URL
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FullScreenVideoPlayer(
+                            videoUrl:
+                                "https://customer-bo58a3euqp8nmzzt.cloudflarestream.com/b524deed1bb964475f330a704f5b0b31/manifest/video.m3u8",
+                            videoTitle: videoTitle,
+                          ),
+                        ),
+                      );
+                    } else {
+                      print(
+                          "Failed to fetch video data. Status code: ${response.statusCode}");
+                    }
+                  } catch (e) {
+                    print("Error fetching video data: $e");
+                  }
                 },
               )
             : Container(
@@ -489,14 +484,12 @@ class _StepContentState extends State<StepContent> {
   @override
   void initState() {
     super.initState();
-    // Initialize with proper length (even if videos is empty)
     showCardBoolList = List<bool>.filled(widget.videos.length, false);
   }
 
   @override
   void didUpdateWidget(StepContent oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Update the list if videos length changes
     if (widget.videos.length != showCardBoolList.length) {
       showCardBoolList = List<bool>.filled(widget.videos.length, false);
     }
@@ -564,13 +557,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   @override
   void initState() {
     super.initState();
-    // Hardcoded video URL
-    const videoUrl = "https://customer-bo58a3euqp8nmzzt.cloudflarestream.com/b524deed1bb964475f330a704f5b0b31/iframe?poster=https%3A%2F%2Fcustomer-bo58a3euqp8nmzzt.cloudflarestream.com%2Fb524deed1bb964475f330a704f5b0b31%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600";
+    const videoUrl =
+        "https://customer-bo58a3euqp8nmzzt.cloudflarestream.com/b524deed1bb964475f330a704f5b0b31/iframe?poster=https%3A%2F%2Fcustomer-bo58a3euqp8nmzzt.cloudflarestream.com%2Fb524deed1bb964475f330a704f5b0b31%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600";
 
     _controller = VideoPlayerController.network(videoUrl)
       ..initialize().then((_) {
         setState(() {});
-        _controller.play(); // Auto-play the video
+        _controller.play();
       });
   }
 
@@ -597,7 +590,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            _controller.value.isPlaying ? _controller.pause() : _controller.play();
+            _controller.value.isPlaying
+                ? _controller.pause()
+                : _controller.play();
           });
         },
         child: Icon(
