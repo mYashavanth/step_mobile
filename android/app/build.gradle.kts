@@ -34,7 +34,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.GHAstep"
+        applicationId = "com.ghastep"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode.toInt()  // Add .toInt() for type safety
