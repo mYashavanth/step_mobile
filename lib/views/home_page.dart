@@ -28,6 +28,7 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> subjects = [];
   bool isLoadingSubjects = true;
   String subjectError = '';
+  String bannerImage = '';
 
   @override
   void initState() {
@@ -38,6 +39,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _initializeState() async {
     _fetchCourses();
     _fetchSubjects();
+    _fetchBannerImages();
     final storedId = await storage.read(key: 'selectedCourseId');
     setState(() {
       selectedCourseIds = storedId != null
@@ -127,6 +129,55 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _fetchBannerImages() async {
+    const storage = FlutterSecureStorage();
+    try {
+      // Retrieve the token from secure storage
+      String? token = await storage.read(key: 'token');
+      if (token == null) {
+        print('No token found in secure storage.');
+        return;
+      }
+
+      // API call to fetch banner images
+      final response = await http.get(
+        Uri.parse('$baseurl/app/display-ad-banners/$token'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        // Parse the response
+        final data = json.decode(response.body);
+
+        // Store the response in secure storage
+        await storage.write(key: 'bannerImages', value: json.encode(data));
+
+        // Print the response
+        print('Banner Images Response: $data');
+        _setHomePageBannerImage(data);
+      } else {
+        print('Failed to fetch banner images: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching banner images: $e');
+    }
+  }
+
+  void _setHomePageBannerImage(List<dynamic> banners) async {
+    for (var banner in banners) {
+      if (banner['banner_title'] == 'home_page') {
+        String token = await storage.read(key: 'token') ?? '';
+        String imageUrl =
+            '$baseurl/app/ad-banners/display/$token/${banner['banner_image_name']}';
+
+        setState(() {
+          bannerImage = imageUrl; // Set the full image URL
+        });
+        break; // Exit the loop once the banner is found
+      }
+    }
+  }
+
   String get selectedCourseName {
     if (isLoadingCourses) return 'Loading...';
     if (courseError.isNotEmpty) return 'Error loading courses';
@@ -147,6 +198,7 @@ class _HomePageState extends State<HomePage> {
         onRefresh: () async {
           await _fetchCourses();
           await _fetchSubjects();
+          await _fetchBannerImages();
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -322,7 +374,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const CourseBanner(),
+                CourseBanner(bannerImage: bannerImage),
                 const SizedBox(height: 20),
                 const CalendarSection(),
                 const SizedBox(height: 20),
@@ -525,7 +577,9 @@ class _HomePageState extends State<HomePage> {
 }
 
 class CourseBanner extends StatelessWidget {
-  const CourseBanner({super.key});
+  final String bannerImage;
+
+  const CourseBanner({super.key, required this.bannerImage});
 
   @override
   Widget build(BuildContext context) {
@@ -534,9 +588,16 @@ class CourseBanner extends StatelessWidget {
       height: 248,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        // color: Colors.blue.shade100,
-        image: const DecorationImage(
-            image: AssetImage("assets/image/student.png"), fit: BoxFit.cover),
+        image:
+        //  bannerImage.isNotEmpty?
+             DecorationImage(
+                image: NetworkImage(bannerImage), // Use the fetched image URL
+                fit: BoxFit.cover,
+              )
+            // : const DecorationImage(
+            //     image: AssetImage("assets/image/student.png"), // Fallback image
+            //     fit: BoxFit.cover,
+            //   ),
       ),
       child: Row(
         children: [
