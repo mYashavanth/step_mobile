@@ -22,7 +22,7 @@ class _TestScreenState extends State<TestScreen> {
   static Duration? sharedRemainingTime; // Shared state for the timer
   int currentPage = 0;
   int totalQuestions = 3;
-  String pre_course_test_question_id = '';
+  String course_test_question_id = '';
   List<Map<String, dynamic>> questions = [];
   List<int?> selectedOptions =
       []; // To track selected options for each question
@@ -149,8 +149,9 @@ class _TestScreenState extends State<TestScreen> {
       print("data printing in fetch question ++++++++++++++++++++++++++++ ^");
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        pre_course_test_question_id =
-            data[0]['pre_course_test_question_id'].toString();
+        course_test_question_id = isPreCourse
+            ? data[0]['pre_course_test_question_id'].toString() :
+            data[0]['post_course_test_question_id'].toString();
 
         if (data is List && data.isNotEmpty) {
           final questionData = data[0];
@@ -158,10 +159,17 @@ class _TestScreenState extends State<TestScreen> {
 
           // Extract options from the response including their IDs
           for (var option in questionData['options']) {
+            isPreCourse
+                ? options.add({
+                    'option_text': option['option_text'],
+                    'pre_course_test_questions_options_id':
+                        option['pre_course_test_questions_options_id'],
+                  })
+                :
             options.add({
               'option_text': option['option_text'],
-              'pre_course_test_questions_options_id':
-                  option['pre_course_test_questions_options_id'],
+              'post_course_test_questions_options_id':
+                  option['post_course_test_questions_options_id'],
             });
           }
 
@@ -174,8 +182,9 @@ class _TestScreenState extends State<TestScreen> {
             'correctAnswer': options[0]
                 ['option_text'], // Assuming first option is correct for now
             'question_no': questionData['question_no'],
-            'pre_course_test_question_id':
-                questionData['pre_course_test_question_id'],
+            'course_test_question_id': isPreCourse
+                ? questionData['pre_course_test_question_id'] :
+                questionData['post_course_test_question_id'],
           };
 
           // If we already have this question (from going back), update it
@@ -214,14 +223,14 @@ class _TestScreenState extends State<TestScreen> {
   Future<void> _saveResponse(int questionIndex, int? optionIndex) async {
     try {
       String? token = await storage.read(key: "token");
-      String? preCourseTestTransactionId = await storage.read(
+      String? CourseTestTransactionId = await storage.read(
           key: isPreCourse
               ? "preCourseTestTransactionId"
               : "postCourseTestTransactionId");
 
-      if (token == null || preCourseTestTransactionId == null) {
+      if (token == null || CourseTestTransactionId == null) {
         print(token);
-        print(preCourseTestTransactionId);
+        print(CourseTestTransactionId);
         print("Missing required data to save response");
         return;
       }
@@ -232,19 +241,33 @@ class _TestScreenState extends State<TestScreen> {
       }
 
       final question = questions[questionIndex];
-      final questionId = question['pre_course_test_question_id'];
-      final optionId = optionIndex != null
-          ? question['options_data'][optionIndex]
-              ['pre_course_test_questions_options_id']
-          : 0; // 0 means no option selected
+      final questionId = question['course_test_question_id'];
+      // final optionId = optionIndex != null
+      //     ? isPreCourse ? question['options_data'][optionIndex]['pre_course_test_questions_options_id'] : question['options_data'][optionIndex]
+      //         ['post_course_test_questions_options_id']
+      //     : 0; // 0 means no option selected
+
+      int optionId = 0;
+      if(optionIndex != null) {
+         optionId = isPreCourse
+            ? question['options_data'][optionIndex]
+                ['pre_course_test_questions_options_id']
+            : question['options_data'][optionIndex]
+                ['post_course_test_questions_options_id'];
+
+        print("Selected option ID: $optionId");
+      }
 
       String apiUrl = isPreCourse
           ? "$baseurl/app/save-update-pre-course-test-questions-response/" +
-              "$token/$preCourseTestTransactionId/$questionId/$optionId"
+              "$token/$CourseTestTransactionId/$questionId/$optionId"
           : "$baseurl/app/save-update-post-course-test-questions-response/" +
-              "$token/$preCourseTestTransactionId/$questionId/$optionId";
+              "$token/$CourseTestTransactionId/$questionId/$optionId";
 
       final response = await http.get(Uri.parse(apiUrl));
+
+      print(
+          "url printing for update answere api +++++++++++ $isPreCourse +++++++++++++++++ $apiUrl");
 
       print(response.body);
       print(

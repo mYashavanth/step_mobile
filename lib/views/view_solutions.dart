@@ -45,6 +45,7 @@ class _ViewSolutionState extends State<ViewSolution> {
       try {
         final response = await http.get(Uri.parse(url));
         if (response.statusCode == 200) {
+          print('Response body for solution data: ${response.body}');
           setState(() {
             solutionData =
                 List<Map<String, dynamic>>.from(json.decode(response.body));
