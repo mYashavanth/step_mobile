@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:ghastep/views/dry.dart';
 
 Widget buildTopSelectCards(bool selected, String title) {
   return Container(
@@ -29,22 +31,55 @@ Widget buildTopSelectCards(bool selected, String title) {
   );
 }
 
-class QuestAnsSolWidget extends StatelessWidget {
+class QuestAnsSolWidget extends StatefulWidget {
   final List<Map<String, dynamic>> solutionData;
 
   const QuestAnsSolWidget({super.key, required this.solutionData});
 
   @override
+  State<QuestAnsSolWidget> createState() => _QuestAnsSolWidgetState();
+}
+
+class _QuestAnsSolWidgetState extends State<QuestAnsSolWidget> {
+  final storage = const FlutterSecureStorage();
+  bool isPreCourse = true;
+  @override
+  void initState() {
+    super.initState();
+    _loadIsPreCourseFlag();
+    // Initialize any state or fetch data if needed
+  }
+
+    Future<void> _loadIsPreCourseFlag() async {
+    try {
+      String? isPreCourseFlag = await storage.read(key: "isPreCourse");
+      setState(() {
+        isPreCourse = isPreCourseFlag == "true";
+      });
+     
+    } catch (e) {
+      print("Error loading isPreCourse flag: $e");
+      showCustomSnackBar(
+        context: context,
+        message: "An error occurred while loading test details.",
+        isSuccess: false,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    print("Solution Data: ${widget.solutionData}");
     return Column(
-      children: List.generate(solutionData.length, (i) {
-        return buildQuestionAnsSol(solutionData[i]);
+      children: List.generate(widget.solutionData.length, (i) {
+        return buildQuestionAnsSol(widget.solutionData[i] , isPreCourse);
+
       }),
     );
   }
 }
 
-Widget buildQuestionAnsSol(Map<String, dynamic> data) {
+Widget buildQuestionAnsSol(Map<String, dynamic> data , bool isPreCourse) {
   return Container(
     color: Colors.white,
     margin: const EdgeInsets.only(bottom: 12),
@@ -90,9 +125,13 @@ Widget buildQuestionAnsSol(Map<String, dynamic> data) {
         ...data["options"].asMap().entries.map<Widget>((entry) {
           int index = entry.key;
           var option = entry.value;
-          return solAnswerCard(
-            data["selected_pre_course_test_options_id"] ==
-                option["pre_course_test_questions_options_id"],
+          return solAnswerCard( 
+            isPreCourse
+                ? data["selected_pre_course_test_options_id"] ==
+                    option["pre_course_test_questions_options_id"]
+                :
+            data["selected_post_course_test_options_id"] ==
+                option["post_course_test_questions_options_id"],
             option["option_text"],
             option["option_text"],
             data["correct_option_text"],
