@@ -116,32 +116,32 @@ class _IntroState extends State<Intro> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                OutlinedButton(
-                  onPressed: () {
-                    // Handle continue with Google
-                  },
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(double.infinity, 50),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image(image: AssetImage('assets/icons/google1.png')),
-                      SizedBox(width: 24),
-                      Text(
-                        'Continue with Google',
-                        style: TextStyle(
-                          color: Color(0xFF1A1A1A),
-                          fontSize: 16,
-                          fontFamily: 'SF Pro Display',
-                          fontWeight: FontWeight.w500,
-                          height: 1.50,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                // const SizedBox(height: 16),
+                // OutlinedButton(
+                //   onPressed: () {
+                //     // Handle continue with Google
+                //   },
+                //   style: OutlinedButton.styleFrom(
+                //     minimumSize: const Size(double.infinity, 50),
+                //   ),
+                //   child: const Row(
+                //     mainAxisAlignment: MainAxisAlignment.center,
+                //     children: [
+                //       Image(image: AssetImage('assets/icons/google1.png')),
+                //       SizedBox(width: 24),
+                //       Text(
+                //         'Continue with Google',
+                //         style: TextStyle(
+                //           color: Color(0xFF1A1A1A),
+                //           fontSize: 16,
+                //           fontFamily: 'SF Pro Display',
+                //           fontWeight: FontWeight.w500,
+                //           height: 1.50,
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                // ),
                 const SizedBox(height: 32),
                 const Text.rich(
                   TextSpan(
