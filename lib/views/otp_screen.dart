@@ -5,6 +5,7 @@ import 'package:ghastep/views/urlconfig.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:ghastep/views/dry.dart';
+import 'dart:async';
 
 class OTPScreen extends StatefulWidget {
   const OTPScreen({super.key});
@@ -17,13 +18,35 @@ class _OTPScreenState extends State<OTPScreen> {
   final storage = const FlutterSecureStorage();
   String? mobile;
   late String appUserId;
-  String enteredOtp = ""; // Variable to store the entered OTP
-  bool clearOtpField = false; // Flag to clear the OTP field
+  String enteredOtp = "";
+  bool clearOtpField = false;
+  bool isResendingOtp = false;
+  int resendCountdown = 30; // 30 seconds countdown for resend
+  late Timer resendTimer;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    startResendTimer();
+  }
+
+  @override
+  void dispose() {
+    resendTimer.cancel();
+    super.dispose();
+  }
+
+  void startResendTimer() {
+    resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (resendCountdown > 0) {
+        setState(() {
+          resendCountdown--;
+        });
+      } else {
+        timer.cancel();
+      }
+    });
   }
 
   Future<void> _loadUserData() async {
@@ -46,12 +69,11 @@ class _OTPScreenState extends State<OTPScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print('Response data: $data'); // Debug print
+        print('Response data: $data');
         if (data['errFlag'] == 0) {
-          // OTP verification successful
           setState(() {
-            enteredOtp = ""; // Clear the entered OTP
-            clearOtpField = true; // Set the flag to clear the OTP field
+            enteredOtp = "";
+            clearOtpField = true;
           });
           await storage.write(key: 'token', value: data['token']);
           Navigator.pushNamed(context, "/details_form");
@@ -62,8 +84,6 @@ class _OTPScreenState extends State<OTPScreen> {
             isSuccess: true,
           );
         } else {
-          // OTP verification failed
-
           showCustomSnackBar(
             context: context,
             message: data['message'],
@@ -71,8 +91,6 @@ class _OTPScreenState extends State<OTPScreen> {
           );
         }
       } else {
-        // Server error
-
         showCustomSnackBar(
           context: context,
           message: 'Failed to verify OTP. Please try again.',
@@ -80,11 +98,79 @@ class _OTPScreenState extends State<OTPScreen> {
         );
       }
     } catch (e) {
-      // Exception handling
-      print('Error: $e'); // Debug print
+      print('Error: $e');
       showCustomSnackBar(
         context: context,
         message: 'An error occurred: $e',
+        isSuccess: false,
+      );
+    }
+  }
+
+  Future<void> _resendOtp() async {
+    if (isResendingOtp || resendCountdown > 0) return;
+
+    setState(() {
+      isResendingOtp = true;
+    });
+
+    String url = '$baseurl/app-users/login-register-mobile';
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        body: {'mobile': mobile},
+      );
+
+      print('Resend OTP Response status: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print('Resend OTP Response data: $data');
+
+        if (data['errFlag'] == 0) {
+          // Reset the countdown
+          setState(() {
+            resendCountdown = 30;
+            isResendingOtp = false;
+          });
+
+          // Restart the timer
+          startResendTimer();
+
+          showCustomSnackBar(
+            context: context,
+            message: 'OTP resent successfully',
+            isSuccess: true,
+          );
+        } else {
+          setState(() {
+            isResendingOtp = false;
+          });
+          showCustomSnackBar(
+            context: context,
+            message: data['message'],
+            isSuccess: false,
+          );
+        }
+      } else {
+        setState(() {
+          isResendingOtp = false;
+        });
+        showCustomSnackBar(
+          context: context,
+          message: 'Failed to resend OTP. Please try again.',
+          isSuccess: false,
+        );
+      }
+    } catch (e) {
+      setState(() {
+        isResendingOtp = false;
+      });
+      print('Error resending OTP: $e');
+      showCustomSnackBar(
+        context: context,
+        message: 'An error occurred while resending OTP.',
         isSuccess: false,
       );
     }
@@ -135,9 +221,7 @@ class _OTPScreenState extends State<OTPScreen> {
                 ],
               ),
             ),
-            const SizedBox(
-              height: 16,
-            ),
+            const SizedBox(height: 16),
             const Text(
               'We have sent code to your number',
               style: TextStyle(
@@ -149,8 +233,7 @@ class _OTPScreenState extends State<OTPScreen> {
               ),
             ),
             Text(
-              mobile ??
-                  'Loading...', // Display a placeholder while mobile is null
+              mobile ?? 'Loading...',
               style: const TextStyle(
                 color: Color(0xFF737373),
                 fontSize: 16,
@@ -159,9 +242,7 @@ class _OTPScreenState extends State<OTPScreen> {
                 height: 1.50,
               ),
             ),
-            const SizedBox(
-              height: 12,
-            ),
+            const SizedBox(height: 12),
             OtpTextField(
               textStyle: const TextStyle(
                 color: Color(0xFF1A1A1A),
@@ -170,55 +251,56 @@ class _OTPScreenState extends State<OTPScreen> {
                 fontWeight: FontWeight.w500,
                 height: 1.25,
               ),
-              fieldWidth: MediaQuery.of(context).size.width *
-                  0.12, // Adjusted width for 6 fields
-              numberOfFields: 6, // Set to 6 for a 6-digit PIN
+              fieldWidth: MediaQuery.of(context).size.width * 0.12,
+              numberOfFields: 6,
               showFieldAsBox: true,
               borderRadius: BorderRadius.circular(10),
               borderWidth: 1,
               borderColor: const Color(0xFFE1E1E1),
               focusedBorderColor: const Color(0xFF247E80),
               contentPadding: const EdgeInsets.all(15),
-              clearText: clearOtpField, // Use the clearText parameter
+              clearText: clearOtpField,
               onCodeChanged: (value) {
-                enteredOtp = value; // Update enteredOtp on every change
+                enteredOtp = value;
               },
               onSubmit: (value) {
-                enteredOtp =
-                    value; // Store the complete OTP when all fields are filled
-                print('Complete OTP: $enteredOtp'); // Debug print
+                enteredOtp = value;
+                print('Complete OTP: $enteredOtp');
               },
             ),
-            const SizedBox(
-              height: 12,
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            const Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'Didn’t receive OTP? ',
-                    style: TextStyle(
-                      color: Color(0xFF1A1A1A),
-                      fontSize: 16,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      height: 1.50,
+            const SizedBox(height: 12),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: resendCountdown == 0 ? _resendOtp : null,
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(
+                      text: 'Didn\'t receive OTP? ',
+                      style: TextStyle(
+                        color: Color(0xFF1A1A1A),
+                        fontSize: 16,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w400,
+                        height: 1.50,
+                      ),
                     ),
-                  ),
-                  TextSpan(
-                    text: 'Resend',
-                    style: TextStyle(
-                      color: Color(0xFF247E80),
-                      fontSize: 16,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w500,
-                      height: 1.50,
+                    TextSpan(
+                      text: resendCountdown > 0
+                          ? 'Resend in $resendCountdown'
+                          : 'Resend',
+                      style: TextStyle(
+                        color: resendCountdown > 0
+                            ? const Color(0xFF737373)
+                            : const Color(0xFF247E80),
+                        fontSize: 16,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w500,
+                        height: 1.50,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             )
           ],
@@ -231,11 +313,11 @@ class _OTPScreenState extends State<OTPScreen> {
           children: [
             ElevatedButton(
               onPressed: () {
-                print('Entered OTP: $enteredOtp'); // Debug print
+                print('Entered OTP: $enteredOtp');
                 if (enteredOtp.length == 6) {
-                  _verifyOtp(enteredOtp); // Validate OTP on button click
+                  _verifyOtp(enteredOtp);
                   setState(() {
-                    clearOtpField = false; // Reset the clearText flag
+                    clearOtpField = false;
                   });
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(

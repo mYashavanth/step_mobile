@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -218,6 +219,7 @@ class _SettingsState extends State<Settings> {
 }
 
 void logOutPopUp(BuildContext context) {
+  final storage = const FlutterSecureStorage();
   showDialog(
     context: context,
     builder: (BuildContext context) => AlertDialog(
@@ -287,7 +289,7 @@ void logOutPopUp(BuildContext context) {
               children: [
                 Expanded(
                   child: InkWell(
-                    onTap: (){
+                    onTap: () {
                       Navigator.pop(context);
                     },
                     child: Container(
@@ -318,7 +320,10 @@ void logOutPopUp(BuildContext context) {
                 ),
                 Expanded(
                   child: InkWell(
-                    onTap: (){},
+                    onTap: () {
+                      storage.delete(key: "token");
+                      Navigator.pushReplacementNamed(context, '/intro');
+                    },
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: ShapeDecoration(
