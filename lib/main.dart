@@ -26,6 +26,11 @@ import 'package:ghastep/views/test_result.dart';
 import 'package:ghastep/views/test_screen.dart';
 import 'package:ghastep/views/updates.dart';
 import 'package:ghastep/views/view_solutions.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:ghastep/views/urlconfig.dart';
+import 'package:ghastep/views/dry.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(const MyApp());
@@ -93,28 +98,79 @@ class Splash extends StatefulWidget {
   const Splash({super.key});
 
   @override
-  State<Splash> createState() => _Splash();
+  State<Splash> createState() => _SplashState();
 }
 
-class _Splash extends State<Splash> {
+class _SplashState extends State<Splash> {
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  bool _isLoading = true;
+
+  Future<void> _validateToken() async {
+    try {
+      final token = await _secureStorage.read(key: 'token');
+
+      if (token == null || token.isEmpty) {
+        // No token found, navigate to intro
+        _navigateToIntro();
+        return;
+      }
+
+      final response =
+          await http.get(Uri.parse('$baseurl/app-users/validate-token/$token'));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('Response data: $data');
+        if (data['errFlag'] == 0 && data['message'] == 'Valid Token') {
+          // Token is valid, navigate to home
+          Navigator.pushReplacementNamed(context, '/home_page');
+        } else {
+          // Token is invalid, navigate to intro
+          _navigateToIntro();
+        }
+      } else {
+        // API error, navigate to intro
+        showCustomSnackBar(
+          context: context,
+          message: 'Authentication failed. Please login again.',
+          isSuccess: false,
+        );
+        _navigateToIntro();
+      }
+    } catch (e) {
+      // Handle any errors
+      showCustomSnackBar(
+        context: context,
+        message: 'Connection error. Please try again.',
+        isSuccess: false,
+      );
+      _navigateToIntro();
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _navigateToIntro() {
+    Navigator.pushReplacementNamed(context, '/intro');
+  }
+
   @override
   void initState() {
-    // TODO: implement initState
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pushNamed(context, "/intro");
-    });
     super.initState();
+    _validateToken();
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF247E80),
+    return Scaffold(
+      backgroundColor: const Color(0xFF247E80),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Padding(
+          const Padding(
             padding: EdgeInsets.symmetric(horizontal: 65),
             child: SizedBox(
               child: Image(
@@ -122,6 +178,13 @@ class _Splash extends State<Splash> {
               ),
             ),
           ),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.only(top: 20),
+              child: CircularProgressIndicator(
+                color: Colors.white,
+              ),
+            ),
         ],
       ),
     );
