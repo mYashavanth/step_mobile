@@ -24,14 +24,24 @@ class _ViewSolutionState extends State<ViewSolution> {
   }
 
   Future<void> fetchSolutionData() async {
+    bool isPreCourse = false;
     const storage = FlutterSecureStorage();
     String? token = await storage.read(key: 'token');
-    String? courseTestTransactionId =
-        await storage.read(key: 'preCourseTestTransactionId');
+      String? isPreCourseFlag = await storage.read(key: "isPreCourse");
+    setState(() {
+      isPreCourse = isPreCourseFlag == "true";
+    });
+
+    String? courseTestTransactionId = isPreCourse
+        ? await storage.read(key: 'preCourseTestTransactionId'):
+        await storage.read(key: 'postCourseTestTransactionId');
+
 
     if (token != null && courseTestTransactionId != null) {
-      final url =
-          '$baseurl/app/get-pre-course-test-user-reponses/$token/$courseTestTransactionId';
+      final url = isPreCourse
+          ? '$baseurl/app/get-pre-course-test-user-reponses/$token/$courseTestTransactionId':
+          '$baseurl/app/get-post-course-test-user-reponses/$token/$courseTestTransactionId';
+      print('Fetching solution data from: $url');
       try {
         final response = await http.get(Uri.parse(url));
         if (response.statusCode == 200) {
