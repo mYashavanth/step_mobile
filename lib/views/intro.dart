@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 
 class Intro extends StatefulWidget {
   const Intro({super.key});
@@ -143,11 +144,11 @@ class _IntroState extends State<Intro> {
                 //   ),
                 // ),
                 const SizedBox(height: 32),
-                const Text.rich(
+                Text.rich(
                   TextSpan(
                     children: [
-                      TextSpan(
-                        text: 'By using our services you are agreeing to our\n',
+                      const TextSpan(
+                        text: 'By using our services you are agreeing to our ',
                         style: TextStyle(
                           color: Color(0xFF737373),
                           fontSize: 12,
@@ -158,15 +159,21 @@ class _IntroState extends State<Intro> {
                       ),
                       TextSpan(
                         text: 'Terms',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Color(0xFF247E80),
-                          fontSize: 12,
+                          fontSize: 14,
                           fontFamily: 'SF Pro Display',
                           fontWeight: FontWeight.w500,
                           height: 1.67,
                         ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            Navigator.of(context)
+                                .pushNamed('/terms_and_conditions');
+                          },
+                        mouseCursor: SystemMouseCursors.click,
                       ),
-                      TextSpan(
+                      const TextSpan(
                         text: ' and ',
                         style: TextStyle(
                           color: Color(0xFF737373),
@@ -178,13 +185,18 @@ class _IntroState extends State<Intro> {
                       ),
                       TextSpan(
                         text: 'Privacy Policy',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Color(0xFF247E80),
-                          fontSize: 12,
+                          fontSize: 14,
                           fontFamily: 'SF Pro Display',
                           fontWeight: FontWeight.w500,
                           height: 1.67,
                         ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            Navigator.of(context).pushNamed('/privacy_policy');
+                          },
+                        mouseCursor: SystemMouseCursors.click,
                       ),
                     ],
                   ),
