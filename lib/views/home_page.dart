@@ -23,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   bool isLoadingCourses = true;
   String courseError = '';
   List<int> selectedCourseIds = [1]; // Default selected course
+  String userName = ''; // Variable to store the username
 
   // New state variables for subjects
   List<Map<String, dynamic>> subjects = [];
@@ -40,11 +41,19 @@ class _HomePageState extends State<HomePage> {
     _fetchCourses();
     _fetchSubjects();
     _fetchBannerImages();
+    await _loadUserName(); // Load the username from secure storage
     final storedId = await storage.read(key: 'selectedCourseId');
     setState(() {
       selectedCourseIds = storedId != null
           ? [int.parse(storedId)]
           : [1]; // Default to course ID 1 if not found
+    });
+  }
+
+  Future<void> _loadUserName() async {
+    final storedUserName = await storage.read(key: 'userName');
+    setState(() {
+      userName = storedUserName ?? 'User'; // Default to 'User' if not found
     });
   }
 
@@ -214,11 +223,11 @@ class _HomePageState extends State<HomePage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(
+                           SizedBox(
                             child: Text.rich(
                               TextSpan(
                                 children: [
-                                  TextSpan(
+                              const TextSpan(
                                     text: 'Hello ',
                                     style: TextStyle(
                                       color: Color(0xFF1A1A1A),
@@ -228,10 +237,10 @@ class _HomePageState extends State<HomePage> {
                                       height: 1.50,
                                     ),
                                   ),
-                                  TextSpan(
-                                    text: 'Rohan Canara ',
+                                const  TextSpan(
+                                    text: '👋 ',
                                     style: TextStyle(
-                                      color: Color(0xFF247E80),
+                                      color: Color(0xFF887E5B),
                                       fontSize: 16,
                                       fontFamily: 'SF Pro Display',
                                       fontWeight: FontWeight.w700,
@@ -239,9 +248,9 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                   TextSpan(
-                                    text: '👋 ',
-                                    style: TextStyle(
-                                      color: Color(0xFF887E5B),
+                                    text: userName,
+                                   style: const TextStyle(
+                                      color: Color(0xFF247E80),
                                       fontSize: 16,
                                       fontFamily: 'SF Pro Display',
                                       fontWeight: FontWeight.w700,
@@ -587,18 +596,18 @@ class CourseBanner extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       height: 248,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        image:
-        //  bannerImage.isNotEmpty?
-             DecorationImage(
-                image: NetworkImage(bannerImage), // Use the fetched image URL
-                fit: BoxFit.cover,
-              )
-            // : const DecorationImage(
-            //     image: AssetImage("assets/image/student.png"), // Fallback image
-            //     fit: BoxFit.cover,
-            //   ),
-      ),
+          borderRadius: BorderRadius.circular(12),
+          image:
+              //  bannerImage.isNotEmpty?
+              DecorationImage(
+            image: NetworkImage(bannerImage), // Use the fetched image URL
+            fit: BoxFit.cover,
+          )
+          // : const DecorationImage(
+          //     image: AssetImage("assets/image/student.png"), // Fallback image
+          //     fit: BoxFit.cover,
+          //   ),
+          ),
       child: Row(
         children: [
           Expanded(
