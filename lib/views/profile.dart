@@ -192,36 +192,36 @@ class _ProfileState extends State<Profile> {
               margin: const EdgeInsets.only(bottom: 12),
               child: Column(
                 children: [
+                  // Row(
+                  //   children: [
+                  //     Expanded(
+                  //       child: InkWell(
+                  //           onTap: () {
+                  //             Navigator.pushNamed(context, "/updates");
+                  //           },
+                  //           child: buildProfileCard(
+                  //               "Updates", "notification.svg")),
+                  //     ),
+                  //     Expanded(
+                  //       child: InkWell(
+                  //         onTap: () {
+                  //           Navigator.pushNamed(context, "/saved_items");
+                  //         },
+                  //         child: buildProfileCard("Saved items", "saved.svg"),
+                  //       ),
+                  //     ),
+                  //   ],
+                  // ),
+                  // const SizedBox(height: 12),
                   Row(
                     children: [
-                      Expanded(
-                        child: InkWell(
-                            onTap: () {
-                              Navigator.pushNamed(context, "/updates");
-                            },
-                            child: buildProfileCard(
-                                "Updates", "notification.svg")),
-                      ),
-                      Expanded(
-                        child: InkWell(
-                          onTap: () {
-                            Navigator.pushNamed(context, "/saved_items");
-                          },
-                          child: buildProfileCard("Saved items", "saved.svg"),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                            onTap: () {
-                              Navigator.pushNamed(context, "/faq");
-                            },
-                            child: buildProfileCard("FAQs", "faq.svg")),
-                      ),
+                      // Expanded(
+                      //   child: InkWell(
+                      //       onTap: () {
+                      //         Navigator.pushNamed(context, "/faq");
+                      //       },
+                      //       child: buildProfileCard("FAQs", "faq.svg")),
+                      // ),
                       Expanded(
                         child: InkWell(
                             onTap: () {

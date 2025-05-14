@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -17,7 +18,9 @@ class _SettingsState extends State<Settings> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         leading: IconButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pop(context);
+          },
           icon: const Icon(
             Icons.arrow_back_ios_new,
             color: Colors.black,
@@ -81,11 +84,12 @@ class _SettingsState extends State<Settings> {
                     ),
                   ),
                   buildSettingsRow(
-                      const Icon(Icons.star_border_purple500_outlined),
-                      "Rate the app",
-                      ""),
-                  buildSettingsRow(const Icon(Icons.flag_outlined),
-                      "Report a problem", "/report_problem"),
+                    const Icon(Icons.star_border_purple500_outlined),
+                    "Rate the app",
+                    "https://play.google.com/store/apps/details?id=com.ghastep&hl=en",
+                  ),
+                  // buildSettingsRow(const Icon(Icons.flag_outlined),
+                  //     "Report a problem", "/report_problem"),
                 ],
               ),
             ),
@@ -106,10 +110,10 @@ class _SettingsState extends State<Settings> {
                       height: 1.50,
                     ),
                   ),
-                  buildSettingsRow(
-                      const Icon(Icons.gavel), "Terms and conditions", ""),
+                  buildSettingsRow(const Icon(Icons.gavel),
+                      "Terms and conditions", "/terms_and_conditions"),
                   buildSettingsRow(const Icon(Icons.privacy_tip_outlined),
-                      "Privacy policy", ""),
+                      "Privacy policy", "/privacy_policy"),
                 ],
               ),
             ),
@@ -132,8 +136,8 @@ class _SettingsState extends State<Settings> {
                   ),
                   buildSettingsRow(
                       const Icon(Icons.logout), "Sign out", "log_out"),
-                  buildSettingsRow(
-                      const Icon(Icons.delete), "Delete account", ""),
+                  // buildSettingsRow(
+                  //     const Icon(Icons.delete), "Delete account", ""),
                 ],
               ),
             ),
@@ -173,7 +177,6 @@ class _SettingsState extends State<Settings> {
           width: 35,
           height: 35,
           margin: const EdgeInsets.only(right: 12),
-          // padding: const EdgeInsets.all(10),
           decoration: ShapeDecoration(
             color: const Color(0xFFEDEEF0),
             shape: RoundedRectangleBorder(
@@ -204,12 +207,22 @@ class _SettingsState extends State<Settings> {
         ),
         const Spacer(),
         IconButton(
-          onPressed: () {
+          onPressed: () async {
             if (route == "log_out") {
               logOutPopUp(context);
               return;
             }
-            Navigator.pushNamed(context, route);
+            if (route.startsWith('http')) {
+              // Handle URL launch
+              final Uri url = Uri.parse(route);
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              } else {
+                throw 'Could not launch $url';
+              }
+            } else if (route.isNotEmpty) {
+              Navigator.pushNamed(context, route);
+            }
           },
           icon: const Icon(Icons.arrow_forward_ios_rounded),
         ),

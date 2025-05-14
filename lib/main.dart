@@ -13,6 +13,7 @@ import 'package:ghastep/views/mobile_login.dart';
 import 'package:ghastep/views/notes.dart';
 import 'package:ghastep/views/notes_individual.dart';
 import 'package:ghastep/views/otp_screen.dart';
+import 'package:ghastep/views/privacy_policy.dart';
 import 'package:ghastep/views/profile.dart';
 import 'package:ghastep/views/profile_detail.dart';
 import 'package:ghastep/views/rankings_leaderbord_screen.dart';
@@ -22,6 +23,7 @@ import 'package:ghastep/views/select_course.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 import 'package:ghastep/views/settings.dart';
 import 'package:ghastep/views/subscription_page.dart';
+import 'package:ghastep/views/terms_and_conditions.dart';
 import 'package:ghastep/views/test_result.dart';
 import 'package:ghastep/views/test_screen.dart';
 import 'package:ghastep/views/updates.dart';
@@ -88,6 +90,8 @@ class MyApp extends StatelessWidget {
         '/subscribe': (context) => const SubscribePage(),
         '/updates': (context) => const UpdatesScreen(),
         '/all_subjects': (context) => const AllSubjectsScreen(),
+        '/terms_and_conditions': (context) => const TermsAndConditionsPage(),
+        '/privacy_policy': (context) => const PrivacyPolicyPage(),
       },
       initialRoute: '/splash',
     );
