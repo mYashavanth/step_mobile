@@ -4,6 +4,7 @@ import 'package:ghastep/views/dry.dart';
 import 'dart:convert';
 import 'package:ghastep/views/urlconfig.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/gestures.dart';
 
 class MobileLogin extends StatefulWidget {
   const MobileLogin({super.key});
@@ -258,10 +259,10 @@ class _MobileLoginState extends State<MobileLogin> {
               ),
             ),
             const SizedBox(height: 32),
-            const Text.rich(
+            Text.rich(
               TextSpan(
                 children: [
-                  TextSpan(
+                  const TextSpan(
                     text: 'By using our services you are agreeing to our ',
                     style: TextStyle(
                       color: Color(0xFF737373),
@@ -273,15 +274,21 @@ class _MobileLoginState extends State<MobileLogin> {
                   ),
                   TextSpan(
                     text: 'Terms',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Color(0xFF247E80),
-                      fontSize: 12,
+                      fontSize: 14,
                       fontFamily: 'SF Pro Display',
                       fontWeight: FontWeight.w500,
                       height: 1.67,
                     ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.of(context)
+                            .pushNamed('/terms_and_conditions');
+                      },
+                    mouseCursor: SystemMouseCursors.click,
                   ),
-                  TextSpan(
+                  const TextSpan(
                     text: ' and ',
                     style: TextStyle(
                       color: Color(0xFF737373),
@@ -293,13 +300,18 @@ class _MobileLoginState extends State<MobileLogin> {
                   ),
                   TextSpan(
                     text: 'Privacy Policy',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Color(0xFF247E80),
-                      fontSize: 12,
+                      fontSize: 14,
                       fontFamily: 'SF Pro Display',
                       fontWeight: FontWeight.w500,
                       height: 1.67,
                     ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.of(context).pushNamed('/privacy_policy');
+                      },
+                    mouseCursor: SystemMouseCursors.click,
                   ),
                 ],
               ),
