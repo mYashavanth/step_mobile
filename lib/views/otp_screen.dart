@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:ghastep/views/dry.dart';
 import 'dart:async';
+import 'package:flutter/gestures.dart';
 
 class OTPScreen extends StatefulWidget {
   const OTPScreen({super.key});
@@ -69,14 +70,52 @@ class _OTPScreenState extends State<OTPScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print('Response data: $data');
+        print('Response data for verify otp: $data');
         if (data['errFlag'] == 0) {
           setState(() {
             enteredOtp = "";
             clearOtpField = true;
           });
+
+          // Store token in secure storage
           await storage.write(key: 'token', value: data['token']);
-          Navigator.pushNamed(context, "/details_form");
+
+          // Extract user_fields
+          if (data['user_fields'] != null && data['user_fields'].isNotEmpty) {
+            final userFields = data['user_fields'][0];
+            final userEmail = userFields['app_user_email'];
+            final userName = userFields['app_user_name'];
+            final college = userFields['college'];
+            final isGraduated = userFields['is_graduated'];
+            final isUg = userFields['is_ug'];
+            final yearOfGraduation = userFields['year_of_graduation'];
+
+            // Store user_fields in secure storage
+            await storage.write(key: 'userEmail', value: userEmail);
+            await storage.write(key: 'userName', value: userName);
+            await storage.write(key: 'college', value: college);
+            await storage.write(
+                key: 'isGraduated', value: isGraduated.toString());
+            await storage.write(key: 'isUg', value: isUg.toString());
+            await storage.write(
+                key: 'yearOfGraduation', value: yearOfGraduation ?? '');
+
+            // Navigation logic
+            if (userEmail == null || userName == null || college == null) {
+              // Navigate to details_form if any of these fields are missing
+              Navigator.pushNamed(context, "/details_form");
+            } else if ((isGraduated != 1 && isUg != 1) ||
+                (yearOfGraduation == null || yearOfGraduation.isEmpty)) {
+              // Navigate to select_course if conditions are not met
+              Navigator.pushNamed(context, "/select_course");
+            } else {
+              // Navigate to home_page if all data is valid
+              Navigator.pushNamed(context, "/home_page");
+            }
+          } else {
+            // Navigate to details_form if user_fields is missing
+            Navigator.pushNamed(context, "/details_form");
+          }
 
           showCustomSnackBar(
             context: context,
@@ -185,41 +224,63 @@ class _OTPScreenState extends State<OTPScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text.rich(
+           Text.rich(
               TextSpan(
                 children: [
-                  TextSpan(
-                    text: 'OTP',
+                  const TextSpan(
+                    text: 'By using our services you are agreeing to our ',
                     style: TextStyle(
-                      color: Color(0xFF247E80),
-                      fontSize: 30,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w700,
-                      height: 1.20,
-                    ),
-                  ),
-                  TextSpan(
-                    text: ' ',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 30,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w700,
-                      height: 1.20,
-                    ),
-                  ),
-                  TextSpan(
-                    text: 'Verification',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 30,
+                      color: Color(0xFF737373),
+                      fontSize: 12,
                       fontFamily: 'SF Pro Display',
                       fontWeight: FontWeight.w400,
-                      height: 1.20,
+                      height: 1.67,
                     ),
+                  ),
+                  TextSpan(
+                    text: 'Terms',
+                    style: const TextStyle(
+                      color: Color(0xFF247E80),
+                      fontSize: 14,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w500,
+                      height: 1.67,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.of(context)
+                            .pushNamed('/terms_and_conditions');
+                      },
+                    mouseCursor: SystemMouseCursors.click,
+                  ),
+                  const TextSpan(
+                    text: ' and ',
+                    style: TextStyle(
+                      color: Color(0xFF737373),
+                      fontSize: 12,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w400,
+                      height: 1.67,
+                    ),
+                  ),
+                  TextSpan(
+                    text: 'Privacy Policy',
+                    style: const TextStyle(
+                      color: Color(0xFF247E80),
+                      fontSize: 14,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w500,
+                      height: 1.67,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        Navigator.of(context).pushNamed('/privacy_policy');
+                      },
+                    mouseCursor: SystemMouseCursors.click,
                   ),
                 ],
               ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             const Text(
