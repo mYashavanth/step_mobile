@@ -60,6 +60,16 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
                 : VideoFormat.other),
       );
 
+      // Add a listener to detect play/pause events and log the timestamp
+      _videoPlayerController.addListener(() {
+        final position = _videoPlayerController.value.position;
+        if (_videoPlayerController.value.isPlaying) {
+          debugPrint("Video is playing at timestamp: ${position.inSeconds}s");
+        } else {
+          debugPrint("Video is paused at timestamp: ${position.inSeconds}s");
+        }
+      });
+
       await _videoPlayerController.initialize();
 
       setState(() {
