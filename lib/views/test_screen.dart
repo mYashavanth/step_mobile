@@ -9,7 +9,6 @@ import 'dart:async';
 
 class TestScreen extends StatefulWidget {
   const TestScreen({super.key});
-
   @override
   State<TestScreen> createState() => _TestScreenState();
 }
@@ -345,13 +344,6 @@ class _TestScreenState extends State<TestScreen> {
       final apiUrl = isPreCourse ? Uri.parse("$baseurl/app/pre-course-test-mark-review/"+
               "$token/$CourseTestTransactionId/$questionId"): Uri.parse("$baseurl/app/post-course-test-mark-review/"+
               "$token/$CourseTestTransactionId/$questionId");
-      //     .replace(
-      //   queryParameters: {
-      //     'feedback_type': feedbackType.toString(),
-      //     if (additionalFeedback.isNotEmpty)
-      //       'additional_feedback': additionalFeedback,
-      //   },
-      // );
 
       // Make the API call
       final response = await http.get(apiUrl);
@@ -640,37 +632,37 @@ class _TestScreenState extends State<TestScreen> {
               ),
             ),
           ),
-          InkWell(
-            onTap: () {
-              // Clear selected option for current question
-              setState(() {
-                selectedOptions[currentPage] = null;
-              });
-              // Save the cleared response
-              _saveResponse(currentPage, null);
-            },
-            child: Container(
-              height: 40,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: ShapeDecoration(
-                color: const Color(0x1931B5B9),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-              ),
-              child: const Center(
-                  child: Text(
-                'Clear selected',
-                style: TextStyle(
-                  color: Color(0xFF289799),
-                  fontSize: 16,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w500,
-                  height: 1.50,
-                ),
-              )),
-            ),
-          ),
+          // InkWell(
+          //   onTap: () {
+          //     // Clear selected option for current question
+          //     setState(() {
+          //       selectedOptions[currentPage] = null;
+          //     });
+          //     // Save the cleared response
+          //     _saveResponse(currentPage, null);
+          //   },
+          //   child: Container(
+          //     height: 40,
+          //     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          //     decoration: ShapeDecoration(
+          //       color: const Color(0x1931B5B9),
+          //       shape: RoundedRectangleBorder(
+          //         borderRadius: BorderRadius.circular(24),
+          //       ),
+          //     ),
+          //     child: const Center(
+          //         child: Text(
+          //       'Clear selected',
+          //       style: TextStyle(
+          //         color: Color(0xFF289799),
+          //         fontSize: 16,
+          //         fontFamily: 'SF Pro Display',
+          //         fontWeight: FontWeight.w500,
+          //         height: 1.50,
+          //       ),
+          //     )),
+          //   ),
+          // ),
           InkWell(
             borderRadius: BorderRadius.circular(24),
             onTap: currentPage == totalQuestions - 1

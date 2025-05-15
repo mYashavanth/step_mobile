@@ -96,9 +96,9 @@ class _ViewSolutionState extends State<ViewSolution> {
                       scrollDirection: Axis.horizontal,
                       children: [
                         buildTopSelectCards(true, "All Solutions"),
-                        buildTopSelectCards(false, "Correct"),
-                        buildTopSelectCards(false, "Incorrect"),
-                        buildTopSelectCards(false, "Unanswered"),
+                        // buildTopSelectCards(false, "Correct"),
+                        // buildTopSelectCards(false, "Incorrect"),
+                        // buildTopSelectCards(false, "Unanswered"),
                       ],
                     ),
                   ),
