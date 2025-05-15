@@ -85,17 +85,19 @@ class _TestScreenState extends State<TestScreen> {
   }
 
   Future<void> _handleTimerEnd() async {
-    try {
-      // End the test and fetch the result
-      await _endTest();
-    } catch (e) {
-      print("Error handling timer end: $e");
-      showCustomSnackBar(
-        context: context,
-        message: "An error occurred while ending the test.",
-        isSuccess: false,
-      );
-    }
+    await _endTest();
+    print("+++++++++++++++++++++++++++++++++Timer ended++++++++++++++++++++++++++++++");
+    // try {
+    //   // End the test and fetch the result
+    //   await _endTest();
+    // } catch (e) {
+    //   print("Error handling timer end: $e");
+    //   showCustomSnackBar(
+    //     context: context,
+    //     message: "An error occurred while ending the test.",
+    //     isSuccess: false,
+    //   );
+    // }
   }
 
   String _formatDuration(Duration duration) {
@@ -150,8 +152,8 @@ class _TestScreenState extends State<TestScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         course_test_question_id = isPreCourse
-            ? data[0]['pre_course_test_question_id'].toString() :
-            data[0]['post_course_test_question_id'].toString();
+            ? data[0]['pre_course_test_question_id'].toString()
+            : data[0]['post_course_test_question_id'].toString();
 
         if (data is List && data.isNotEmpty) {
           final questionData = data[0];
@@ -165,12 +167,11 @@ class _TestScreenState extends State<TestScreen> {
                     'pre_course_test_questions_options_id':
                         option['pre_course_test_questions_options_id'],
                   })
-                :
-            options.add({
-              'option_text': option['option_text'],
-              'post_course_test_questions_options_id':
-                  option['post_course_test_questions_options_id'],
-            });
+                : options.add({
+                    'option_text': option['option_text'],
+                    'post_course_test_questions_options_id':
+                        option['post_course_test_questions_options_id'],
+                  });
           }
 
           // Create question map in the format expected by your TestScreenWidgets
@@ -183,8 +184,8 @@ class _TestScreenState extends State<TestScreen> {
                 ['option_text'], // Assuming first option is correct for now
             'question_no': questionData['question_no'],
             'course_test_question_id': isPreCourse
-                ? questionData['pre_course_test_question_id'] :
-                questionData['post_course_test_question_id'],
+                ? questionData['pre_course_test_question_id']
+                : questionData['post_course_test_question_id'],
           };
 
           // If we already have this question (from going back), update it
@@ -248,8 +249,8 @@ class _TestScreenState extends State<TestScreen> {
       //     : 0; // 0 means no option selected
 
       int optionId = 0;
-      if(optionIndex != null) {
-         optionId = isPreCourse
+      if (optionIndex != null) {
+        optionId = isPreCourse
             ? question['options_data'][optionIndex]
                 ['pre_course_test_questions_options_id']
             : question['options_data'][optionIndex]
@@ -307,10 +308,13 @@ class _TestScreenState extends State<TestScreen> {
 
       // Fetch required data from storage
       String? token = await storage.read(key: "token");
-      String? preCourseTestTransactionId =
-          await storage.read(key: "preCourseTestTransactionId");
+      String? CourseTestTransactionId = isPreCourse
+          ? await storage.read(key: "preCourseTestTransactionId")
+          : await storage.read(key: "postCourseTestTransactionId"); 
 
-      if (token == null || preCourseTestTransactionId == null) {
+          print("course test transaction id $isPreCourse : $CourseTestTransactionId");
+
+      if (token == null || CourseTestTransactionId == null) {
         print("Missing required data to submit review");
         showCustomSnackBar(
           context: context,
@@ -322,7 +326,7 @@ class _TestScreenState extends State<TestScreen> {
 
       // Get the current question's ID
       final currentQuestion = questions[currentPage];
-      final questionId = currentQuestion['pre_course_test_question_id'];
+      final questionId = currentQuestion['course_test_question_id'];
 
       if (questionId == null) {
         print("Missing question ID");
@@ -338,19 +342,20 @@ class _TestScreenState extends State<TestScreen> {
       int feedbackType = selectedOptions.isNotEmpty ? selectedOptions[0] : 0;
 
       // Construct the API URL
-      final apiUrl = Uri.parse("$baseurl/app/pre-course-test-mark-review/" +
-              "$token/$preCourseTestTransactionId/$questionId")
-          .replace(
-        queryParameters: {
-          'feedback_type': feedbackType.toString(),
-          if (additionalFeedback.isNotEmpty)
-            'additional_feedback': additionalFeedback,
-        },
-      );
+      final apiUrl = isPreCourse ? Uri.parse("$baseurl/app/pre-course-test-mark-review/"+
+              "$token/$CourseTestTransactionId/$questionId"): Uri.parse("$baseurl/app/post-course-test-mark-review/"+
+              "$token/$CourseTestTransactionId/$questionId");
+      //     .replace(
+      //   queryParameters: {
+      //     'feedback_type': feedbackType.toString(),
+      //     if (additionalFeedback.isNotEmpty)
+      //       'additional_feedback': additionalFeedback,
+      //   },
+      // );
 
       // Make the API call
       final response = await http.get(apiUrl);
-      print("pre-course-test- transaction id: $preCourseTestTransactionId");
+      print("course-test- transaction id: $CourseTestTransactionId");
       print("question id: $questionId");
       print("feedback type: $feedbackType");
       print(response.body);
@@ -442,6 +447,7 @@ class _TestScreenState extends State<TestScreen> {
   List<int> selectedReviewoption = [0];
 
   Future<void> _endTest() async {
+
     try {
       String? token = await storage.read(key: "token");
       String? testTransactionId = isPreCourse
