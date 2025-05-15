@@ -102,11 +102,12 @@ class _HomePageState extends State<HomePage> {
 
     try {
       String token = await storage.read(key: 'token') ?? '';
-      int courseId = selectedCourseIds.isNotEmpty
-          ? selectedCourseIds.first
-          : storedCourseId != null
-              ? int.parse(storedCourseId)
-              : 1;
+      int courseId = storedCourseId != null
+          ? int.parse(storedCourseId) :1;
+          // ? selectedCourseIds.first
+          // : storedCourseId != null
+          //     ? int.parse(storedCourseId)
+          //     : 1;
 
       final response = await http.get(
         Uri.parse(
