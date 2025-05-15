@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:ghastep/widgets/homepage_widgets.dart';
 import 'package:ghastep/widgets/navbar.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -11,12 +12,29 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  final storage = const FlutterSecureStorage();
+  String userName = '';
+
   List<Map> selectCourseData = [
     {"name": "NEET PG (2025)", "id": 1},
     {"name": "FMGE ( June - 2025 )", "id": 2},
     {"name": "JEE ( June - 2025 )", "id": 3},
   ];
   List<int> selectedCourse = [1];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final storedUserName = await storage.read(key: 'userName');
+    setState(() {
+      userName = storedUserName ?? 'User';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,12 +51,11 @@ class _ProfileState extends State<Profile> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(
-                          // width: 160,
+                         SizedBox(
                           child: Text.rich(
                             TextSpan(
                               children: [
-                                TextSpan(
+                                const TextSpan(
                                   text: 'Hello ',
                                   style: TextStyle(
                                     color: Color(0xFF1A1A1A),
@@ -49,8 +66,8 @@ class _ProfileState extends State<Profile> {
                                   ),
                                 ),
                                 TextSpan(
-                                  text: 'Rohan Canara ',
-                                  style: TextStyle(
+                                  text: userName,
+                                  style: const TextStyle(
                                     color: Color(0xFF247E80),
                                     fontSize: 16,
                                     fontFamily: 'SF Pro Display',
@@ -58,7 +75,7 @@ class _ProfileState extends State<Profile> {
                                     height: 1.50,
                                   ),
                                 ),
-                                TextSpan(
+                                const TextSpan(
                                   text: '👋 ',
                                   style: TextStyle(
                                     color: Color(0xFF887E5B),
@@ -77,7 +94,6 @@ class _ProfileState extends State<Profile> {
                             showModalBottomSheet(
                                 isScrollControlled: true,
                                 context: context,
-                                //  isScrollControlled: true,
                                 backgroundColor: Colors.transparent,
                                 builder: (context) {
                                   return StatefulBuilder(builder:
@@ -114,8 +130,6 @@ class _ProfileState extends State<Profile> {
                       ],
                     ),
                     Container(
-                      // width: 92,
-                      // height: 34,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),
                       decoration: ShapeDecoration(
@@ -192,36 +206,8 @@ class _ProfileState extends State<Profile> {
               margin: const EdgeInsets.only(bottom: 12),
               child: Column(
                 children: [
-                  // Row(
-                  //   children: [
-                  //     Expanded(
-                  //       child: InkWell(
-                  //           onTap: () {
-                  //             Navigator.pushNamed(context, "/updates");
-                  //           },
-                  //           child: buildProfileCard(
-                  //               "Updates", "notification.svg")),
-                  //     ),
-                  //     Expanded(
-                  //       child: InkWell(
-                  //         onTap: () {
-                  //           Navigator.pushNamed(context, "/saved_items");
-                  //         },
-                  //         child: buildProfileCard("Saved items", "saved.svg"),
-                  //       ),
-                  //     ),
-                  //   ],
-                  // ),
-                  // const SizedBox(height: 12),
                   Row(
                     children: [
-                      // Expanded(
-                      //   child: InkWell(
-                      //       onTap: () {
-                      //         Navigator.pushNamed(context, "/faq");
-                      //       },
-                      //       child: buildProfileCard("FAQs", "faq.svg")),
-                      // ),
                       Expanded(
                         child: InkWell(
                             onTap: () {
@@ -386,7 +372,6 @@ Widget profileBannerNotes() {
               // Navigator.pushNamed(context, "/otp_verify");
             },
             style: ElevatedButton.styleFrom(
-              // minimumSize: const Size(double.infinity, 50),
               backgroundColor: const Color(0xFFFE860A),
             ),
             child: const Text(
