@@ -19,6 +19,7 @@ Widget buildTabBarCourse(
 ) {
   print("videoData in widget page: $videoData");
   // Filter videos based on selected step
+
   final filteredVideos = videoData.isEmpty
       ? []
       : videoData
@@ -310,6 +311,7 @@ Widget collapseStepClassCard(
   required String videoDuration,
   required bool isLocked,
   required String videoUrl,
+  required int videoId,
 }) {
   return Container(
     margin: const EdgeInsets.symmetric(vertical: 4),
@@ -457,6 +459,7 @@ Widget collapseStepClassCard(
                           builder: (context) => FullScreenVideoPlayer(
                             videoUrl: videoUrl,
                             videoTitle: videoTitle,
+                            videoId: videoId, // <-- Pass the video id here
                           ),
                         ),
                       );
@@ -554,6 +557,7 @@ class _StepContentState extends State<StepContent> {
                 videoDuration: '${video['video_duration_in_mins'] ?? 0} mins',
                 isLocked: false,
                 videoUrl: video['video_link'] ?? '',
+                videoId: video['id'] ?? 0,
               );
             }),
           ),
