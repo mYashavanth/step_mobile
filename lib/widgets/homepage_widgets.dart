@@ -408,7 +408,6 @@ Widget buidSelectCourseBottomSheet(
   return Stack(clipBehavior: Clip.none, children: [
     Container(
       padding: const EdgeInsets.only(top: 16, left: 20, right: 20, bottom: 16),
-      // margin: EdgeInsets.only(top: 50),
       clipBehavior: Clip.antiAlias,
       decoration: const ShapeDecoration(
         color: Colors.white,
@@ -433,9 +432,7 @@ Widget buidSelectCourseBottomSheet(
               height: 1.10,
             ),
           ),
-          const SizedBox(
-            height: 8,
-          ),
+          const SizedBox(height: 8),
           Container(
             width: 358,
             decoration: const ShapeDecoration(
@@ -448,20 +445,26 @@ Widget buidSelectCourseBottomSheet(
               ),
             ),
           ),
-          const SizedBox(
-            height: 8,
-          ),
+          const SizedBox(height: 8),
           Column(
-            children: List.generate(selectCourseList.length, (int) {
+            children: List.generate(selectCourseList.length, (int index) {
               return buildSelectCourseRow(
-                  modalSetState, selectCourseList[int], selected);
+                  modalSetState, selectCourseList[index], selected);
             }),
           ),
-          const SizedBox(
-            height: 12,
-          ),
+          const SizedBox(height: 12),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
+              const storage = FlutterSecureStorage();
+              // Get the selected course's ID
+              Map selectedCourse = selectCourseList
+                  .firstWhere((course) => course['id'] == selected[0]);
+              String selectedCourseId = selectedCourse['id'].toString();
+
+              // Store the selected course ID in secure storage
+              await storage.write(
+                  key: "selectedCourseId", value: selectedCourseId);
+
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
@@ -561,7 +564,11 @@ Widget buidSelectCourseBottomSheetStep(
               String selectedStepName = selectedStep['name'];
               // Store the step id in Flutter Secure Storage
               await storage.write(key: "selectedStepNo", value: selectedStepId);
+              selected[0] = int.parse(selectedStepId);
               // Update the UI with the step name
+
+              print(
+                  "Printing selected after multi selection ++++++++++: $selected");
               onStepSelected(selectedStepName);
               Navigator.pop(context);
             },

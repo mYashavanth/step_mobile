@@ -427,7 +427,7 @@ Widget collapseStepClassCard(
 
                     if (response.statusCode == 200) {
                       // Print the API response
-                      print("API Response: ${response.body}");
+                      print("API Response for video api: ${response.body}");
 
                       // Navigate to full-screen player with Cloudflare URL
                       Navigator.push(
@@ -544,61 +544,61 @@ class _StepContentState extends State<StepContent> {
   }
 }
 
-class VideoPlayerScreen extends StatefulWidget {
-  const VideoPlayerScreen({super.key});
+// class VideoPlayerScreen extends StatefulWidget {
+//   const VideoPlayerScreen({super.key});
 
-  @override
-  State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
-}
+//   @override
+//   State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
+// }
 
-class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-  late VideoPlayerController _controller;
+// class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
+//   late VideoPlayerController _controller;
 
-  @override
-  void initState() {
-    super.initState();
-    const videoUrl =
-        "https://customer-bo58a3euqp8nmzzt.cloudflarestream.com/b524deed1bb964475f330a704f5b0b31/iframe?poster=https%3A%2F%2Fcustomer-bo58a3euqp8nmzzt.cloudflarestream.com%2Fb524deed1bb964475f330a704f5b0b31%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600";
+//   @override
+//   void initState() {
+//     super.initState();
+//     const videoUrl =
+//         "https://customer-bo58a3euqp8nmzzt.cloudflarestream.com/b524deed1bb964475f330a704f5b0b31/iframe?poster=https%3A%2F%2Fcustomer-bo58a3euqp8nmzzt.cloudflarestream.com%2Fb524deed1bb964475f330a704f5b0b31%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600";
 
-    _controller = VideoPlayerController.network(videoUrl)
-      ..initialize().then((_) {
-        setState(() {});
-        _controller.play();
-      });
-  }
+//     _controller = VideoPlayerController.network(videoUrl)
+//       ..initialize().then((_) {
+//         setState(() {});
+//         _controller.play();
+//       });
+//   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+//   @override
+//   void dispose() {
+//     _controller.dispose();
+//     super.dispose();
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Video Player"),
-      ),
-      body: Center(
-        child: _controller.value.isInitialized
-            ? AspectRatio(
-                aspectRatio: _controller.value.aspectRatio,
-                child: VideoPlayer(_controller),
-              )
-            : const CircularProgressIndicator(),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          setState(() {
-            _controller.value.isPlaying
-                ? _controller.pause()
-                : _controller.play();
-          });
-        },
-        child: Icon(
-          _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text("Video Player"),
+//       ),
+//       body: Center(
+//         child: _controller.value.isInitialized
+//             ? AspectRatio(
+//                 aspectRatio: _controller.value.aspectRatio,
+//                 child: VideoPlayer(_controller),
+//               )
+//             : const CircularProgressIndicator(),
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         onPressed: () {
+//           setState(() {
+//             _controller.value.isPlaying
+//                 ? _controller.pause()
+//                 : _controller.play();
+//           });
+//         },
+//         child: Icon(
+//           _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
+//         ),
+//       ),
+//     );
+//   }
+// }
