@@ -46,6 +46,15 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'GHAStep',
+      navigatorObservers: [
+        CustomNavigatorObserver(
+          onPopNext: () {
+            print("Navigated back to HomePage");
+            // Call fetchItineraries when HomePage is shown again
+            homePageKey.currentState?.fetchUserMetrics();
+          },
+        ),
+      ],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF247E80)),
         useMaterial3: true,
@@ -68,7 +77,7 @@ class MyApp extends StatelessWidget {
         '/otp_verify': (context) => const OTPScreen(),
         '/details_form': (context) => const DetailsForm(),
         '/select_course': (context) => const SelectCourse(),
-        '/home_page': (context) => const HomePage(),
+        '/home_page': (context) => HomePage(),
         '/calendar_view': (context) => const CalendarScreen(),
         '/course_screen': (context) => const CourseScreen(),
         '/before_enter_test': (context) => const BeforeEnterTestScreen(),
@@ -192,5 +201,21 @@ class _SplashState extends State<Splash> {
         ],
       ),
     );
+  }
+}
+
+class CustomNavigatorObserver extends NavigatorObserver {
+  final VoidCallback onPopNext;
+
+  CustomNavigatorObserver({required this.onPopNext});
+
+  @override
+  void didPop(Route route, Route? previousRoute) {
+    super.didPop(route, previousRoute);
+    print("didPop called ${previousRoute?.settings.name}");
+    if (previousRoute?.settings.name == '/home_page') {
+      print("onPopNext called");
+      onPopNext(); // Trigger the callback when navigating back to HomePage
+    }
   }
 }

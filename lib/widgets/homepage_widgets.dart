@@ -225,6 +225,7 @@ Widget buildStepWiseCourseCard(
             'courseId': selectedCourseId,
             'subjectId': id,
           });
+          await storage.write(key: "selectedSubjectId", value: id);
           showCustomSnackBar(
             context: context,
             message: data['message'],
@@ -235,6 +236,7 @@ Widget buildStepWiseCourseCard(
             'courseId': selectedCourseId,
             'subjectId': id,
           });
+          await storage.write(key: "selectedSubjectId", value: id);
           showCustomSnackBar(
             context: context,
             message: data['message'],

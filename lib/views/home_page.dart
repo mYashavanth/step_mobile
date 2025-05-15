@@ -10,8 +10,10 @@ import 'package:ghastep/views/urlconfig.dart';
 import 'dart:math' as math;
 import 'package:share_plus/share_plus.dart';
 
+final GlobalKey<_HomePageState> homePageKey = GlobalKey<_HomePageState>();
+
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  HomePage({Key? key}) : super(key: homePageKey);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -19,6 +21,15 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final storage = const FlutterSecureStorage();
+
+  int videosWatched = 0;
+  bool isLoadingVideosWatched = false;
+  String videosWatchedError = '';
+  int testsAttempted = 0;
+  int questionsAttempted = 0;
+  int stepsCompleted = 0;
+  bool isLoadingMetrics = false;
+  String metricsError = '';
 
   List<Map<String, dynamic>> courses = [];
   bool isLoadingCourses = true;
@@ -49,6 +60,83 @@ class _HomePageState extends State<HomePage> {
           ? [int.parse(storedId)]
           : [1]; // Default to course ID 1 if not found
     });
+    fetchUserMetrics();
+  }
+
+  Future<void> fetchUserMetrics() async {
+    final token = await storage.read(key: 'token') ?? '';
+    final courseId = await storage.read(key: 'selectedCourseId') ?? '';
+    final subjectId = await storage.read(key: 'selectedSubjectId') ?? '';
+
+    if (courseId.isEmpty || subjectId.isEmpty || token.isEmpty) {
+      setState(() {
+        videosWatched = 0;
+        testsAttempted = 0;
+        questionsAttempted = 0;
+        stepsCompleted = 0;
+      });
+      return;
+    }
+
+    setState(() {
+      isLoadingVideosWatched = true;
+      isLoadingMetrics = true;
+      videosWatchedError = '';
+      metricsError = '';
+    });
+
+    try {
+      // First API call - Videos Watched
+      final videosResponse = await http.get(Uri.parse(
+          '$baseurl/app/no-of-video-watched/$courseId/$subjectId/$token'));
+
+      if (videosResponse.statusCode == 200) {
+        final List<dynamic> videosData = json.decode(videosResponse.body);
+        print(
+            'Videos watched response: ${videosResponse.statusCode} ${videosResponse.body}');
+        if (videosData.isNotEmpty &&
+            videosData[0]['no_of_videos_watched'] != null) {
+          setState(() {
+            videosWatched = videosData[0]['no_of_videos_watched'] ?? 0;
+          });
+        }
+      } else {
+        print('Failed to load videos watched: ${videosResponse.statusCode}');
+      }
+
+      // Second API call - Tests/Questions/Steps
+      final metricsResponse = await http.get(Uri.parse(
+          '$baseurl/app/home/tests-questions-steps/$token/$courseId/$subjectId'));
+
+      if (metricsResponse.statusCode == 200) {
+        final List<dynamic> metricsData = json.decode(metricsResponse.body);
+        print(
+            'Metrics response: ${metricsResponse.statusCode} ${metricsResponse.body}');
+        if (metricsData.isNotEmpty) {
+          setState(() {
+            testsAttempted = metricsData[0]['totalTestAttempted'] ?? 0;
+            questionsAttempted = metricsData[0]['totalQuestionsAtempted'] ?? 0;
+            stepsCompleted = metricsData[0]['totalStepsCompleted'] ?? 0;
+          });
+        }
+      } else {
+        print('Failed to load metrics: ${metricsResponse.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        videosWatchedError = e.toString();
+        metricsError = e.toString();
+        videosWatched = 0;
+        testsAttempted = 0;
+        questionsAttempted = 0;
+        stepsCompleted = 0;
+      });
+    } finally {
+      setState(() {
+        isLoadingVideosWatched = false;
+        isLoadingMetrics = false;
+      });
+    }
   }
 
   Future<void> _loadUserName() async {
@@ -81,7 +169,7 @@ class _HomePageState extends State<HomePage> {
               .toList();
         });
       } else {
-        throw Exception('Failed to load courses: ${response.statusCode}');
+        print('Failed to load courses: ${response.statusCode}');
       }
     } catch (e) {
       setState(() {
@@ -126,7 +214,7 @@ class _HomePageState extends State<HomePage> {
               .toList();
         });
       } else {
-        throw Exception('Failed to load subjects: ${response.statusCode}');
+        print('Failed to load subjects: ${response.statusCode}');
       }
     } catch (e) {
       setState(() {
@@ -391,24 +479,40 @@ class _HomePageState extends State<HomePage> {
                 Row(
                   children: [
                     Expanded(
-                        child: homeStepsCard(
-                            "VIDEOS WATCHED", "238 Mins", "clock.svg")),
+                      child: homeStepsCard(
+                          "VIDEOS WATCHED",
+                          isLoadingVideosWatched
+                              ? "Loading..."
+                              : "$videosWatched",
+                          "clock.svg"),
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
-                        child: homeStepsCard(
-                            "STEPS COMPLETED", "23", "steps.svg")),
+                      child: homeStepsCard(
+                          "STEPS COMPLETED",
+                          isLoadingMetrics ? "Loading..." : "$stepsCompleted",
+                          "steps.svg"),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
                     Expanded(
-                        child:
-                            homeStepsCard("TESTS ATTEMPTED", "5", "done.svg")),
+                      child: homeStepsCard(
+                          "TESTS ATTEMPTED",
+                          isLoadingMetrics ? "Loading..." : "$testsAttempted",
+                          "done.svg"),
+                    ),
                     const SizedBox(width: 16),
                     Expanded(
-                        child: homeStepsCard(
-                            "QUESTIONS ATTEMPTED", "85", "questions.svg")),
+                      child: homeStepsCard(
+                          "QUESTIONS ATTEMPTED",
+                          isLoadingMetrics
+                              ? "Loading..."
+                              : "$questionsAttempted",
+                          "questions.svg"),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
