@@ -8,6 +8,7 @@ import 'package:ghastep/widgets/navbar.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ghastep/views/urlconfig.dart';
 import 'dart:math' as math;
+import 'package:share_plus/share_plus.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -102,12 +103,11 @@ class _HomePageState extends State<HomePage> {
 
     try {
       String token = await storage.read(key: 'token') ?? '';
-      int courseId = storedCourseId != null
-          ? int.parse(storedCourseId) :1;
-          // ? selectedCourseIds.first
-          // : storedCourseId != null
-          //     ? int.parse(storedCourseId)
-          //     : 1;
+      int courseId = storedCourseId != null ? int.parse(storedCourseId) : 1;
+      // ? selectedCourseIds.first
+      // : storedCourseId != null
+      //     ? int.parse(storedCourseId)
+      //     : 1;
 
       final response = await http.get(
         Uri.parse(
@@ -224,11 +224,11 @@ class _HomePageState extends State<HomePage> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                           SizedBox(
+                          SizedBox(
                             child: Text.rich(
                               TextSpan(
                                 children: [
-                              const TextSpan(
+                                  const TextSpan(
                                     text: 'Hello ',
                                     style: TextStyle(
                                       color: Color(0xFF1A1A1A),
@@ -238,7 +238,7 @@ class _HomePageState extends State<HomePage> {
                                       height: 1.50,
                                     ),
                                   ),
-                                const  TextSpan(
+                                  const TextSpan(
                                     text: '👋 ',
                                     style: TextStyle(
                                       color: Color(0xFF887E5B),
@@ -250,7 +250,7 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   TextSpan(
                                     text: userName,
-                                   style: const TextStyle(
+                                    style: const TextStyle(
                                       color: Color(0xFF247E80),
                                       fontSize: 16,
                                       fontFamily: 'SF Pro Display',
@@ -392,7 +392,7 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Expanded(
                         child: homeStepsCard(
-                            "TOTAL WATCH MINS", "238 Mins", "clock.svg")),
+                            "VIDEOS WATCHED", "238 Mins", "clock.svg")),
                     const SizedBox(width: 16),
                     Expanded(
                         child: homeStepsCard(
@@ -539,7 +539,12 @@ class _HomePageState extends State<HomePage> {
                             SizedBox(
                               width: 170,
                               child: ElevatedButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  Share.share(
+                                      "Hey! I’ve been using the Global Healthcare Academy NEET PG App and it’s a game-changer for NEET PG prep — structured video lectures, MCQs with explanations, study planners, and more. "
+                                      "If you’re preparing too, I’d highly recommend checking it out. Let’s crack NEET PG together!\n"
+                                      "https://play.google.com/store/apps/details?id=com.ghastep&pcampaignid=web_share");
+                                },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF247E80),
                                 ),

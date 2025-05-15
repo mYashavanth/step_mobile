@@ -154,61 +154,61 @@ class _StepNavigationBar extends State<StepNavigationBar> {
             ),
           ),
 
-          GestureDetector(
-            onTap: () {
-              _onItemTapped(2);
-            },
-            child: SizedBox(
-              width: 70,
-              child: Column(
-                children: [
-                  Container(
-                    width: 56,
-                    height: 4,
-                    decoration: ShapeDecoration(
-                      color: _selectedIndex != 2
-                          ? Colors.white
-                          : const Color(0xFF247E80),
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(4),
-                          bottomRight: Radius.circular(4),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  SvgPicture.asset(
-                    'assets/icons/ranking.svg',
-                    colorFilter: ColorFilter.mode(
-                        _selectedIndex != 2
-                            ? const Color(0xFF8B8D98)
-                            : const Color(0xFF247E80),
-                        BlendMode.srcIn),
-                  ),
-                  const SizedBox(
-                    height: 6,
-                  ),
-                  Text(
-                    'Ranking',
-                    style: TextStyle(
-                      color: _selectedIndex != 2
-                          ? const Color(0xFF8B8D98)
-                          : const Color(0xFF247E80),
-                      fontSize: 12,
-                      fontFamily: "SF Pro Display",
-                      fontWeight: _selectedIndex != 2
-                          ? FontWeight.w400
-                          : FontWeight.w600,
-                      // height: 0.11,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // GestureDetector(
+          //   onTap: () {
+          //     _onItemTapped(2);
+          //   },
+          //   child: SizedBox(
+          //     width: 70,
+          //     child: Column(
+          //       children: [
+          //         Container(
+          //           width: 56,
+          //           height: 4,
+          //           decoration: ShapeDecoration(
+          //             color: _selectedIndex != 2
+          //                 ? Colors.white
+          //                 : const Color(0xFF247E80),
+          //             shape: const RoundedRectangleBorder(
+          //               borderRadius: BorderRadius.only(
+          //                 bottomLeft: Radius.circular(4),
+          //                 bottomRight: Radius.circular(4),
+          //               ),
+          //             ),
+          //           ),
+          //         ),
+          //         const SizedBox(
+          //           height: 5,
+          //         ),
+          //         SvgPicture.asset(
+          //           'assets/icons/ranking.svg',
+          //           colorFilter: ColorFilter.mode(
+          //               _selectedIndex != 2
+          //                   ? const Color(0xFF8B8D98)
+          //                   : const Color(0xFF247E80),
+          //               BlendMode.srcIn),
+          //         ),
+          //         const SizedBox(
+          //           height: 6,
+          //         ),
+          //         Text(
+          //           'Ranking',
+          //           style: TextStyle(
+          //             color: _selectedIndex != 2
+          //                 ? const Color(0xFF8B8D98)
+          //                 : const Color(0xFF247E80),
+          //             fontSize: 12,
+          //             fontFamily: "SF Pro Display",
+          //             fontWeight: _selectedIndex != 2
+          //                 ? FontWeight.w400
+          //                 : FontWeight.w600,
+          //             // height: 0.11,
+          //           ),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
           GestureDetector(
             onTap: () {
               _onItemTapped(3);

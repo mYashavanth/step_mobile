@@ -45,6 +45,7 @@ dependencies:
   chewie: ^1.4.0
   better_player_plus: ^1.0.8
   quiver: ^3.2.1
+  share_plus: ^10.1.4
 
 dev_dependencies:
   flutter_test:
