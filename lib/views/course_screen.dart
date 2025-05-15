@@ -58,6 +58,8 @@ class _CourseScreenState extends State<CourseScreen>
     }
     setState(() {
       selectedStepId = int.parse(stepId!);
+      chooseStepList[0] = selectedStepId;
+      stepTabSelectedIndex[0] = selectedStepId - 1;
     });
   }
 
@@ -220,11 +222,15 @@ class _CourseScreenState extends State<CourseScreen>
                                         );
                                         setState(() {
                                           selectedStepId = selectedStep["id"];
+                                          chooseStepList[0] = selectedStepId;
+                                          stepTabSelectedIndex[0] =
+                                              selectedStepId - 1;
                                         });
                                         storage.write(
                                           key: "selectedStepNo",
                                           value: selectedStep["id"].toString(),
                                         );
+                                        fetchVideoData();
                                       },
                                     );
                                   });
@@ -328,7 +334,27 @@ class _CourseScreenState extends State<CourseScreen>
             Padding(
               padding: const EdgeInsets.all(12),
               child: buildTabBarCourse(
-                  _tabController, stepTabSelectedIndex, setState, videoData),
+                _tabController,
+                stepTabSelectedIndex,
+                setState,
+                videoData,
+                chooseStepList,
+                selectedStepId,
+                (newStepId) {
+                  // This callback will be called when step changes
+                  setState(() {
+                    selectedStepId = newStepId;
+                    chooseStepList[0] = newStepId;
+                    stepTabSelectedIndex[0] = newStepId - 1;
+                  });
+                  storage.write(
+                    key: "selectedStepNo",
+                    value: newStepId.toString(),
+                  );
+                  // Fetch new video data for the new step
+                  fetchVideoData();
+                },
+              ),
             ),
           ],
         ),

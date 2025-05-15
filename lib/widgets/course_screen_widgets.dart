@@ -13,6 +13,9 @@ Widget buildTabBarCourse(
   List<int> stepTabSelectedIndex,
   StateSetter setState,
   List<dynamic> videoData,
+  List<int> chooseStepList,
+  int selectedStepId,
+  Function(int) onStepChanged,
 ) {
   print("videoData in widget page: $videoData");
   // Filter videos based on selected step
@@ -24,7 +27,13 @@ Widget buildTabBarCourse(
   return Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-      buildStepTabButton(setState, stepTabSelectedIndex),
+      buildStepTabButton(
+        setState,
+        stepTabSelectedIndex,
+        chooseStepList,
+        selectedStepId,
+        onStepChanged,
+      ),
       Container(
         padding: const EdgeInsets.only(left: 12, right: 12),
         child: Column(
@@ -114,13 +123,25 @@ List stepTabCourse = ['Step 1', "Step 2", "Step 3", "Notes", "Subject test"];
 Widget buildStepTabButton(
   StateSetter setState,
   List<int> stepTabSelectedIndex,
+  List<int> chooseStepList,
+  int selectedStepId,
+  Function(int) onStepChanged,
 ) {
+  final storage = FlutterSecureStorage();
   return Row(
       children: List.generate(5, (i) {
     return GestureDetector(
       onTap: () {
-        stepTabSelectedIndex[0] = i;
-        setState(() {});
+        final newStepId = i + 1;
+        onStepChanged(newStepId); // Call the callback instead
+        setState(() {
+          stepTabSelectedIndex[0] = i;
+          chooseStepList[0] = newStepId;
+        });
+        storage.write(
+          key: "selectedStepNo",
+          value: newStepId.toString(),
+        );
       },
       child: Container(
         margin: EdgeInsets.only(right: 12),
@@ -434,8 +455,7 @@ Widget collapseStepClassCard(
                         context,
                         MaterialPageRoute(
                           builder: (context) => FullScreenVideoPlayer(
-                            videoUrl:
-                                "https://customer-bo58a3euqp8nmzzt.cloudflarestream.com/b524deed1bb964475f330a704f5b0b31/manifest/video.m3u8",
+                            videoUrl: videoUrl,
                             videoTitle: videoTitle,
                           ),
                         ),

@@ -464,6 +464,11 @@ Widget buidSelectCourseBottomSheet(
               // Store the selected course ID in secure storage
               await storage.write(
                   key: "selectedCourseId", value: selectedCourseId);
+              selected[0] = int.parse(selectedCourseId);
+              // Update the UI with the step name
+
+              print(
+                  "Printing selected after multi selection course ++++++++++: $selected");
 
               Navigator.pop(context);
             },
@@ -568,7 +573,7 @@ Widget buidSelectCourseBottomSheetStep(
               // Update the UI with the step name
 
               print(
-                  "Printing selected after multi selection ++++++++++: $selected");
+                  "Printing selected after multi selection step ++++++++++: $selected");
               onStepSelected(selectedStepName);
               Navigator.pop(context);
             },

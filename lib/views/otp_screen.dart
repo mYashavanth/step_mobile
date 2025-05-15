@@ -100,6 +100,8 @@ class _OTPScreenState extends State<OTPScreen> {
             await storage.write(
                 key: 'yearOfGraduation', value: yearOfGraduation ?? '');
 
+            // Navigator.pushNamed(context, "/details_form");
+
             // Navigation logic
             if (userEmail == null || userName == null || college == null) {
               // Navigate to details_form if any of these fields are missing
@@ -224,7 +226,7 @@ class _OTPScreenState extends State<OTPScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-           Text.rich(
+            Text.rich(
               TextSpan(
                 children: [
                   const TextSpan(

@@ -85,7 +85,7 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
                   Text('URL: $playbackUrl'),
                   ElevatedButton(
                     onPressed: _retryPlayer,
-                    child: Text('Retry'),
+                    child: const Text('Retry'),
                   ),
                 ],
               ),
@@ -121,7 +121,8 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
       backgroundColor: Colors.black,
       body: SafeArea(
         child: _isLoading
-            ? Center(child: CircularProgressIndicator(color: Colors.white))
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.white))
             : Chewie(controller: _chewieController!),
       ),
     );
@@ -134,15 +135,15 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Video Playback Failed',
+            const Text('Video Playback Failed',
                 style: TextStyle(color: Colors.white)),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text('URL: ${widget.videoUrl}',
-                style: TextStyle(color: Colors.grey)),
-            SizedBox(height: 20),
+                style: const TextStyle(color: Colors.grey)),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _retryPlayer,
-              child: Text('Retry'),
+              child: const Text('Retry'),
             ),
           ],
         ),
