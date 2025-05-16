@@ -110,12 +110,17 @@ class _ProfileDetailsState extends State<ProfileDetails> {
                   Positioned(
                     right: 8,
                     top: 22, // Add this line to help with vertical positioning
-                    bottom: 0, // Add this line to help with vertical positioning
+                    bottom:
+                        0, // Add this line to help with vertical positioning
                     child: Center(
                       child: IconButton(
                         icon: const Icon(Icons.edit, color: Color(0xFF247E80)),
                         onPressed: () {
-                          print("Edit mobile clicked");
+                          Navigator.pushNamed(
+                            context,
+                            '/mobile_login',
+                            arguments: {'fromProfileEdit': true},
+                          );
                         },
                       ),
                     ),

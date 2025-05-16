@@ -23,12 +23,34 @@ class _MobileLoginState extends State<MobileLogin> {
   Future<void> _submitMobileNumber() async {
     if (_formKey.currentState!.validate()) {
       String mobile = mobileController.text.trim();
-      String url = '$baseurl/app-users/login-register-mobile';
 
+      // Get navigation arguments
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
+      // Choose URL based on navigation source
+      bool fromProfileEdit = args != null && args['fromProfileEdit'] == true;
+      String url = fromProfileEdit
+          ? '$baseurl/app-users/request-update-mobile'
+          : '$baseurl/app-users/login-register-mobile';
+
+      Map<String, String> body;
+
+      if (fromProfileEdit) {
+        String? token = await storage.read(key: 'token');
+        body = {
+          'newMobile': mobile,
+          if (token != null) 'token': token,
+        };
+      } else {
+        body = {'mobile': mobile};
+      }
+
+      print('URL for request mobile login page: $url,  and body is: $body');
       try {
         final response = await http.post(
           Uri.parse(url),
-          body: {'mobile': mobile},
+          body: body,
         );
         print('Response status: ${response.body}');
         if (response.statusCode == 200) {
@@ -37,13 +59,23 @@ class _MobileLoginState extends State<MobileLogin> {
           if (data['errFlag'] == 0) {
             // Store the mobile number securely
             await storage.write(key: 'mobile', value: mobile);
-            await storage.write(
-                key: 'appUserId', value: data['appUserId'].toString());
+
+            // Only update appUserId if NOT coming from profile edit
+            if (!fromProfileEdit) {
+              await storage.write(
+                key: 'appUserId',
+                value: data['appUserId'].toString(),
+              );
+            }
+
             // Handle success
             Navigator.pushNamed(
               context,
               "/otp_verify",
-              arguments: {'mobile': mobile},
+              arguments: {
+                'mobile': mobile,
+                'fromProfileEdit': fromProfileEdit,
+              },
             );
             showCustomSnackBar(
               context: context,
@@ -77,6 +109,17 @@ class _MobileLoginState extends State<MobileLogin> {
 
   @override
   Widget build(BuildContext context) {
+    // Read arguments
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
+    // Print the state if present
+    final bool fromProfileEdit =
+        args != null && args['fromProfileEdit'] == true;
+    if (fromProfileEdit) {
+      print('Navigated from profile edit: $fromProfileEdit');
+    }
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
