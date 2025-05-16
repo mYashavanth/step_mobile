@@ -20,47 +20,47 @@ PreferredSizeWidget testScreenAppBar(
         padding: const EdgeInsets.only(left: 12),
         child: Row(
           children: [
-            InkWell(
-              borderRadius: BorderRadius.circular(24),
-              onTap: () {},
-              child: Container(
-                width: 40,
-                height: 40,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: ShapeDecoration(
-                  color: const Color(0xFFEDEEF0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                ),
-                child: Center(
-                  child: SvgPicture.asset("assets/icons/exit.svg"),
-                ),
-              ),
-            ),
-            const SizedBox(
-              width: 12,
-            ),
-            InkWell(
-              borderRadius: BorderRadius.circular(24),
-              onTap: () {},
-              child: Container(
-                width: 40,
-                height: 40,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: ShapeDecoration(
-                  color: const Color(0xFFEDEEF0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                ),
-                child: Center(
-                  child: SvgPicture.asset("assets/icons/pause.svg"),
-                ),
-              ),
-            ),
+            // InkWell(
+            //   borderRadius: BorderRadius.circular(24),
+            //   onTap: () {},
+            //   child: Container(
+            //     width: 40,
+            //     height: 40,
+            //     padding:
+            //         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            //     decoration: ShapeDecoration(
+            //       color: const Color(0xFFEDEEF0),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(24),
+            //       ),
+            //     ),
+            //     child: Center(
+            //       child: SvgPicture.asset("assets/icons/exit.svg"),
+            //     ),
+            //   ),
+            // ),
+            // const SizedBox(
+            //   width: 12,
+            // ),
+            // InkWell(
+            //   borderRadius: BorderRadius.circular(24),
+            //   onTap: () {},
+            //   child: Container(
+            //     width: 40,
+            //     height: 40,
+            //     padding:
+            //         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            //     decoration: ShapeDecoration(
+            //       color: const Color(0xFFEDEEF0),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(24),
+            //       ),
+            //     ),
+            //     child: Center(
+            //       child: SvgPicture.asset("assets/icons/pause.svg"),
+            //     ),
+            //   ),
+            // ),
             Container(
               margin: const EdgeInsets.only(left: 12, right: 12),
               padding: const EdgeInsets.all(8),
@@ -89,6 +89,8 @@ PreferredSizeWidget testScreenAppBar(
                 ],
               ),
             ),
+            Spacer(),
+
             ElevatedButton(
               onPressed: () {
                 submitTestDialog(context, _endTest);
@@ -107,9 +109,13 @@ PreferredSizeWidget testScreenAppBar(
                 ),
               ),
             ),
+            const SizedBox(
+              width: 12,
+            ),
           ],
         ),
       ),
+      
     ),
   );
 }
@@ -603,29 +609,29 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
                     ),
                   ),
                   const Spacer(),
-                  IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.bookmark_border_outlined)),
-                  IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.outlined_flag_rounded)),
-                  IconButton(
-                      onPressed: () {
-                        showModalBottomSheet(
-                            isScrollControlled: true,
-                            context: context,
-                            //  isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (context) {
-                              return StatefulBuilder(builder:
-                                  (BuildContext context,
-                                      StateSetter modalSetState) {
-                                return buildQuestionGridOrListViewBottomSheet(
-                                    modalSetState, context);
-                              });
-                            });
-                      },
-                      icon: const Icon(Icons.grid_view_outlined)),
+                  // IconButton(
+                  //     onPressed: () {},
+                  //     icon: const Icon(Icons.bookmark_border_outlined)),
+                  // IconButton(
+                  //     onPressed: () {},
+                  //     icon: const Icon(Icons.outlined_flag_rounded)),
+                  // IconButton(
+                  //     onPressed: () {
+                  //       showModalBottomSheet(
+                  //           isScrollControlled: true,
+                  //           context: context,
+                  //           //  isScrollControlled: true,
+                  //           backgroundColor: Colors.transparent,
+                  //           builder: (context) {
+                  //             return StatefulBuilder(builder:
+                  //                 (BuildContext context,
+                  //                     StateSetter modalSetState) {
+                  //               return buildQuestionGridOrListViewBottomSheet(
+                  //                   modalSetState, context);
+                  //             });
+                  //           });
+                  //     },
+                  //     icon: const Icon(Icons.grid_view_outlined)),
                 ],
               ),
               const SizedBox(

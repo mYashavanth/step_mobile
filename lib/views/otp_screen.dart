@@ -33,6 +33,17 @@ class _OTPScreenState extends State<OTPScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null && args['fromProfileEdit'] == true) {
+      print(
+          'Navigated from profile edit in otp screen: ${args['fromProfileEdit']}');
+    }
+  }
+
+  @override
   void dispose() {
     resendTimer.cancel();
     super.dispose();
@@ -57,7 +68,20 @@ class _OTPScreenState extends State<OTPScreen> {
   }
 
   Future<void> _verifyOtp(String otp) async {
-    String url = '$baseurl/app-users/verify-otp';
+    // Get navigation arguments
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
+    // Determine which URL to use
+    String url;
+    bool fromProfileEdit = args != null && args['fromProfileEdit'] == true;
+    if (fromProfileEdit) {
+      url = '$baseurl/app-users/confirm-update-mobile';
+    } else {
+      url = '$baseurl/app-users/verify-otp';
+    }
+
+    print('URL for verify otp: $url');
 
     try {
       final response = await http.post(
@@ -80,6 +104,27 @@ class _OTPScreenState extends State<OTPScreen> {
           // Store token in secure storage
           await storage.write(key: 'token', value: data['token']);
 
+          // If fromProfileEdit and mobile updated successfully, update mobile and navigate
+          if (fromProfileEdit &&
+              data['message'] == 'Mobile updated successfully') {
+            // Get the new mobile from arguments (sent from previous page)
+            final newMobile = args['mobile'] as String?;
+            if (newMobile != null) {
+              await storage.write(key: 'mobile', value: newMobile);
+            }
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/profile_details',
+              (route) => false,
+            );
+            showCustomSnackBar(
+              context: context,
+              message: data['message'],
+              isSuccess: true,
+            );
+            return;
+          }
+
           // Extract user_fields
           if (data['user_fields'] != null && data['user_fields'].isNotEmpty) {
             final userFields = data['user_fields'][0];
@@ -100,22 +145,16 @@ class _OTPScreenState extends State<OTPScreen> {
             await storage.write(
                 key: 'yearOfGraduation', value: yearOfGraduation ?? '');
 
-            // Navigator.pushNamed(context, "/details_form");
-
             // Navigation logic
             if (userEmail == null || userName == null || college == null) {
-              // Navigate to details_form if any of these fields are missing
               Navigator.pushNamed(context, "/details_form");
             } else if ((isGraduated != 1 && isUg != 1) ||
                 (yearOfGraduation == null || yearOfGraduation.isEmpty)) {
-              // Navigate to select_course if conditions are not met
               Navigator.pushNamed(context, "/select_course");
             } else {
-              // Navigate to home_page if all data is valid
               Navigator.pushNamed(context, "/home_page");
             }
           } else {
-            // Navigate to details_form if user_fields is missing
             Navigator.pushNamed(context, "/details_form");
           }
 

@@ -61,37 +61,37 @@ class _ResultScreenTestState extends State<ResultScreenTest> {
             height: 1.40,
           ),
         ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 12),
-            padding: const EdgeInsets.all(8),
-            decoration: ShapeDecoration(
-              color: const Color(0xFFF9FAFB),
-              shape: RoundedRectangleBorder(
-                side: const BorderSide(
-                  width: 1,
-                  color: Color(0xFFDDDDDD),
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Row(
-              children: [
-                Text(
-                  'View attempts',
-                  style: TextStyle(
-                    color: Color(0xFF1A1A1A),
-                    fontSize: 14,
-                    fontFamily: 'SF Pro Display',
-                    fontWeight: FontWeight.w400,
-                    height: 1.71,
-                  ),
-                ),
-                Icon(Icons.keyboard_arrow_down_outlined)
-              ],
-            ),
-          )
-        ],
+        // actions: [
+        //   Container(
+        //     margin: const EdgeInsets.only(right: 12),
+        //     padding: const EdgeInsets.all(8),
+        //     decoration: ShapeDecoration(
+        //       color: const Color(0xFFF9FAFB),
+        //       shape: RoundedRectangleBorder(
+        //         side: const BorderSide(
+        //           width: 1,
+        //           color: Color(0xFFDDDDDD),
+        //         ),
+        //         borderRadius: BorderRadius.circular(8),
+        //       ),
+        //     ),
+        //     child: const Row(
+        //       children: [
+        //         Text(
+        //           'View attempts',
+        //           style: TextStyle(
+        //             color: Color(0xFF1A1A1A),
+        //             fontSize: 14,
+        //             fontFamily: 'SF Pro Display',
+        //             fontWeight: FontWeight.w400,
+        //             height: 1.71,
+        //           ),
+        //         ),
+        //         Icon(Icons.keyboard_arrow_down_outlined)
+        //       ],
+        //     ),
+        //   )
+        // ],
       ),
       body: resultData == null
           ? const Center(
@@ -142,7 +142,7 @@ class _ResultScreenTestState extends State<ResultScreenTest> {
                         buildButton(
                             context, "View solutions", '/view_solutions'),
                         const SizedBox(height: 12),
-                        buildBorderButton(context, "Re-attempt test", '')
+                        // buildBorderButton(context, "Re-attempt test", '')
                       ],
                     ),
                   ),
@@ -183,60 +183,60 @@ class _ResultScreenTestState extends State<ResultScreenTest> {
                   ),
                   borderHorizontal(),
                   const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Leaderboard',
-                          style: TextStyle(
-                            color: Color(0xFF1A1A1A),
-                            fontSize: 20,
-                            fontFamily: 'SF Pro Display',
-                            fontWeight: FontWeight.w500,
-                            height: 1.40,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Ranking is based on marks. Time taken to answer the test is used to break the tie, incase marks are the same for learners',
-                          style: TextStyle(
-                            color: Color(0xFF737373),
-                            fontSize: 14,
-                            fontFamily: 'SF Pro Display',
-                            fontWeight: FontWeight.w400,
-                            height: 1.57,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        buildUserRow(1, "Sushanth Raj"),
-                        borderHorizontal(),
-                        buildUserRow(2, "Suhas R"),
-                        borderHorizontal(),
-                        buildUserRow(3, "Deepthi"),
-                        borderHorizontal(),
-                        buildUserRow(420, "You"),
-                        borderHorizontal(),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pushNamed(
-                                context, "/leader_board_screen");
-                          },
-                          child: const Text(
-                            'See full leaderboard',
-                            style: TextStyle(
-                              color: Color(0xFF007AFF),
-                              fontSize: 16,
-                              fontFamily: 'SF Pro Display',
-                              fontWeight: FontWeight.w700,
-                              height: 1.50,
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                  )
+                  // Padding(
+                  //   padding: const EdgeInsets.all(16),
+                  //   child: Column(
+                  //     crossAxisAlignment: CrossAxisAlignment.start,
+                  //     children: [
+                  //       const Text(
+                  //         'Leaderboard',
+                  //         style: TextStyle(
+                  //           color: Color(0xFF1A1A1A),
+                  //           fontSize: 20,
+                  //           fontFamily: 'SF Pro Display',
+                  //           fontWeight: FontWeight.w500,
+                  //           height: 1.40,
+                  //         ),
+                  //       ),
+                  //       const SizedBox(height: 8),
+                  //       const Text(
+                  //         'Ranking is based on marks. Time taken to answer the test is used to break the tie, incase marks are the same for learners',
+                  //         style: TextStyle(
+                  //           color: Color(0xFF737373),
+                  //           fontSize: 14,
+                  //           fontFamily: 'SF Pro Display',
+                  //           fontWeight: FontWeight.w400,
+                  //           height: 1.57,
+                  //         ),
+                  //       ),
+                  //       const SizedBox(height: 8),
+                  //       buildUserRow(1, "Sushanth Raj"),
+                  //       borderHorizontal(),
+                  //       buildUserRow(2, "Suhas R"),
+                  //       borderHorizontal(),
+                  //       buildUserRow(3, "Deepthi"),
+                  //       borderHorizontal(),
+                  //       buildUserRow(420, "You"),
+                  //       borderHorizontal(),
+                  //       TextButton(
+                  //         onPressed: () {
+                  //           Navigator.pushNamed(
+                  //               context, "/leader_board_screen");
+                  //         },
+                  //         child: const Text(
+                  //           'See full leaderboard',
+                  //           style: TextStyle(
+                  //             color: Color(0xFF007AFF),
+                  //             fontSize: 16,
+                  //             fontFamily: 'SF Pro Display',
+                  //             fontWeight: FontWeight.w700,
+                  //             height: 1.50,
+                  //           ),
+                  //         ),
+                  //       )
+                  //     ],
+                  //   ),
+                  // )
                 ],
               ),
             ),
