@@ -23,6 +23,7 @@ class _ProfileState extends State<Profile> {
   int testsAttempted = 0;
   int questionsAttempted = 0;
   int stepsCompleted = 0;
+  int totalSteps = 0;
   bool isLoadingMetrics = false;
   String metricsError = '';
 
@@ -60,6 +61,7 @@ class _ProfileState extends State<Profile> {
         testsAttempted = 0;
         questionsAttempted = 0;
         stepsCompleted = 0;
+        totalSteps = 0;
       });
       return;
     }
@@ -103,6 +105,7 @@ class _ProfileState extends State<Profile> {
             testsAttempted = metricsData['totalTestAttempted'] ?? 0;
             questionsAttempted = metricsData['totalQuestionsAtempted'] ?? 0;
             stepsCompleted = metricsData['totalStepsCompleted'] ?? 0;
+            totalSteps = metricsData['totalSteps'] ?? 0;
           });
         }
       } else {
@@ -117,6 +120,7 @@ class _ProfileState extends State<Profile> {
         testsAttempted = 0;
         questionsAttempted = 0;
         stepsCompleted = 0;
+        totalSteps = 0;
       });
     } finally {
       setState(() {
@@ -270,9 +274,9 @@ class _ProfileState extends State<Profile> {
                                     letterSpacing: 1,
                                   ),
                                 ),
-                                const TextSpan(
-                                  text: '60',
-                                  style: TextStyle(
+                                TextSpan(
+                                  text: totalSteps.toString(),
+                                  style: const TextStyle(
                                     color: Color(0xFFFE7D14),
                                     fontSize: 14,
                                     fontFamily: 'SF Pro Display',
