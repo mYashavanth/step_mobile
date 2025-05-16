@@ -522,7 +522,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 20),
                 const UpcomingTests(),
-                bannerNotes(),
+                bannerNotes(context),
                 const Text(
                   'Resume learning',
                   style: TextStyle(
