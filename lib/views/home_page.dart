@@ -93,7 +93,7 @@ class _HomePageState extends State<HomePage> {
       if (videosResponse.statusCode == 200) {
         final List<dynamic> videosData = json.decode(videosResponse.body);
         print(
-            'Videos watched response: ${videosResponse.statusCode} ${videosResponse.body}');
+            '+++++++++++++++++++++++++++Videos watched response: ${videosResponse.statusCode} ${videosResponse.body}');
         if (videosData.isNotEmpty &&
             videosData[0]['no_of_videos_watched'] != null) {
           setState(() {
@@ -101,26 +101,27 @@ class _HomePageState extends State<HomePage> {
           });
         }
       } else {
-        print('Failed to load videos watched: ${videosResponse.statusCode}');
+        print(
+            '+++++++++++++++++++++++++++Failed to load videos watched: ${videosResponse.statusCode}');
       }
 
       // Second API call - Tests/Questions/Steps
       final metricsResponse = await http.get(Uri.parse(
           '$baseurl/app/home/tests-questions-steps/$token/$courseId/$subjectId'));
-
+      print(
+          '+++++++++++++++++++++++++++Metrics metricsResponse: ${metricsResponse.statusCode} ${metricsResponse.body}');
       if (metricsResponse.statusCode == 200) {
-        final List<dynamic> metricsData = json.decode(metricsResponse.body);
-        print(
-            'Metrics response: ${metricsResponse.statusCode} ${metricsResponse.body}');
+        final metricsData = json.decode(metricsResponse.body);
         if (metricsData.isNotEmpty) {
           setState(() {
-            testsAttempted = metricsData[0]['totalTestAttempted'] ?? 0;
-            questionsAttempted = metricsData[0]['totalQuestionsAtempted'] ?? 0;
-            stepsCompleted = metricsData[0]['totalStepsCompleted'] ?? 0;
+            testsAttempted = metricsData['totalTestAttempted'] ?? 0;
+            questionsAttempted = metricsData['totalQuestionsAtempted'] ?? 0;
+            stepsCompleted = metricsData['totalStepsCompleted'] ?? 0;
           });
         }
       } else {
-        print('Failed to load metrics: ${metricsResponse.statusCode}');
+        print(
+            '+++++++++++++++++++++++++++Failed to load metrics: ${metricsResponse.statusCode}');
       }
     } catch (e) {
       setState(() {
@@ -426,12 +427,12 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             SvgPicture.asset("assets/icons/Group (6).svg"),
                             const SizedBox(width: 12),
-                            const Text.rich(
+                            Text.rich(
                               TextSpan(
                                 children: [
                                   TextSpan(
-                                    text: '35',
-                                    style: TextStyle(
+                                    text: stepsCompleted.toString(),
+                                    style: const TextStyle(
                                       color: Color(0xFF1A1A1A),
                                       fontSize: 14,
                                       fontFamily: 'SF Pro Display',
@@ -440,7 +441,7 @@ class _HomePageState extends State<HomePage> {
                                       letterSpacing: 1,
                                     ),
                                   ),
-                                  TextSpan(
+                                  const TextSpan(
                                     text: '/',
                                     style: TextStyle(
                                       color: Color(0xFF1A1A1A),
@@ -451,7 +452,7 @@ class _HomePageState extends State<HomePage> {
                                       letterSpacing: 1,
                                     ),
                                   ),
-                                  TextSpan(
+                                  const TextSpan(
                                     text: '60',
                                     style: TextStyle(
                                       color: Color(0xFFFE7D14),

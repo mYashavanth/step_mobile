@@ -3,6 +3,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:ghastep/widgets/homepage_widgets.dart';
 import 'package:ghastep/widgets/navbar.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:ghastep/views/urlconfig.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -13,6 +16,16 @@ class Profile extends StatefulWidget {
 
 class _ProfileState extends State<Profile> {
   final storage = const FlutterSecureStorage();
+
+  int videosWatched = 0;
+  bool isLoadingVideosWatched = false;
+  String videosWatchedError = '';
+  int testsAttempted = 0;
+  int questionsAttempted = 0;
+  int stepsCompleted = 0;
+  bool isLoadingMetrics = false;
+  String metricsError = '';
+
   String userName = '';
 
   List<Map> selectCourseData = [
@@ -26,6 +39,7 @@ class _ProfileState extends State<Profile> {
   void initState() {
     super.initState();
     _loadUserName();
+    fetchUserMetrics();
   }
 
   Future<void> _loadUserName() async {
@@ -33,6 +47,83 @@ class _ProfileState extends State<Profile> {
     setState(() {
       userName = storedUserName ?? 'User';
     });
+  }
+
+  Future<void> fetchUserMetrics() async {
+    final token = await storage.read(key: 'token') ?? '';
+    final courseId = await storage.read(key: 'selectedCourseId') ?? '';
+    final subjectId = await storage.read(key: 'selectedSubjectId') ?? '';
+
+    if (courseId.isEmpty || subjectId.isEmpty || token.isEmpty) {
+      setState(() {
+        videosWatched = 0;
+        testsAttempted = 0;
+        questionsAttempted = 0;
+        stepsCompleted = 0;
+      });
+      return;
+    }
+
+    setState(() {
+      isLoadingVideosWatched = true;
+      isLoadingMetrics = true;
+      videosWatchedError = '';
+      metricsError = '';
+    });
+
+    try {
+      // First API call - Videos Watched
+      final videosResponse = await http.get(Uri.parse(
+          '$baseurl/app/no-of-video-watched/$courseId/$subjectId/$token'));
+
+      if (videosResponse.statusCode == 200) {
+        final List<dynamic> videosData = json.decode(videosResponse.body);
+        print(
+            '+++++++++++++++++++++++++++Videos watched response: ${videosResponse.statusCode} ${videosResponse.body}');
+        if (videosData.isNotEmpty &&
+            videosData[0]['no_of_videos_watched'] != null) {
+          setState(() {
+            videosWatched = videosData[0]['no_of_videos_watched'] ?? 0;
+          });
+        }
+      } else {
+        print(
+            '+++++++++++++++++++++++++++Failed to load videos watched: ${videosResponse.statusCode}');
+      }
+
+      // Second API call - Tests/Questions/Steps
+      final metricsResponse = await http.get(Uri.parse(
+          '$baseurl/app/home/tests-questions-steps/$token/$courseId/$subjectId'));
+      print(
+          '+++++++++++++++++++++++++++Metrics metricsResponse: ${metricsResponse.statusCode} ${metricsResponse.body}');
+      if (metricsResponse.statusCode == 200) {
+        final metricsData = json.decode(metricsResponse.body);
+        if (metricsData.isNotEmpty) {
+          setState(() {
+            testsAttempted = metricsData['totalTestAttempted'] ?? 0;
+            questionsAttempted = metricsData['totalQuestionsAtempted'] ?? 0;
+            stepsCompleted = metricsData['totalStepsCompleted'] ?? 0;
+          });
+        }
+      } else {
+        print(
+            '+++++++++++++++++++++++++++Failed to load metrics: ${metricsResponse.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        videosWatchedError = e.toString();
+        metricsError = e.toString();
+        videosWatched = 0;
+        testsAttempted = 0;
+        questionsAttempted = 0;
+        stepsCompleted = 0;
+      });
+    } finally {
+      setState(() {
+        isLoadingVideosWatched = false;
+        isLoadingMetrics = false;
+      });
+    }
   }
 
   @override
@@ -51,7 +142,7 @@ class _ProfileState extends State<Profile> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                         SizedBox(
+                        SizedBox(
                           child: Text.rich(
                             TextSpan(
                               children: [
@@ -89,44 +180,44 @@ class _ProfileState extends State<Profile> {
                             ),
                           ),
                         ),
-                        InkWell(
-                          onTap: () {
-                            showModalBottomSheet(
-                                isScrollControlled: true,
-                                context: context,
-                                backgroundColor: Colors.transparent,
-                                builder: (context) {
-                                  return StatefulBuilder(builder:
-                                      (BuildContext context,
-                                          StateSetter modalSetState) {
-                                    return buidSelectCourseBottomSheet(
-                                        context,
-                                        modalSetState,
-                                        selectCourseData,
-                                        selectedCourse,
-                                        "Select your Course");
-                                  });
-                                });
-                          },
-                          child: const Row(
-                            children: [
-                              Text(
-                                'NEET - PG (2025)',
-                                style: TextStyle(
-                                  color: Color(0xFF737373),
-                                  fontSize: 14,
-                                  fontFamily: 'SF Pro Display',
-                                  fontWeight: FontWeight.w400,
-                                  height: 1.57,
-                                ),
-                              ),
-                              Icon(
-                                Icons.keyboard_arrow_down,
-                                color: Color(0xFF737373),
-                              )
-                            ],
-                          ),
-                        )
+                        // InkWell(
+                        //   onTap: () {
+                        //     showModalBottomSheet(
+                        //         isScrollControlled: true,
+                        //         context: context,
+                        //         backgroundColor: Colors.transparent,
+                        //         builder: (context) {
+                        //           return StatefulBuilder(builder:
+                        //               (BuildContext context,
+                        //                   StateSetter modalSetState) {
+                        //             return buidSelectCourseBottomSheet(
+                        //                 context,
+                        //                 modalSetState,
+                        //                 selectCourseData,
+                        //                 selectedCourse,
+                        //                 "Select your Course");
+                        //           });
+                        //         });
+                        //   },
+                        //   child: const Row(
+                        //     children: [
+                        //       Text(
+                        //         'NEET - PG (2025)',
+                        //         style: TextStyle(
+                        //           color: Color(0xFF737373),
+                        //           fontSize: 14,
+                        //           fontFamily: 'SF Pro Display',
+                        //           fontWeight: FontWeight.w400,
+                        //           height: 1.57,
+                        //         ),
+                        //       ),
+                        //       Icon(
+                        //         Icons.keyboard_arrow_down,
+                        //         color: Color(0xFF737373),
+                        //       )
+                        //     ],
+                        //   ),
+                        // )
                       ],
                     ),
                     Container(
@@ -154,12 +245,12 @@ class _ProfileState extends State<Profile> {
                           const SizedBox(
                             width: 12,
                           ),
-                          const Text.rich(
+                          Text.rich(
                             TextSpan(
                               children: [
                                 TextSpan(
-                                  text: '35',
-                                  style: TextStyle(
+                                  text: stepsCompleted.toString(),
+                                  style: const TextStyle(
                                     color: Color(0xFF1A1A1A),
                                     fontSize: 14,
                                     fontFamily: 'SF Pro Display',
@@ -168,7 +259,7 @@ class _ProfileState extends State<Profile> {
                                     letterSpacing: 1,
                                   ),
                                 ),
-                                TextSpan(
+                                const TextSpan(
                                   text: '/',
                                   style: TextStyle(
                                     color: Color(0xFF1A1A1A),
@@ -179,7 +270,7 @@ class _ProfileState extends State<Profile> {
                                     letterSpacing: 1,
                                   ),
                                 ),
-                                TextSpan(
+                                const TextSpan(
                                   text: '60',
                                   style: TextStyle(
                                     color: Color(0xFFFE7D14),
@@ -257,30 +348,40 @@ class _ProfileState extends State<Profile> {
                   Row(
                     children: [
                       Expanded(
-                          child: homeStepsCard(
-                              "TOTAL WATCH MINS", "238 Mins", "clock.svg")),
-                      const SizedBox(
-                        width: 16,
+                        child: homeStepsCard(
+                            "VIDEOS WATCHED",
+                            isLoadingVideosWatched
+                                ? "Loading..."
+                                : "$videosWatched",
+                            "clock.svg"),
                       ),
+                      const SizedBox(width: 16),
                       Expanded(
-                          child: homeStepsCard(
-                              "STEPS COMPLETED", "23", "steps.svg")),
+                        child: homeStepsCard(
+                            "STEPS COMPLETED",
+                            isLoadingMetrics ? "Loading..." : "$stepsCompleted",
+                            "steps.svg"),
+                      ),
                     ],
                   ),
-                  const SizedBox(
-                    height: 12,
-                  ),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(
-                          child: homeStepsCard(
-                              "TESTS ATTEMPTED", "5", "done.svg")),
-                      const SizedBox(
-                        width: 16,
+                        child: homeStepsCard(
+                            "TESTS ATTEMPTED",
+                            isLoadingMetrics ? "Loading..." : "$testsAttempted",
+                            "done.svg"),
                       ),
+                      const SizedBox(width: 16),
                       Expanded(
-                          child: homeStepsCard(
-                              "QUESTIONS ATTEMPTED", "85", "questions.svg")),
+                        child: homeStepsCard(
+                            "QUESTIONS ATTEMPTED",
+                            isLoadingMetrics
+                                ? "Loading..."
+                                : "$questionsAttempted",
+                            "questions.svg"),
+                      ),
                     ],
                   ),
                 ],
