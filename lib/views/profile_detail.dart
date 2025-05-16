@@ -98,9 +98,30 @@ class _ProfileDetailsState extends State<ProfileDetails> {
               const SizedBox(
                 height: 12,
               ),
-              formInputWithLabel(
-                  mobileController, "Enter mobile number", "Mobile number",
-                  readOnly: true), //remove read only to make it editable
+              Stack(
+                alignment: Alignment.centerRight,
+                children: [
+                  formInputWithLabel(
+                    mobileController,
+                    "Enter mobile number",
+                    "Mobile number",
+                    readOnly: true,
+                  ),
+                  Positioned(
+                    right: 8,
+                    top: 22, // Add this line to help with vertical positioning
+                    bottom: 0, // Add this line to help with vertical positioning
+                    child: Center(
+                      child: IconButton(
+                        icon: const Icon(Icons.edit, color: Color(0xFF247E80)),
+                        onPressed: () {
+                          print("Edit mobile clicked");
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(
                 height: 12,
               ),
