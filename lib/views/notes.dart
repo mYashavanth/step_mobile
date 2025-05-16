@@ -43,7 +43,7 @@ class _NotesScreen extends State<NotesScreen> {
             const SizedBox(
               height: 6,
             ),
-            bannerNotes(),
+            bannerNotes(context),
             const SizedBox(
               height: 12,
             ),
@@ -56,71 +56,101 @@ class _NotesScreen extends State<NotesScreen> {
   }
 }
 
-Widget bannerNotes() {
+Widget bannerNotes(BuildContext context) {
+  // Get screen dimensions
+  final screenWidth = MediaQuery.of(context).size.width;
+  final screenHeight = MediaQuery.of(context).size.height;
+
+  // Calculate responsive values
+  final bannerHeight = screenHeight * 0.3; // 30% of screen height
+  final horizontalPadding = screenWidth * 0.05; // 5% of screen width
+  final verticalSpacing = screenHeight * 0.02; // 2% of screen height
+  final borderRadius = 8.0; // Border radius value
+
   return Container(
     color: Colors.white,
-    padding: const EdgeInsets.symmetric(
-      vertical: 16,
-    ),
-    child: Container(
-      height: 240,
-      width: double.maxFinite,
-      decoration: const ShapeDecoration(
-        image: DecorationImage(
-          image: AssetImage("assets/image/subscribe-to-premium-package.jpg"),
+    padding: EdgeInsets.symmetric(vertical: verticalSpacing),
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: Container(
+        height: bannerHeight,
+        width: double.maxFinite,
+        decoration: BoxDecoration(
+          image: const DecorationImage(
+            image: AssetImage("assets/image/subscribe-to-premium-package.jpg"),
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+          ),
         ),
-        shape: RoundedRectangleBorder(),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(
-            height: 16,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(borderRadius),
           ),
-          const Text(
-            'Get Unlimited Access',
-            style: TextStyle(
-              color: Color(0xFFEB7700),
-              fontSize: 20,
-              fontFamily: 'SF Pro Display',
-              fontWeight: FontWeight.w700,
-              height: 1.40,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(height: verticalSpacing),
+                const Text(
+                  'Get Unlimited Access',
+                  style: TextStyle(
+                    color: Color(0xFFEB7700),
+                    fontSize: 20,
+                    fontFamily: 'SF Pro Display',
+                    fontWeight: FontWeight.w700,
+                    height: 1.40,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: verticalSpacing),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                  child: const Text(
+                    'Get access to 60+ recorded sessions, 200+ videos, Downloadable resources & 60+ practice tests',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xCCEC7800),
+                      fontSize: 14,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w400,
+                      height: 1.43,
+                    ),
+                  ),
+                ),
+                SizedBox(height: verticalSpacing),
+                SizedBox(
+                  width: screenWidth * 0.6,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Handle button press
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFE860A),
+                      padding: EdgeInsets.symmetric(
+                        vertical: verticalSpacing * 0.8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(borderRadius),
+                      ),
+                    ),
+                    child: const Text(
+                      'Enroll Now @ ₹1000',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w500,
+                        height: 1.50,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 64),
-            child: Text(
-              'Get access to 60+ recorded sessions, 200+ videos, Downloadable resources & 60+ practice tests',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xCCEC7800),
-                fontSize: 14,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w400,
-                height: 1.43,
-              ),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // Handle login with mobile number
-              // Navigator.pushNamed(context, "/otp_verify");
-            },
-            style: ElevatedButton.styleFrom(
-              // minimumSize: const Size(double.infinity, 50),
-              backgroundColor: const Color(0xFFFE860A),
-            ),
-            child: const Text(
-              'Enroll Now @ ₹1000',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w500,
-                height: 1.50,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     ),
   );

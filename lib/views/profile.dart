@@ -448,7 +448,7 @@ Widget profileBannerNotes() {
             height: 16,
           ),
           const Text(
-            'Get Unlimited Access',
+            'Get Unlimited Accesss',
             style: TextStyle(
               color: Color(0xFFEB7700),
               fontSize: 20,
