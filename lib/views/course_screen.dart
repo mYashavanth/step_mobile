@@ -46,7 +46,8 @@ class _CourseScreenState extends State<CourseScreen>
     super.didUpdateWidget(oldWidget);
     // Call API when selectedStepId changes
     if (courseStepDetailId.isNotEmpty) {
-      fetchVideoData();
+      // fetchVideoData();
+      fetchCourseStepDetails();
     }
   }
 
@@ -76,7 +77,7 @@ class _CourseScreenState extends State<CourseScreen>
     final subjectId = args['subjectId'];
     try {
       final url = Uri.parse(
-          '$baseurl/app/get-course-step-details-details/$token/$courseId/$subjectId');
+          '$baseurl/app/get-course-step-details-details/$token/$courseId/$subjectId/$selectedStepId');
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -230,7 +231,8 @@ class _CourseScreenState extends State<CourseScreen>
                                           key: "selectedStepNo",
                                           value: selectedStep["id"].toString(),
                                         );
-                                        fetchVideoData();
+                                        // fetchVideoData();
+                                        fetchCourseStepDetails();
                                       },
                                     );
                                   });
@@ -352,7 +354,8 @@ class _CourseScreenState extends State<CourseScreen>
                     value: newStepId.toString(),
                   );
                   // Fetch new video data for the new step
-                  fetchVideoData();
+                  // fetchVideoData();
+                  fetchCourseStepDetails();
                 },
               ),
             ),
