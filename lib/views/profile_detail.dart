@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ghastep/widgets/common_widgets.dart';
 import 'package:ghastep/widgets/inputs.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ProfileDetails extends StatefulWidget {
   const ProfileDetails({super.key});
@@ -16,9 +17,41 @@ class _ProfileDetailsState extends State<ProfileDetails> {
   TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController mobileController = TextEditingController();
+  TextEditingController collegeController = TextEditingController();
 
   final ImagePicker picker = ImagePicker();
   XFile? profileImage;
+
+  final FlutterSecureStorage storage = const FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileDetailsFromStorage();
+    printAllSecureStorageItems();
+  }
+
+  Future<void> _loadProfileDetailsFromStorage() async {
+    final mobile = await storage.read(key: 'mobile');
+    final userEmail = await storage.read(key: 'userEmail');
+    final userName = await storage.read(key: 'userName');
+    final college = await storage.read(key: 'college');
+
+    setState(() {
+      mobileController.text = mobile ?? '';
+      emailController.text = userEmail ?? '';
+      nameController.text = userName ?? '';
+      collegeController.text = college ?? '';
+    });
+  }
+
+  Future<void> printAllSecureStorageItems() async {
+    final allItems = await storage.readAll();
+    print('All items in Flutter Secure Storage:');
+    allItems.forEach((key, value) {
+      print('$key: $value');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,17 +88,25 @@ class _ProfileDetailsState extends State<ProfileDetails> {
               Center(
                 child: buildUserPicWidget(),
               ),
-              formInputWithLabel(nameController, "Enter your name", "Name"),
+              formInputWithLabel(nameController, "Enter your name", "Name",
+                  readOnly: true), //remove read only to make it editable
+              const SizedBox(
+                height: 12,
+              ),
+              formInputWithLabel(emailController, "Enter your name", "Email id",
+                  readOnly: true), //remove read only to make it editable
               const SizedBox(
                 height: 12,
               ),
               formInputWithLabel(
-                  emailController, "Enter your name", "Email id"),
+                  mobileController, "Enter mobile number", "Mobile number",
+                  readOnly: true), //remove read only to make it editable
               const SizedBox(
                 height: 12,
               ),
               formInputWithLabel(
-                  emailController, "Enter mobile number", "Mobile number"),
+                  collegeController, "Enter your college", "College",
+                  readOnly: true), //remove read only to make it editable
             ],
           ),
         ),
@@ -103,7 +144,6 @@ class _ProfileDetailsState extends State<ProfileDetails> {
                       fill: 1,
                       color: Color(0xFFC6C3BD),
                     ),
-                    // child: SvgPicture.asset('assets/icons/profile_filled.svg'),
                   )
                 : Container(
                     decoration: ShapeDecoration(
