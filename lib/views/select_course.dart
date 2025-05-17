@@ -16,6 +16,7 @@ class SelectCourse extends StatefulWidget {
 class _SelectCourseState extends State<SelectCourse> {
   bool graduate = false;
   TextEditingController yearOfStudy = TextEditingController();
+  TextEditingController yearOfGraduation = TextEditingController();
   bool isLoading = false;
   List<dynamic> courses = [];
   int? selectedCourseId;
@@ -59,7 +60,14 @@ class _SelectCourseState extends State<SelectCourse> {
   }
 
   Future<void> updateUGGStatus() async {
-    if (yearOfStudy.text.isEmpty) {
+    if (yearOfGraduation.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter year of graduation')),
+      );
+      return;
+    }
+
+    if (!graduate && yearOfStudy.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter year of study')),
       );
@@ -87,11 +95,12 @@ class _SelectCourseState extends State<SelectCourse> {
         body: {
           'isUG': graduate ? '0' : '1',
           'isGraduated': graduate ? '1' : '0',
-          'yearOfGraduation': yearOfStudy.text,
+          'yearOfStudy': yearOfStudy.text,
+          'yearOfGraduation': yearOfGraduation.text,
           'token': token,
         },
       );
-
+      print('++++++++++++++++++++++++++response.body: ${response.body}');
       if (response.statusCode == 200) {
         Navigator.pushNamed(context, "/home_page");
       } else {
@@ -147,8 +156,9 @@ class _SelectCourseState extends State<SelectCourse> {
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
-                          graduate = false;
-                          setState(() {});
+                          setState(() {
+                            graduate = false;
+                          });
                         },
                         child: Container(
                           height: 48,
@@ -187,8 +197,10 @@ class _SelectCourseState extends State<SelectCourse> {
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
-                          graduate = true;
-                          setState(() {});
+                          setState(() {
+                            graduate = true;
+                            yearOfStudy.clear();
+                          });
                         },
                         child: Container(
                           height: 48,
@@ -228,8 +240,19 @@ class _SelectCourseState extends State<SelectCourse> {
                 ),
               ),
               const SizedBox(height: 16),
+              // Always show both fields but enable/disable based on graduate status
               formInputWithLabel(
-                  yearOfStudy, "Enter Year Of Study", "Year Of Study"),
+                yearOfStudy,
+                "Enter Year Of Study",
+                "Year Of Study (Undergraduate)",
+                readOnly: graduate, // Disable if graduate
+              ),
+              const SizedBox(height: 16),
+              formInputWithLabel(
+                yearOfGraduation,
+                "Enter Year Of Graduation",
+                "Year Of Graduation",
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Select course',
@@ -256,8 +279,8 @@ class _SelectCourseState extends State<SelectCourse> {
                             },
                             child: createSelectCourseCard(
                               course['course_name'],
-                              "Critical steps (crash course)", // Added the static subtitle here
-                              "microscope.svg", // Default icon
+                              "Critical steps (crash course)",
+                              "microscope.svg",
                               selectedCourseId == course['id'],
                             ),
                           ),
