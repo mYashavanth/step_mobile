@@ -145,17 +145,17 @@ class _OTPScreenState extends State<OTPScreen> {
             await storage.write(
                 key: 'yearOfGraduation', value: yearOfGraduation ?? '');
 
-            Navigator.pushNamed(context, "/select_course");
+            // Navigator.pushNamed(context, "/select_course");
 
             // Navigation logic
-            // if (userEmail == null || userName == null || college == null) {
-            //   Navigator.pushNamed(context, "/details_form");
-            // } else if ((isGraduated != 1 && isUg != 1) ||
-            //     (yearOfGraduation == null || yearOfGraduation.isEmpty)) {
-            //   Navigator.pushNamed(context, "/select_course");
-            // } else {
-            //   Navigator.pushNamed(context, "/home_page");
-            // }
+            if (userEmail == null || userName == null || college == null) {
+              Navigator.pushNamed(context, "/details_form");
+            } else if ((isGraduated != 1 && isUg != 1) ||
+                (yearOfGraduation == null || yearOfGraduation.isEmpty)) {
+              Navigator.pushNamed(context, "/select_course");
+            } else {
+              Navigator.pushNamed(context, "/home_page");
+            }
           } else {
             Navigator.pushNamed(context, "/details_form");
           }
