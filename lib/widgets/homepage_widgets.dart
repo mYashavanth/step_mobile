@@ -6,6 +6,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:ghastep/views/urlconfig.dart';
+import 'package:ghastep/widgets/full_screen_video_player.dart';
+
 
 Widget buildStatusCard(
     bool complete, String icon, bool selected, String title) {
@@ -64,65 +66,112 @@ Widget buildStatusCard(
   );
 }
 
-Widget buildVedioLearnCard(
-    String image, String title, String teacherName, String category) {
-  return Column(
-    children: [
-      Container(
-        margin: const EdgeInsets.only(left: 5, right: 5),
-        decoration: ShapeDecoration(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          shadows: const [
-            BoxShadow(
-              color: Color(0x19000000),
-              blurRadius: 30,
-              offset: Offset(0, 4),
-              spreadRadius: 0,
-            ),
-          ],
+Widget buildVedioLearnCard({
+  required String imagePath,
+  required String title,
+  required String teacherName,
+  required String duration,
+  required int? videoId, // Changed to int? to match FullScreenVideoPlayer
+  required String videoUrl,
+  String? videoPauseTime,
+  required BuildContext context,
+}) {
+  // Calculate remaining time
+  final totalSeconds = (double.tryParse(duration) ?? 1) * 60;
+  final pausedSeconds = double.tryParse(videoPauseTime ?? '0') ?? 0;
+  final remainingMinutes = ((totalSeconds - pausedSeconds) / 60).ceil();
+
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FullScreenVideoPlayer(
+            videoUrl: videoUrl,
+            videoTitle: title,
+            videoId: videoId, // Now passing the correct type
+            resumeFrom: videoPauseTime,
+          ),
         ),
-        child: Column(
-          // mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 150,
-              width: 270,
-              clipBehavior: Clip.antiAlias,
-              decoration: ShapeDecoration(
-                image: DecorationImage(
-                  image: AssetImage("assets/image/$image"),
-                  fit: BoxFit.cover,
-                ),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(8),
-                    topRight: Radius.circular(8),
-                  ),
-                ),
+      );
+    },
+    child: Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.only(left: 5, right: 5),
+          decoration: ShapeDecoration(
+            color: Colors.white,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shadows: const [
+              BoxShadow(
+                color: Color(0x19000000),
+                blurRadius: 30,
+                offset: Offset(0, 4),
+                spreadRadius: 0,
               ),
-            ),
-            const SizedBox(
-              height: 4,
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
                 children: [
                   Container(
-                    width: 60,
-                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    height: 150,
+                    width: 270,
+                    clipBehavior: Clip.antiAlias,
                     decoration: ShapeDecoration(
-                      color: const Color(0xFF289799),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                      image: DecorationImage(
+                        image: AssetImage("assets/image/$imagePath"),
+                        fit: BoxFit.cover,
+                      ),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(8),
+                          topRight: Radius.circular(8),
+                        ),
                       ),
                     ),
-                    child: Center(
+                  ),
+                  if (videoPauseTime != null && videoPauseTime.isNotEmpty)
+                    Positioned(
+                      bottom: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: ShapeDecoration(
+                          color: const Color(0xFFFE7D14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                        ),
+                        child: const Text(
+                          'Resume',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  Positioned(
+                    bottom: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: ShapeDecoration(
+                        color: Colors.black.withOpacity(0.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                      ),
                       child: Text(
-                        category,
+                        '$duration min',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -132,52 +181,86 @@ Widget buildVedioLearnCard(
                       ),
                     ),
                   ),
-                  const SizedBox(
-                    height: 4,
-                  ),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: Color(0xFF1A1A1A),
-                      fontSize: 16,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w500,
-                      height: 1.38,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 4,
-                  ),
-                  Text(
-                    teacherName,
-                    style: const TextStyle(
-                      color: Color(0xFF737373),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      height: 1.57,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 4,
-                  ),
-                  const Text(
-                    '1 hr 45 mins remaining',
-                    style: TextStyle(
-                      color: Color(0xFF9CA3AF),
-                      fontSize: 12,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      height: 1.67,
-                    ),
-                  ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 60,
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      decoration: ShapeDecoration(
+                        color: const Color(0xFF289799),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          duration,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF1A1A1A),
+                        fontSize: 16,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w500,
+                        height: 1.38,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      teacherName,
+                      style: const TextStyle(
+                        color: Color(0xFF737373),
+                        fontSize: 14,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w400,
+                        height: 1.57,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$remainingMinutes mins remaining',
+                      style: const TextStyle(
+                        color: Color(0xFF9CA3AF),
+                        fontSize: 12,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w400,
+                        height: 1.67,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    LinearProgressIndicator(
+                      value: pausedSeconds / totalSeconds,
+                      backgroundColor: const Color(0xFFE6E6E6),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFFFE7D14)),
+                      minHeight: 4,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-    ],
+      ],
+    ),
   );
 }
 

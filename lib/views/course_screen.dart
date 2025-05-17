@@ -111,8 +111,8 @@ class _CourseScreenState extends State<CourseScreen>
     if (authToken.isEmpty || courseStepDetailId.isEmpty) return;
 
     try {
-      final url = Uri.parse(
-          '$baseurl/app/get-video/$authToken/$courseStepDetailId/$selectedStepId');
+      final url =
+          Uri.parse('$baseurl/app/get-video/$authToken/$courseStepDetailId');
       print("Fetching video data from: $url");
       final response = await http.get(url);
 

@@ -52,6 +52,7 @@ class MyApp extends StatelessWidget {
             print("Navigated back to HomePage");
             // Call fetchItineraries when HomePage is shown again
             homePageKey.currentState?.fetchUserMetrics();
+            homePageKey.currentState?.fetchResumeVideos();
           },
         ),
       ],

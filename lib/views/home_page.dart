@@ -32,6 +32,10 @@ class _HomePageState extends State<HomePage> {
   bool isLoadingMetrics = false;
   String metricsError = '';
 
+  List<Map<String, dynamic>> resumeVideos = [];
+  bool isLoadingResumeVideos = false;
+  String resumeVideosError = '';
+
   List<Map<String, dynamic>> courses = [];
   bool isLoadingCourses = true;
   String courseError = '';
@@ -62,6 +66,45 @@ class _HomePageState extends State<HomePage> {
           : [1]; // Default to course ID 1 if not found
     });
     fetchUserMetrics();
+    fetchResumeVideos();
+  }
+
+  Future<void> fetchResumeVideos() async {
+    setState(() {
+      isLoadingResumeVideos = true;
+      resumeVideosError = '';
+    });
+
+    try {
+      String token = await storage.read(key: 'token') ?? '';
+      final response = await http.get(
+        Uri.parse('$baseurl/app/video/resume-list/$token'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print(
+            '+++++++++++++++++++++++++++Resume videos response: ${response.statusCode} ${response.body}');
+        if (data['errFlag'] == 0 && data['data'] != null) {
+          setState(() {
+            resumeVideos = List<Map<String, dynamic>>.from(data['data']);
+          });
+        }
+      } else {
+        setState(() {
+          resumeVideosError = 'Failed to load resume videos';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        resumeVideosError = 'Error: ${e.toString()}';
+      });
+    } finally {
+      setState(() {
+        isLoadingResumeVideos = false;
+      });
+    }
   }
 
   Future<void> fetchUserMetrics() async {
@@ -523,6 +566,7 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 20),
                 const UpcomingTests(),
                 bannerNotes(context),
+                // Replace the current Resume learning section with this:
                 const Text(
                   'Resume learning',
                   style: TextStyle(
@@ -534,23 +578,38 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                SizedBox(
-                  height: 310,
-                  child: ListView(
-                    itemExtent: 220,
-                    shrinkWrap: true,
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      buildVedioLearnCard(
-                          'vedio1.png',
-                          "Types of bones, joints, and cartilage",
-                          "Teacher Name",
-                          "Anatomy"),
-                      buildVedioLearnCard('vedio1.png', "Epithelium types",
-                          "Teacher Name", "Pediatrics"),
-                    ],
+                if (isLoadingResumeVideos)
+                  const Center(child: CircularProgressIndicator())
+                else if (resumeVideosError.isNotEmpty)
+                  Text(resumeVideosError)
+                else if (resumeVideos.isEmpty)
+                  const Text('No videos to resume')
+                else
+                  SizedBox(
+                    height: 310,
+                    child: ListView(
+                      itemExtent: 270,
+                      shrinkWrap: true,
+                      scrollDirection: Axis.horizontal,
+                      children: resumeVideos.map((video) {
+                        return buildVedioLearnCard(
+                          imagePath: 'vedio1.png',
+                          title: video['video_title']?.toString() ?? 'No title',
+                          teacherName: video['doctor_name']?.toString() ??
+                              'Unknown teacher',
+                          duration:
+                              video['video_duration_in_mins']?.toString() ??
+                                  '0',
+                          videoId: int.tryParse(
+                              video['videoLearningId']?.toString() ??
+                                  '0'), // Convert to int here
+                          videoUrl: video['videoLink']?.toString() ?? '',
+                          videoPauseTime: video['video_pause_time']?.toString(),
+                          context: context,
+                        );
+                      }).toList(),
+                    ),
                   ),
-                ),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

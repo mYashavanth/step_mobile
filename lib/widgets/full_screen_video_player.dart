@@ -7,17 +7,18 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:ghastep/views/urlconfig.dart';
 
-
 class FullScreenVideoPlayer extends StatefulWidget {
   final String videoUrl;
   final String? videoTitle;
   final int? videoId;
+  final String? resumeFrom; // in seconds as string
 
   const FullScreenVideoPlayer({
     Key? key,
     required this.videoUrl,
     this.videoTitle,
     this.videoId,
+    this.resumeFrom,
   }) : super(key: key);
 
   @override
@@ -43,8 +44,10 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
     _initializePlayer();
   }
 
-  Future<void> _logPlayPauseEvent(
-      {required bool isPlay, int? pauseTime}) async {
+  Future<void> _logPlayPauseEvent({
+    required bool isPlay,
+    int? pauseTime,
+  }) async {
     const storage = FlutterSecureStorage();
     final token = await storage.read(key: 'token') ?? '';
     final videoLearningId = widget.videoId?.toString() ?? '';
@@ -71,7 +74,6 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
     try {
       String playbackUrl = widget.videoUrl;
 
-      // Convert any Cloudflare URL to proper format
       if (widget.videoUrl.contains('cloudflarestream.com')) {
         if (widget.videoUrl.contains('/watch')) {
           playbackUrl =
@@ -95,16 +97,15 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
       );
 
       bool wasPlaying = false;
+
       _videoPlayerController.addListener(() async {
         final isPlaying = _videoPlayerController.value.isPlaying;
         final position = _videoPlayerController.value.position;
 
-        // Detect play event
         if (isPlaying && !wasPlaying) {
           debugPrint("Video is playing at timestamp: ${position.inSeconds}s");
           await _logPlayPauseEvent(isPlay: true);
         }
-        // Detect pause event
         if (!isPlaying && wasPlaying) {
           debugPrint("Video is paused at timestamp: ${position.inSeconds}s");
           await _logPlayPauseEvent(
@@ -115,6 +116,12 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
 
       await _videoPlayerController.initialize();
 
+      /// Resume playback if resumeFrom is valid
+      final resumeSeconds = int.tryParse(widget.resumeFrom ?? '');
+      if (resumeSeconds != null && resumeSeconds > 0) {
+        await _videoPlayerController.seekTo(Duration(seconds: resumeSeconds));
+      }
+
       setState(() {
         _chewieController = ChewieController(
           videoPlayerController: _videoPlayerController,
@@ -123,9 +130,12 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
           errorBuilder: (context, errorMsg) {
             return Center(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Error: $errorMsg'),
-                  Text('URL: $playbackUrl'),
+                  Text('Error: $errorMsg',
+                      style: TextStyle(color: Colors.white)),
+                  Text('URL: $playbackUrl',
+                      style: TextStyle(color: Colors.grey)),
                   ElevatedButton(
                     onPressed: _retryPlayer,
                     child: const Text('Retry'),

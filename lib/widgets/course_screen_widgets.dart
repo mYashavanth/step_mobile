@@ -425,51 +425,17 @@ Widget collapseStepClassCard(
                   size: 40,
                   color: Color(0xFF737373),
                 ),
-                onPressed: () async {
-                  try {
-                    // Fetch required data from Flutter Secure Storage
-                    final storage = const FlutterSecureStorage();
-                    String? token = await storage.read(key: "token");
-                    String? courseStepDetailsId =
-                        await storage.read(key: "courseStepDetailId");
-                    String? stepNo = await storage.read(key: "selectedStepNo");
-
-                    if (token == null ||
-                        courseStepDetailsId == null ||
-                        stepNo == null) {
-                      print("Missing required data in Flutter Secure Storage.");
-                      return;
-                    }
-
-                    // Construct the API URL
-                    String apiUrl =
-                        "$baseurl/app/get-video/$token/$courseStepDetailsId/$stepNo";
-
-                    // Make the API call
-                    final response = await http.get(Uri.parse(apiUrl));
-
-                    if (response.statusCode == 200) {
-                      // Print the API response
-                      print("API Response for video api: ${response.body}");
-
-                      // Navigate to full-screen player with Cloudflare URL
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FullScreenVideoPlayer(
-                            videoUrl: videoUrl,
-                            videoTitle: videoTitle,
-                            videoId: videoId, // <-- Pass the video id here
-                          ),
-                        ),
-                      );
-                    } else {
-                      print(
-                          "Failed to fetch video data. Status code: ${response.statusCode}");
-                    }
-                  } catch (e) {
-                    print("Error fetching video data: $e");
-                  }
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FullScreenVideoPlayer(
+                        videoUrl: videoUrl,
+                        videoTitle: videoTitle,
+                        videoId: videoId, // <-- Pass the video id here
+                      ),
+                    ),
+                  );
                 },
               )
             : Container(
