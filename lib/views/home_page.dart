@@ -919,6 +919,12 @@ class CourseBanner extends StatelessWidget {
 
 List<String> weeksList = ['SUN', "MON", "TUE", "WED", "THUR", "FRI", "SAT"];
 
+DateTime today = DateTime.now();
+int weekday = today.weekday; // 1 (Mon) - 7 (Sun)
+DateTime weekStart = today.subtract(Duration(days: weekday - 1)); // Monday
+List<DateTime> weekDates =
+    List.generate(7, (i) => weekStart.add(Duration(days: i)));
+
 class CalendarSection extends StatefulWidget {
   const CalendarSection({super.key});
 
@@ -928,8 +934,55 @@ class CalendarSection extends StatefulWidget {
 
 class _CalendarSectionState extends State<CalendarSection> {
   List<bool> statusSelectList = [false, false, false];
+  int? daysToExam; // Add this variable
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchExamDate();
+  }
+
+  Future<void> _fetchExamDate() async {
+    final storage = FlutterSecureStorage();
+    String? token = await storage.read(key: 'token');
+    if (token == null) return;
+
+    try {
+      final response =
+          await http.get(Uri.parse('$baseurl/app/exam-date/$token'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        if (data.isNotEmpty && data[0]['neet_exam_date'] != null) {
+          final examDateStr = data[0]['neet_exam_date']; // e.g., "15-06-2025"
+          final parts = examDateStr.split('-');
+          if (parts.length == 3) {
+            final examDate = DateTime(
+              int.parse(parts[2]), // year
+              int.parse(parts[1]), // month
+              int.parse(parts[0]), // day
+            );
+            final today = DateTime.now();
+            final diff = examDate.difference(today).inDays;
+            setState(() {
+              daysToExam = diff;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      print("Error fetching exam date: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final DateTime today = DateTime.now();
+    final int weekday = today.weekday; // 1 (Mon) - 7 (Sun)
+    final DateTime weekStart =
+        today.subtract(Duration(days: weekday - 1)); // Monday as start
+    final List<DateTime> weekDates =
+        List.generate(7, (i) => weekStart.add(Duration(days: i)));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -964,11 +1017,11 @@ class _CalendarSectionState extends State<CalendarSection> {
           ],
         ),
         const SizedBox(height: 16),
-        const Row(
+        Row(
           children: [
             Text(
-              "2025/Jan",
-              style: TextStyle(
+              "${DateTime.now().year}/${_monthName(DateTime.now().month)}",
+              style: const TextStyle(
                 color: Color(0xFF1A1A1A),
                 fontSize: 16,
                 fontFamily: 'SF Pro Display',
@@ -977,8 +1030,10 @@ class _CalendarSectionState extends State<CalendarSection> {
               ),
             ),
             Text(
-              " Exam in 34 days",
-              style: TextStyle(
+              daysToExam != null
+                  ? " Exam in $daysToExam days"
+                  : " Exam in ... days",
+              style: const TextStyle(
                 color: Color(0xFFFE860A),
                 fontSize: 12,
                 fontFamily: 'SF Pro Display',
@@ -993,9 +1048,9 @@ class _CalendarSectionState extends State<CalendarSection> {
           padding: const EdgeInsets.all(4),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(7, (index) {
+            children: weekDates.map((date) {
               return Text(
-                weeksList[index],
+                weeksList[date.weekday % 7], // weeksList = ['SUN', "MON", ...]
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Color(0xFF1A1A1A),
@@ -1005,7 +1060,7 @@ class _CalendarSectionState extends State<CalendarSection> {
                   height: 1.67,
                 ),
               );
-            }),
+            }).toList(),
           ),
         ),
         Container(
@@ -1014,17 +1069,22 @@ class _CalendarSectionState extends State<CalendarSection> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(7, (index) {
+              final date = weekDates[index];
+              final isToday = date.day == today.day &&
+                  date.month == today.month &&
+                  date.year == today.year;
               return Column(
                 children: [
                   Text(
-                    "${index + 1}",
+                    date.day.toString(),
                     style: TextStyle(
-                        fontSize: 16,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w400,
-                        color: index == 5 ? Colors.orange : Colors.black),
+                      fontSize: 16,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w400,
+                      color: isToday ? Colors.orange : Colors.black,
+                    ),
                   ),
-                  if (index == 5)
+                  if (isToday)
                     const Icon(Icons.circle, color: Colors.orange, size: 8),
                 ],
               );
@@ -1211,4 +1271,22 @@ WidgetStateProperty<Color> getColor() {
 
 WidgetStateProperty<Size> getFullWidth() {
   return WidgetStateProperty.all(const Size(double.infinity, double.maxFinite));
+}
+
+String _monthName(int month) {
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
+  ];
+  return months[month - 1];
 }
