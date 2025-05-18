@@ -11,8 +11,15 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   List<DateTime> dateList = [DateTime.now()];
+
   @override
   Widget build(BuildContext context) {
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null && args['examDateData'] != null) {
+      print('Received exam date data: ${args['examDateData']}');
+    }
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,

@@ -935,6 +935,7 @@ class CalendarSection extends StatefulWidget {
 class _CalendarSectionState extends State<CalendarSection> {
   List<bool> statusSelectList = [false, false, false];
   int? daysToExam; // Add this variable
+  dynamic examDateApiResponse; // Add this variable
 
   @override
   void initState() {
@@ -965,6 +966,7 @@ class _CalendarSectionState extends State<CalendarSection> {
             final diff = examDate.difference(today).inDays;
             setState(() {
               daysToExam = diff;
+              examDateApiResponse = data; // Store the full response
             });
           }
         }
@@ -1001,7 +1003,14 @@ class _CalendarSectionState extends State<CalendarSection> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pushNamed(context, "/calendar_view");
+                Navigator.pushNamed(
+                  context,
+                  "/calendar_view",
+                  arguments: {
+                    'examDateData':
+                        examDateApiResponse, // Pass the full response
+                  },
+                );
               },
               child: const Text(
                 'View',
