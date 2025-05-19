@@ -145,8 +145,6 @@ class _OTPScreenState extends State<OTPScreen> {
             await storage.write(
                 key: 'yearOfGraduation', value: yearOfGraduation ?? '');
 
-            // Navigator.pushNamed(context, "/select_course");
-
             // Navigation logic
             if (userEmail == null || userName == null || college == null) {
               Navigator.pushNamed(context, "/details_form");
