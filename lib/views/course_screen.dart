@@ -84,6 +84,7 @@ class _CourseScreenState extends State<CourseScreen>
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print("Course Step Details API Response: ${response.body}");
         if (data.isNotEmpty) {
           final courseStepDetailsData = data[0];
           final courseStepId = courseStepDetailsData['id'].toString();
