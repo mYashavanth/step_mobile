@@ -46,6 +46,7 @@ dependencies:
   better_player_plus: ^1.0.8
   quiver: ^3.2.1
   share_plus: ^10.1.4
+  open_file: ^3.5.10
 
 dev_dependencies:
   flutter_test:
