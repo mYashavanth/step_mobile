@@ -30,11 +30,9 @@ class _CourseScreenState extends State<CourseScreen>
     {"name": "Step 1", "id": 1},
     {"name": "Step 2", "id": 2},
     {"name": "Step 3", "id": 3},
-    {"name": "Notes", "id": 4},
   ];
   List<int> chooseStepList = [0];
-  String courseId = '0'; // Default value until set
-  String subjectId = '0'; // Default value until set
+
   @override
   void initState() {
     _tabController = TabController(length: 5, vsync: this);
@@ -75,9 +73,8 @@ class _CourseScreenState extends State<CourseScreen>
     }
     final args =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        courseId = args['courseId'].toString(); // Update class variable
-        subjectId = args['subjectId'].toString(); // Update class variable
-    print("_____________________$courseId, $subjectId");
+    final courseId = args['courseId'];
+    final subjectId = args['subjectId'];
     try {
       final url = Uri.parse(
           '$baseurl/app/get-course-step-details-details/$token/$courseId/$subjectId/$selectedStepId');
@@ -360,8 +357,6 @@ class _CourseScreenState extends State<CourseScreen>
                   // fetchVideoData();
                   fetchCourseStepDetails();
                 },
-                courseId, // e.g., 3
-                subjectId, // e.g., 3
               ),
             ),
           ],
