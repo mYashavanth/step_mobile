@@ -40,8 +40,12 @@ import 'package:flutter_microsoft_clarity/flutter_microsoft_clarity.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   FlutterMicrosoftClarity().init(projectId: 'rly2rlgrjp');
-  await Firebase.initializeApp();
-  runApp(const MyApp());
+  try {
+    await Firebase.initializeApp();
+    runApp(const MyApp());
+  } catch (e) {
+    print('Firebase initialization error: $e');
+  }
 }
 
 class MyApp extends StatefulWidget {
