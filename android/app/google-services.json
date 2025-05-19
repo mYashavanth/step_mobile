@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1028643784427",
+    "project_id": "stepbygha-6bdb1",
+    "storage_bucket": "stepbygha-6bdb1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1028643784427:android:4f2686d5114d4eda2ee0ae",
+        "android_client_info": {
+          "package_name": "com.ghastep"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBH_fIdMWHUK6nUq31JUO_PX0ssrtTn0Ws"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

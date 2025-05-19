@@ -33,13 +33,54 @@ import 'package:ghastep/views/urlconfig.dart';
 import 'package:ghastep/views/dry.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter_microsoft_clarity/flutter_microsoft_clarity.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  FlutterMicrosoftClarity().init(projectId: 'rly2rlgrjp');
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  String _platformVersion = 'Unknown';
+  final _flutterMicrosoftClarityPlugin = FlutterMicrosoftClarity();
+  final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    initPlatformState();
+  }
+
+  Future<void> initPlatformState() async {
+    String platformVersion;
+
+    try {
+      platformVersion =
+          await _flutterMicrosoftClarityPlugin.getPlatformVersion() ??
+              'Unknown platform version';
+    } catch (e) {
+      print('Error: $e');
+      platformVersion = 'Failed to get platform version.';
+    }
+    if (!mounted) return;
+
+    setState(() {
+      _platformVersion = platformVersion;
+    });
+    print(
+        'Platform version: $_platformVersion +++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+  }
 
   // This widget is the root of your application.
   @override
