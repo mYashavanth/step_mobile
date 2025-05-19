@@ -1,6 +1,11 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 import 'package:flutter/services.dart'; // Add this import
 import 'package:url_launcher/url_launcher.dart';
@@ -16,8 +21,11 @@ Widget buildTabBarCourse(
   List<int> chooseStepList,
   int selectedStepId,
   Function(int) onStepChanged,
+  String courseId,
+  String subjectId,
 ) {
   print("videoData in widget page: $videoData");
+  print("course and subject ids: $courseId, $subjectId");
   // Filter videos based on selected step
 
   final filteredVideos = videoData.isEmpty
@@ -57,61 +65,51 @@ Widget buildTabBarCourse(
               ),
             ),
             Visibility(
-              visible: stepTabSelectedIndex[0] == 3,
-              child: Column(
-                children: [
-                  courseNotes(
-                      "Name of document here", 25, false, "adobe_pdf.svg"),
-                  courseNotes("Name of document here if it exceeds 1 lines", 27,
-                      false, "adobe_pdf.svg"),
-                  courseNotes("Name of document here", 29, false, "excel.svg"),
-                  courseNotes("Name of document here if it exceeds 1 lines", 31,
-                      true, "excel.svg"),
-                  const SizedBox(
-                    height: 28,
-                  ),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(24),
-                    onTap: () {},
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: ShapeDecoration(
-                        shape: RoundedRectangleBorder(
-                          side: const BorderSide(
-                            width: 1,
-                            color: Color(0xFF247E80),
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.lock,
-                            color: Color(0xFF247E80),
-                          ),
-                          SizedBox(
-                            width: 8,
-                          ),
-                          Text(
-                            'Enroll for ₹1000 to unlock',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Color(0xFF247E80),
-                              fontSize: 16,
-                              fontFamily: 'SF Pro Display',
-                              fontWeight: FontWeight.w500,
-                              height: 1.50,
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                  )
-                ],
+  visible: stepTabSelectedIndex[0] == 3,
+  child: Column(
+    children: [
+      NotesListWidget(courseId: courseId, subjectId: subjectId),
+      const SizedBox(height: 28),
+      InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () {},
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: ShapeDecoration(
+            shape: RoundedRectangleBorder(
+              side: const BorderSide(
+                width: 1,
+                color: Color(0xFF247E80),
               ),
+              borderRadius: BorderRadius.circular(24),
             ),
+          ),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.lock,
+                color: Color(0xFF247E80),
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Enroll for ₹1000 to unlock',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFF247E80),
+                  fontSize: 16,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w500,
+                  height: 1.50,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  ),
+),
           ],
         ),
       ),
@@ -130,50 +128,107 @@ Widget buildStepTabButton(
 ) {
   final storage = FlutterSecureStorage();
   return Row(
-      children: List.generate(5, (i) {
-    return GestureDetector(
-      onTap: () {
-        final newStepId = i + 1;
-        onStepChanged(newStepId); // Call the callback instead
-        setState(() {
-          stepTabSelectedIndex[0] = i;
-          chooseStepList[0] = newStepId;
-        });
-        storage.write(
-          key: "selectedStepNo",
-          value: newStepId.toString(),
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.only(right: 12),
-        padding: const EdgeInsets.only(bottom: 4),
-        decoration: BoxDecoration(
-          border: stepTabSelectedIndex[0] == i
-              ? const Border(
-                  bottom: BorderSide(width: 2, color: Color(0xFF1A1A1A)),
-                )
-              : null,
-        ),
-        child: Text(
-          stepTabCourse[i],
-          style: TextStyle(
-            color: stepTabSelectedIndex[0] == i
-                ? const Color(0xFF1A1A1A)
-                : const Color(0xFF737373),
-            fontSize: 16,
-            fontFamily: 'SF Pro Display',
-            fontWeight: stepTabSelectedIndex[0] == i
-                ? FontWeight.w500
-                : FontWeight.w400,
-            height: 1.50,
+    children: List.generate(5, (i) {
+      return GestureDetector(
+        onTap: () {
+          setState(() {
+            stepTabSelectedIndex[0] = i; // Update selected tab index
+            chooseStepList[0] = i + 1;   // Update chosen step
+          });
+          storage.write(
+            key: "selectedStepNo",
+            value: (i + 1).toString(), // Store the new selection
+          );
+          if (i < 3) { // Step 1, Step 2, Step 3 (indices 0, 1, 2)
+            onStepChanged(i + 1); // Trigger step-related logic
+          } else if (i == 3) { // Notes tab (index 3)
+            print("Notes tab selected,"); // Optional: Add notes-specific logic here
+          } else if (i == 4) { // Subject Test tab (index 4)
+            print("Subject Test tab selected"); // Optional: Add test-specific logic here
+          }
+        },
+        child: Container(
+          margin: EdgeInsets.only(right: 12),
+          padding: const EdgeInsets.only(bottom: 4),
+          decoration: BoxDecoration(
+            border: stepTabSelectedIndex[0] == i
+                ? const Border(
+                    bottom: BorderSide(width: 2, color: Color(0xFF1A1A1A)),
+                  )
+                : null,
+          ),
+          child: Text(
+            stepTabCourse[i],
+            style: TextStyle(
+              color: stepTabSelectedIndex[0] == i
+                  ? const Color(0xFF1A1A1A)
+                  : const Color(0xFF737373),
+              fontSize: 16,
+              fontFamily: 'SF Pro Display',
+              fontWeight: stepTabSelectedIndex[0] == i
+                  ? FontWeight.w500
+                  : FontWeight.w400,
+              height: 1.50,
+            ),
           ),
         ),
-      ),
-    );
-  }));
+      );
+    }),
+  );
 }
 
 Widget courseNotes(String docName, int page, bool locked, String icon) {
+  return Container(
+    margin: const EdgeInsets.symmetric(vertical: 4),
+    padding: const EdgeInsets.all(8),
+    decoration: ShapeDecoration(
+      color: const Color(0xFFF9FAFB),
+      shape: RoundedRectangleBorder(
+        side: const BorderSide(width: 1, color: Color(0xFFDDDDDD)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+    ),
+    child: ListTile(
+      leading: Container(
+        width: 40,
+        height: 40,
+        padding: const EdgeInsets.all(10),
+        decoration: ShapeDecoration(
+          color: const Color(0xFFEAEAEA),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(50),
+          ),
+        ),
+        child: SvgPicture.asset("assets/icons/$icon"),
+      ),
+      title: Text(
+        docName,
+        style: const TextStyle(
+          color: Color(0xFF1A1A1A),
+          fontSize: 16,
+          fontFamily: 'SF Pro Display',
+          fontWeight: FontWeight.w400,
+          height: 1.50,
+        ),
+      ),
+      subtitle: Text(
+        '$page pages',
+        style: const TextStyle(
+          color: Color(0xFF737373),
+          fontSize: 12,
+          fontFamily: 'SF Pro Display',
+          fontWeight: FontWeight.w400,
+          height: 1.67,
+        ),
+      ),
+      trailing: locked
+          ? const Icon(Icons.lock, color: Color(0xFF1A1A1A), size: 24)
+          : null,
+    ),
+  );
+}
+
+Widget NotesList(String docName, int page, bool locked, String icon) {
   return Container(
     margin: const EdgeInsets.symmetric(vertical: 4),
     padding: const EdgeInsets.all(8),
@@ -534,6 +589,245 @@ class _StepContentState extends State<StepContent> {
   }
 }
 
+class NoteItem extends StatefulWidget {
+  final String docName;
+  final int page;
+  final bool locked;
+  final String icon;
+  final int noteId;
+  final String documentUrl;
+
+  const NoteItem({
+    required this.docName,
+    required this.page,
+    required this.locked,
+    required this.icon,
+    required this.noteId,
+    required this.documentUrl,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  _NoteItemState createState() => _NoteItemState();
+}
+
+class _NoteItemState extends State<NoteItem> {
+  bool isDownloading = false;
+  bool isDownloaded = false;
+  String? localFilePath;
+
+  Future<void> downloadNote() async {
+    setState(() {
+      isDownloading = true;
+    });
+    try {
+      final storage = FlutterSecureStorage();
+      String? token = await storage.read(key: "token");
+      if (token == null) {
+        print("Missing token");
+        setState(() {
+          isDownloading = false;
+        });
+        return;
+      }
+      String apiUrl = "$baseurl/mobile/notes/get-download-url/${widget.noteId}/$token";
+      final response = await http.get(Uri.parse(apiUrl));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['errFlag'] == 0) {
+          String downloadUrl = data['downloadUrl'];
+          final fileResponse = await http.get(Uri.parse(downloadUrl));
+          if (fileResponse.statusCode == 200) {
+            final directory = await getTemporaryDirectory();
+            final filePath = '${directory.path}/${widget.documentUrl}';
+            final file = File(filePath);
+            await file.writeAsBytes(fileResponse.bodyBytes);
+            setState(() {
+              isDownloaded = true;
+              isDownloading = false;
+              localFilePath = filePath;
+            });
+          } else {
+            print("Failed to download file: ${fileResponse.statusCode}");
+            setState(() {
+              isDownloading = false;
+            });
+          }
+        } else {
+          print("Error getting download URL: ${data['message']}");
+          setState(() {
+            isDownloading = false;
+          });
+        }
+      } else {
+        print("Failed to get download URL: ${response.statusCode}");
+        setState(() {
+          isDownloading = false;
+        });
+      }
+    } catch (e) {
+      print("Error downloading note: $e");
+      setState(() {
+        isDownloading = false;
+      });
+    }
+  }
+
+  Future<void> openNote() async {
+    if (localFilePath != null) {
+      await OpenFile.open(localFilePath!);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(8),
+      decoration: ShapeDecoration(
+        color: const Color(0xFFF9FAFB),
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(width: 1, color: Color(0xFFDDDDDD)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          padding: const EdgeInsets.all(10),
+          decoration: ShapeDecoration(
+            color: const Color(0xFFEAEAEA),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(50),
+            ),
+          ),
+          child: SvgPicture.asset("assets/icons/${widget.icon}"),
+        ),
+        title: Text(
+          widget.docName,
+          style: const TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontSize: 16,
+            fontFamily: 'SF Pro Display',
+            fontWeight: FontWeight.w400,
+            height: 1.50,
+          ),
+        ),
+        subtitle: Text(
+          '${widget.page} pages',
+          style: const TextStyle(
+            color: Color(0xFF737373),
+            fontSize: 12,
+            fontFamily: 'SF Pro Display',
+            fontWeight: FontWeight.w400,
+            height: 1.67,
+          ),
+        ),
+        trailing: widget.locked
+            ? const Icon(Icons.lock, color: Color(0xFF1A1A1A), size: 24)
+            : isDownloading
+                ? const CircularProgressIndicator()
+                : isDownloaded
+                    ? IconButton(
+                        icon: const Icon(Icons.visibility),
+                        onPressed: openNote,
+                      )
+                    : IconButton(
+                        icon: const Icon(Icons.download),
+                        onPressed: downloadNote,
+                      ),
+      ),
+    );
+  }
+}
+
+class NotesListWidget extends StatefulWidget {
+  final String courseId;
+  final String subjectId;
+
+  const NotesListWidget({
+    required this.courseId,
+    required this.subjectId,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  _NotesListWidgetState createState() => _NotesListWidgetState();
+}
+
+class _NotesListWidgetState extends State<NotesListWidget> {
+  List<dynamic> notes = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchNotes();
+  }
+
+  Future<void> fetchNotes() async {
+    final storage = FlutterSecureStorage();
+    String? token = await storage.read(key: "token");
+    if (token == null) {
+      print("Token not found");
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+    String apiUrl = "$baseurl/mobile/notes/get-by-course-subject/${widget.courseId}/${widget.subjectId}/$token";
+    try {
+      final response = await http.get(Uri.parse(apiUrl));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['errFlag'] == 0) {
+          setState(() {
+            notes = data['notes'];
+            isLoading = false;
+          });
+        } else {
+          print("Error fetching notes: ${data['message']}");
+          setState(() {
+            isLoading = false;
+          });
+        }
+      } else {
+        print("Failed to fetch notes: ${response.statusCode}");
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("Error fetching notes: $e");
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (notes.isEmpty) {
+      return const Center(child: Text("No notes available"));
+    }
+    return Column(
+      children: notes.map((note) {
+        return NoteItem(
+          docName: note['notes_title'],
+          page: note['no_of_pages'],
+          locked: false, // All fetched notes have status = 1 (unlocked)
+          icon: "adobe_pdf.svg",
+          noteId: note['id'],
+          documentUrl: note['document_url'],
+        );
+      }).toList(),
+    );
+  }
+}
 // class VideoPlayerScreen extends StatefulWidget {
 //   const VideoPlayerScreen({super.key});
 

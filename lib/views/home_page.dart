@@ -60,11 +60,17 @@ class _HomePageState extends State<HomePage> {
     _fetchBannerImages();
     await _loadUserName(); // Load the username from secure storage
     final storedId = await storage.read(key: 'selectedCourseId');
-    setState(() {
-      selectedCourseIds = storedId != null
-          ? [int.parse(storedId)]
-          : [1]; // Default to course ID 1 if not found
-    });
+    if (storedId == null) {
+        // Store default course ID if none exists
+        await storage.write(key: 'selectedCourseId', value: '1');
+        setState(() {
+          selectedCourseIds = [1]; // Set to course ID
+        });
+      } else {
+        setState(() {
+          selectedCourseIds = [int.parse(storedId)];
+        });
+      }
     fetchUserMetrics();
     fetchResumeVideos();
   }
