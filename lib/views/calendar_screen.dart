@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:ghastep/views/urlconfig.dart';
+import 'dart:math';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -27,6 +28,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   bool isLoadingMetrics = false;
   String metricsError = '';
   int? daysToExam;
+  int? stepsToTakeEachDay;
 
   Future<void> fetchUserMetrics() async {
     final token = await storage.read(key: 'token') ?? '';
@@ -291,6 +293,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                 ? "Loading..."
                                 : "$questionsAttempted",
                             "questions.svg"),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: homeStepsCard(
+                          "STEPS TO TAKE EACH DAY",
+                          "${daysToExam != null && daysToExam != 0 ? (totalSteps / daysToExam!).ceil() : '0'}",
+                          "done.svg",
+                        ),
                       ),
                     ],
                   ),
