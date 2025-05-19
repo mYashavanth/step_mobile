@@ -26,6 +26,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   int totalSteps = 0;
   bool isLoadingMetrics = false;
   String metricsError = '';
+  int? daysToExam;
 
   Future<void> fetchUserMetrics() async {
     final token = await storage.read(key: 'token') ?? '';
@@ -138,6 +139,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
           .toList();
     }
 
+    if (highlightedDates.isNotEmpty) {
+      final today = DateTime.now();
+      // Find the next exam date (in case there are multiple)
+      final nextExam = highlightedDates
+              .where((d) =>
+                  !d.isBefore(DateTime(today.year, today.month, today.day)))
+              .isNotEmpty
+          ? highlightedDates
+              .where((d) =>
+                  !d.isBefore(DateTime(today.year, today.month, today.day)))
+              .reduce((a, b) => a.isBefore(b) ? a : b)
+          : highlightedDates.first;
+      daysToExam = nextExam
+          .difference(DateTime(today.year, today.month, today.day))
+          .inDays;
+    }
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -155,10 +173,43 @@ class _CalendarScreenState extends State<CalendarScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0), // adjust as needed
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "${DateTime.now().year}/${_monthName(DateTime.now().month)}",
+                    style: const TextStyle(
+                      color: Color(0xFF1A1A1A),
+                      fontSize: 16,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w500,
+                      height: 1,
+                    ),
+                  ),
+                  Text(
+                    daysToExam != null
+                        ? " Exam in $daysToExam days"
+                        : " Exam in ... days",
+                    style: const TextStyle(
+                      color: Color(0xFFFE860A),
+                      fontSize: 12,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w500,
+                      height: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
             buildCalendar(dateList, highlightedDates),
             const SizedBox(
               height: 8,
             ),
+            const SizedBox(height: 8),
             Container(
               // width: 390,
               decoration: const ShapeDecoration(
@@ -410,4 +461,22 @@ Widget buildCalendar(List<DateTime> dateList, List<DateTime> highlightedDates) {
       onValueChanged: (dates) {},
     ),
   );
+}
+
+String _monthName(int month) {
+  const months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+  ];
+  return months[month - 1];
 }
