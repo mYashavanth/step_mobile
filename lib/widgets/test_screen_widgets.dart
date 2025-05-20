@@ -115,7 +115,6 @@ PreferredSizeWidget testScreenAppBar(
           ],
         ),
       ),
-      
     ),
   );
 }
@@ -441,16 +440,19 @@ Widget answerCard(bool selected, String title, String ans) {
         const SizedBox(
           width: 12,
         ),
-        Text(
-          ans,
-          style: const TextStyle(
-            color: Color(0xFF1A1A1A),
-            fontSize: 16,
-            fontFamily: 'SF Pro Display',
-            fontWeight: FontWeight.w400,
-            height: 1.50,
+        Expanded(
+          // This allows text to wrap within available space
+          child: Text(
+            ans,
+            style: const TextStyle(
+              color: Color(0xFF1A1A1A),
+              fontSize: 16,
+              fontFamily: 'SF Pro Display',
+              fontWeight: FontWeight.w400,
+              height: 1.50,
+            ),
           ),
-        )
+        ),
       ],
     ),
   );
@@ -491,90 +493,74 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
   @override
   Widget build(BuildContext context) {
     Map data = widget.questionData;
-
     List options = widget.questionData['options'];
-    return Column(
-      children: [
-        buildTestScreenTopBar(widget.index + 1, widget.questionLength, context),
-        const SizedBox(
-          height: 12,
-        ),
-        borderHorizontal(),
-        const SizedBox(
-          height: 12,
-        ),
-        Padding(
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      data["question"],
-                      style: const TextStyle(
-                        color: Color(0xFF1A1A1A),
-                        fontSize: 16,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w400,
-                        height: 1.50,
-                      ),
-                    ),
-                  )
-                ],
+              buildTestScreenTopBar(
+                  widget.index + 1, widget.questionLength, context),
+              const SizedBox(height: 12),
+              borderHorizontal(),
+              const SizedBox(height: 12),
+              Text(
+                data["question"],
+                style: const TextStyle(
+                  color: Color(0xFF1A1A1A),
+                  fontSize: 16,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w400,
+                  height: 1.50,
+                ),
               ),
-              const SizedBox(
-                height: 20,
-              ),
+              const SizedBox(height: 20),
               InkWell(
                 onTap: () {
                   setState(() {
                     ansSel = 0;
                   });
-                  widget.onOptionSelected(widget.index, 0); // Notify parent
+                  widget.onOptionSelected(widget.index, 0);
                 },
                 child: answerCard(ansSel == 0, 'A', options[0]),
               ),
-              const SizedBox(
-                height: 12,
-              ),
+              const SizedBox(height: 12),
               InkWell(
                 onTap: () {
                   setState(() {
                     ansSel = 1;
                   });
-                  widget.onOptionSelected(widget.index, 1); // Notify parent
+                  widget.onOptionSelected(widget.index, 1);
                 },
                 child: answerCard(ansSel == 1, 'B', options[1]),
               ),
-              const SizedBox(
-                height: 12,
-              ),
+              const SizedBox(height: 12),
               InkWell(
                 onTap: () {
                   setState(() {
                     ansSel = 2;
                   });
-                  widget.onOptionSelected(widget.index, 2); // Notify parent
+                  widget.onOptionSelected(widget.index, 2);
                 },
                 child: answerCard(ansSel == 2, 'C', options[2]),
               ),
-              const SizedBox(
-                height: 12,
-              ),
+              const SizedBox(height: 12),
               InkWell(
                 onTap: () {
                   setState(() {
                     ansSel = 3;
                   });
-                  widget.onOptionSelected(widget.index, 3); // Notify parent
+                  widget.onOptionSelected(widget.index, 3);
                 },
                 child: answerCard(ansSel == 3, 'D', options[3]),
               ),
             ],
           ),
-        )
-      ],
+        ),
+      ),
     );
   }
 
