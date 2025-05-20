@@ -85,7 +85,8 @@ class _TestScreenState extends State<TestScreen> {
 
   Future<void> _handleTimerEnd() async {
     await _endTest();
-    print("+++++++++++++++++++++++++++++++++Timer ended++++++++++++++++++++++++++++++");
+    print(
+        "+++++++++++++++++++++++++++++++++Timer ended++++++++++++++++++++++++++++++");
     // try {
     //   // End the test and fetch the result
     //   await _endTest();
@@ -142,12 +143,14 @@ class _TestScreenState extends State<TestScreen> {
       }
 
       String apiUrl = isPreCourse
-          ? "$baseurl/app/get-pre-course-test-questions/$token/1/$questionNo"
-          : "$baseurl/app/get-post-course-test-questions/$token/1/$questionNo";
+          ? "$baseurl/app/get-pre-course-test-questions/$token/$preCourseTestId/$questionNo"
+          : "$baseurl/app/get-post-course-test-questions/$token/$postCourseTestId/$questionNo";
       final response = await http.get(Uri.parse(apiUrl));
 
       print(response.body);
       print("data printing in fetch question ++++++++++++++++++++++++++++ ^");
+      print(
+          "url printing for fetch question api +++++++++++ $isPreCourse +++++++++++++++++ $apiUrl");
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         course_test_question_id = isPreCourse
@@ -309,9 +312,10 @@ class _TestScreenState extends State<TestScreen> {
       String? token = await storage.read(key: "token");
       String? CourseTestTransactionId = isPreCourse
           ? await storage.read(key: "preCourseTestTransactionId")
-          : await storage.read(key: "postCourseTestTransactionId"); 
+          : await storage.read(key: "postCourseTestTransactionId");
 
-          print("course test transaction id $isPreCourse : $CourseTestTransactionId");
+      print(
+          "course test transaction id $isPreCourse : $CourseTestTransactionId");
 
       if (token == null || CourseTestTransactionId == null) {
         print("Missing required data to submit review");
@@ -341,8 +345,10 @@ class _TestScreenState extends State<TestScreen> {
       int feedbackType = selectedOptions.isNotEmpty ? selectedOptions[0] : 0;
 
       // Construct the API URL
-      final apiUrl = isPreCourse ? Uri.parse("$baseurl/app/pre-course-test-mark-review/"+
-              "$token/$CourseTestTransactionId/$questionId"): Uri.parse("$baseurl/app/post-course-test-mark-review/"+
+      final apiUrl = isPreCourse
+          ? Uri.parse("$baseurl/app/pre-course-test-mark-review/" +
+              "$token/$CourseTestTransactionId/$questionId")
+          : Uri.parse("$baseurl/app/post-course-test-mark-review/" +
               "$token/$CourseTestTransactionId/$questionId");
 
       // Make the API call
@@ -439,7 +445,6 @@ class _TestScreenState extends State<TestScreen> {
   List<int> selectedReviewoption = [0];
 
   Future<void> _endTest() async {
-
     try {
       String? token = await storage.read(key: "token");
       String? testTransactionId = isPreCourse

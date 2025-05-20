@@ -74,7 +74,8 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
 
       // Check the response status
       if (response.statusCode == 200) {
-        print("API Response: ${response.body}");
+        print(
+            "++++++++++++++++++++++++++++++++++++++++++++++++++++++API Response: ${response.body}");
         final data = jsonDecode(response.body);
 
         // Store the test title in Flutter Secure Storage
@@ -92,12 +93,16 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
               : data[0]["post_course_test_title"],
         );
 
-          await storage.write(
-            key: isPreCourse ? "preCourseTestId" : "postCourseTestId",
-            value: testData['id'].toString(),
-          );
+        await storage.write(
+          key: isPreCourse ? "preCourseTestId" : "postCourseTestId",
+          value: data[0]['id'].toString(),
+        );
+        await storage.write(
+          key: "totalQuestions",
+          value: data[0]['no_of_questions'].toString(),
+        );
 
-        setState((){
+        setState(() {
           testData = data.isNotEmpty ? data[0] : {};
         });
       } else {
