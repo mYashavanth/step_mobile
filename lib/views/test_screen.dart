@@ -20,7 +20,7 @@ class _TestScreenState extends State<TestScreen> {
   Duration remainingTime = Duration.zero;
   static Duration? sharedRemainingTime; // Shared state for the timer
   int currentPage = 0;
-  int totalQuestions = 3;
+  int totalQuestions = 0;
   String course_test_question_id = '';
   List<Map<String, dynamic>> questions = [];
   List<int?> selectedOptions =
@@ -32,10 +32,10 @@ class _TestScreenState extends State<TestScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize selectedOptions with null values
-    selectedOptions = List<int?>.filled(totalQuestions, null);
-    _initializeTimer();
-    _loadIsPreCourseFlag();
+    _loadTotalQuestions().then((_) {
+      _initializeTimer();
+      _loadIsPreCourseFlag();
+    });
   }
 
   @override
@@ -123,6 +123,14 @@ class _TestScreenState extends State<TestScreen> {
         isSuccess: false,
       );
     }
+  }
+
+  Future<void> _loadTotalQuestions() async {
+    String? totalQuestionsStr = await storage.read(key: "totalQuestions");
+    setState(() {
+      totalQuestions = int.tryParse(totalQuestionsStr ?? '') ?? 0;
+      selectedOptions = List<int?>.filled(totalQuestions, null);
+    });
   }
 
   Future<void> _fetchQuestion(int questionNo) async {
