@@ -360,18 +360,19 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                   ),
                 ),
                 borderHorizontal(),
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    children: [
-                      testAtemptedCard("4 / 200 marks", context),
-                      const SizedBox(
-                        height: 12,
-                      ),
-                      testAtemptedCard("4 / 200 marks", context),
-                    ],
-                  ),
-                ),
+                // for retesting , show the test attempted card
+                // Padding(
+                //   padding: const EdgeInsets.all(12),
+                //   child: Column(
+                //     children: [
+                //       testAtemptedCard("4 / 200 marks", context),
+                //       const SizedBox(
+                //         height: 12,
+                //       ),
+                //       testAtemptedCard("4 / 200 marks", context),
+                //     ],
+                //   ),
+                // ),
                 borderHorizontal(),
                 const SizedBox(
                   height: 16,

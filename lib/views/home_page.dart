@@ -664,7 +664,8 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         buildStepWiseCourseCard(
                           (index + 1).toString().padLeft(2, '0'),
-                          index == 0 ? 1 : 0, // All steps set to 0 as requested
+                          // index == 0 ? 1 : 0, // 0 is for unlocked, 1 is for locked , 2 is for completed
+                           1,
                           subject['name'],
                           subject['id'].toString(),
                           context,
