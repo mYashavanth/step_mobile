@@ -648,7 +648,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 20),
                 if (isLoadingSubjects)
                   const Center(child: CircularProgressIndicator())
                 else if (subjectError.isNotEmpty)
@@ -665,7 +665,7 @@ class _HomePageState extends State<HomePage> {
                         buildStepWiseCourseCard(
                           (index + 1).toString().padLeft(2, '0'),
                           // index == 0 ? 1 : 0, // 0 is for unlocked, 1 is for locked , 2 is for completed
-                           1,
+                          1,
                           subject['name'],
                           subject['id'].toString(),
                           context,
@@ -1033,7 +1033,7 @@ class _CalendarSectionState extends State<CalendarSection> {
             )
           ],
         ),
-        const SizedBox(height: 16),
+        // const SizedBox(height: 8),
         Row(
           children: [
             Text(
