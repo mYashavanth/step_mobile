@@ -20,6 +20,47 @@ PreferredSizeWidget testScreenAppBar(
         padding: const EdgeInsets.only(left: 12),
         child: Row(
           children: [
+             // InkWell(
+            //   borderRadius: BorderRadius.circular(24),
+            //   onTap: () {},
+            //   child: Container(
+            //     width: 40,
+            //     height: 40,
+            //     padding:
+            //         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            //     decoration: ShapeDecoration(
+            //       color: const Color(0xFFEDEEF0),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(24),
+            //       ),
+            //     ),
+            //     child: Center(
+            //       child: SvgPicture.asset("assets/icons/exit.svg"),
+            //     ),
+            //   ),
+            // ),
+            // const SizedBox(
+            //   width: 12,
+            // ),
+            // InkWell(
+            //   borderRadius: BorderRadius.circular(24),
+            //   onTap: () {},
+            //   child: Container(
+            //     width: 40,
+            //     height: 40,
+            //     padding:
+            //         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            //     decoration: ShapeDecoration(
+            //       color: const Color(0xFFEDEEF0),
+            //       shape: RoundedRectangleBorder(
+            //         borderRadius: BorderRadius.circular(24),
+            //       ),
+            //     ),
+            //     child: Center(
+            //       child: SvgPicture.asset("assets/icons/pause.svg"),
+            //     ),
+            //   ),
+            // ),
             Container(
               margin: const EdgeInsets.only(left: 12, right: 12),
               padding: const EdgeInsets.all(8),
@@ -700,6 +741,33 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
             ],
           ),
         ),
+        // SizedBox(
+        //   height: 36,
+        //   child: Stack(
+        //     children: [
+        //       SvgPicture.asset("assets/icons/bookmark_rectangle.svg"),
+        //       // ignore: prefer_const_constructors
+        //       Padding(
+        //         padding: const EdgeInsets.only(left: 8.0),
+        //         child: const Center(
+        //           child: Align(
+        //             alignment: Alignment.centerLeft,
+        //             child: Text(
+        //               'Marked for Review',
+        //               style: TextStyle(
+        //                 color: Colors.white,
+        //                 fontSize: 16,
+        //                 fontFamily: 'SF Pro Display',
+        //                 fontWeight: FontWeight.w400,
+        //                 height: 1.50,
+        //               ),
+        //             ),
+        //           ),
+        //         ),
+        //       )
+        //     ],
+        //   ),
+        // )
       ],
     );
   }
