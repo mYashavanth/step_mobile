@@ -404,7 +404,7 @@ Widget buildStepWiseCourseCard(
                 IntrinsicWidth(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.5,
+                      maxWidth: MediaQuery.of(context).size.width * 0.38,
                     ),
                     child: Text(
                       title,
