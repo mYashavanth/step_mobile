@@ -656,16 +656,18 @@ class _HomePageState extends State<HomePage> {
                 else if (subjects.isEmpty)
                   const Text('No subjects available')
                 else
-                  ...subjects.asMap().entries.map((entry) {
+                  ...subjects
+                      .asMap()
+                      .entries
+                      .take(subjects.length > 5 ? 5 : subjects.length)
+                      .map((entry) {
                     int index = entry.key;
                     var subject = entry.value;
-                    // print('value: ${subject}');
                     return Column(
                       children: [
                         buildStepWiseCourseCard(
                           (index + 1).toString().padLeft(2, '0'),
-                          // index == 0 ? 1 : 0, // 0 is for unlocked, 1 is for locked , 2 is for completed
-                          1,
+                          1, // 0 = unlocked, 1 = locked, 2 = completed
                           subject['name'],
                           subject['id'].toString(),
                           context,
@@ -674,6 +676,7 @@ class _HomePageState extends State<HomePage> {
                       ],
                     );
                   }).toList(),
+
                 const SizedBox(height: 24),
                 Container(
                   padding: const EdgeInsets.all(12),
