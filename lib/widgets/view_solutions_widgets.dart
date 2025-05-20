@@ -50,13 +50,12 @@ class _QuestAnsSolWidgetState extends State<QuestAnsSolWidget> {
     // Initialize any state or fetch data if needed
   }
 
-    Future<void> _loadIsPreCourseFlag() async {
+  Future<void> _loadIsPreCourseFlag() async {
     try {
       String? isPreCourseFlag = await storage.read(key: "isPreCourse");
       setState(() {
         isPreCourse = isPreCourseFlag == "true";
       });
-     
     } catch (e) {
       print("Error loading isPreCourse flag: $e");
       showCustomSnackBar(
@@ -72,14 +71,13 @@ class _QuestAnsSolWidgetState extends State<QuestAnsSolWidget> {
     print("Solution Data: ${widget.solutionData}");
     return Column(
       children: List.generate(widget.solutionData.length, (i) {
-        return buildQuestionAnsSol(widget.solutionData[i] , isPreCourse);
-
+        return buildQuestionAnsSol(widget.solutionData[i], isPreCourse);
       }),
     );
   }
 }
 
-Widget buildQuestionAnsSol(Map<String, dynamic> data , bool isPreCourse) {
+Widget buildQuestionAnsSol(Map<String, dynamic> data, bool isPreCourse) {
   return Container(
     color: Colors.white,
     margin: const EdgeInsets.only(bottom: 12),
@@ -111,27 +109,21 @@ Widget buildQuestionAnsSol(Map<String, dynamic> data , bool isPreCourse) {
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          data["question"],
-          style: const TextStyle(
-            color: Color(0xFF1A1A1A),
-            fontSize: 16,
-            fontFamily: 'SF Pro Display',
-            fontWeight: FontWeight.w400,
-            height: 1.50,
+        RichText(
+          text: TextSpan(
+            children: buildQuestionContent(data["question"]),
           ),
         ),
         const SizedBox(height: 8),
         ...data["options"].asMap().entries.map<Widget>((entry) {
           int index = entry.key;
           var option = entry.value;
-          return solAnswerCard( 
+          return solAnswerCard(
             isPreCourse
                 ? data["selected_pre_course_test_options_id"] ==
                     option["pre_course_test_questions_options_id"]
-                :
-            data["selected_post_course_test_options_id"] ==
-                option["post_course_test_questions_options_id"],
+                : data["selected_post_course_test_options_id"] ==
+                    option["post_course_test_questions_options_id"],
             option["option_text"],
             option["option_text"],
             data["correct_option_text"],
@@ -167,14 +159,9 @@ Widget buildQuestionAnsSol(Map<String, dynamic> data , bool isPreCourse) {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  data["solution_text"] ?? '',
-                  style: const TextStyle(
-                    color: Color(0xFF1A1A1A),
-                    fontSize: 16,
-                    fontFamily: 'SF Pro Display',
-                    fontWeight: FontWeight.w400,
-                    height: 1.50,
+                RichText(
+                  text: TextSpan(
+                    children: buildSolutionContent(data["solution_text"] ?? ''),
                   ),
                 ),
               ],
@@ -291,3 +278,112 @@ Widget solAnswerCard(bool selected, String title, String optionText, String ans,
   );
 }
 
+List<InlineSpan> buildSolutionContent(String solution) {
+  final RegExp urlRegExp = RegExp(
+    r'(https?:\/\/[^\s]+(?:\.png|\.jpg|\.jpeg|\.gif))',
+    caseSensitive: false,
+  );
+  final List<InlineSpan> spans = [];
+  final matches = urlRegExp.allMatches(solution);
+
+  int lastEnd = 0;
+  for (final match in matches) {
+    // Add text before the image
+    if (match.start > lastEnd) {
+      spans.add(TextSpan(
+        text: solution.substring(lastEnd, match.start),
+        style: const TextStyle(
+          color: Color(0xFF1A1A1A),
+          fontSize: 16,
+          fontFamily: 'SF Pro Display',
+          fontWeight: FontWeight.w400,
+          height: 1.50,
+        ),
+      ));
+    }
+    // Add the image as a WidgetSpan
+    final url = match.group(0)!;
+    spans.add(WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Image.network(
+          url,
+          width: 200,
+          errorBuilder: (context, error, stackTrace) =>
+              const Icon(Icons.broken_image, size: 40),
+        ),
+      ),
+    ));
+    lastEnd = match.end;
+  }
+  // Add any remaining text after the last image
+  if (lastEnd < solution.length) {
+    spans.add(TextSpan(
+      text: solution.substring(lastEnd),
+      style: const TextStyle(
+        color: Color(0xFF1A1A1A),
+        fontSize: 16,
+        fontFamily: 'SF Pro Display',
+        fontWeight: FontWeight.w400,
+        height: 1.50,
+      ),
+    ));
+  }
+  return spans;
+}
+
+List<InlineSpan> buildQuestionContent(String question) {
+  final RegExp urlRegExp = RegExp(
+    r'(https?:\/\/[^\s]+(?:\.png|\.jpg|\.jpeg|\.gif))',
+    caseSensitive: false,
+  );
+  final List<InlineSpan> spans = [];
+  final matches = urlRegExp.allMatches(question);
+
+  int lastEnd = 0;
+  for (final match in matches) {
+    // Add text before the image
+    if (match.start > lastEnd) {
+      spans.add(TextSpan(
+        text: question.substring(lastEnd, match.start),
+        style: const TextStyle(
+          color: Color(0xFF1A1A1A),
+          fontSize: 16,
+          fontFamily: 'SF Pro Display',
+          fontWeight: FontWeight.w400,
+          height: 1.50,
+        ),
+      ));
+    }
+    // Add the image as a WidgetSpan
+    final url = match.group(0)!;
+    spans.add(WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Image.network(
+          url,
+          width: 200,
+          errorBuilder: (context, error, stackTrace) =>
+              const Icon(Icons.broken_image, size: 40),
+        ),
+      ),
+    ));
+    lastEnd = match.end;
+  }
+  // Add any remaining text after the last image
+  if (lastEnd < question.length) {
+    spans.add(TextSpan(
+      text: question.substring(lastEnd),
+      style: const TextStyle(
+        color: Color(0xFF1A1A1A),
+        fontSize: 16,
+        fontFamily: 'SF Pro Display',
+        fontWeight: FontWeight.w400,
+        height: 1.50,
+      ),
+    ));
+  }
+  return spans;
+}
