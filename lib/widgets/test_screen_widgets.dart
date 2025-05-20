@@ -20,47 +20,6 @@ PreferredSizeWidget testScreenAppBar(
         padding: const EdgeInsets.only(left: 12),
         child: Row(
           children: [
-            // InkWell(
-            //   borderRadius: BorderRadius.circular(24),
-            //   onTap: () {},
-            //   child: Container(
-            //     width: 40,
-            //     height: 40,
-            //     padding:
-            //         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            //     decoration: ShapeDecoration(
-            //       color: const Color(0xFFEDEEF0),
-            //       shape: RoundedRectangleBorder(
-            //         borderRadius: BorderRadius.circular(24),
-            //       ),
-            //     ),
-            //     child: Center(
-            //       child: SvgPicture.asset("assets/icons/exit.svg"),
-            //     ),
-            //   ),
-            // ),
-            // const SizedBox(
-            //   width: 12,
-            // ),
-            // InkWell(
-            //   borderRadius: BorderRadius.circular(24),
-            //   onTap: () {},
-            //   child: Container(
-            //     width: 40,
-            //     height: 40,
-            //     padding:
-            //         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            //     decoration: ShapeDecoration(
-            //       color: const Color(0xFFEDEEF0),
-            //       shape: RoundedRectangleBorder(
-            //         borderRadius: BorderRadius.circular(24),
-            //       ),
-            //     ),
-            //     child: Center(
-            //       child: SvgPicture.asset("assets/icons/pause.svg"),
-            //     ),
-            //   ),
-            // ),
             Container(
               margin: const EdgeInsets.only(left: 12, right: 12),
               padding: const EdgeInsets.all(8),
@@ -90,7 +49,6 @@ PreferredSizeWidget testScreenAppBar(
               ),
             ),
             Spacer(),
-
             ElevatedButton(
               onPressed: () {
                 submitTestDialog(context, _endTest);
@@ -507,14 +465,9 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
               const SizedBox(height: 12),
               borderHorizontal(),
               const SizedBox(height: 12),
-              Text(
-                data["question"],
-                style: const TextStyle(
-                  color: Color(0xFF1A1A1A),
-                  fontSize: 16,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w400,
-                  height: 1.50,
+              RichText(
+                text: TextSpan(
+                  children: _buildQuestionContent(data["question"]),
                 ),
               ),
               const SizedBox(height: 20),
@@ -747,33 +700,6 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
             ],
           ),
         ),
-        // SizedBox(
-        //   height: 36,
-        //   child: Stack(
-        //     children: [
-        //       SvgPicture.asset("assets/icons/bookmark_rectangle.svg"),
-        //       // ignore: prefer_const_constructors
-        //       Padding(
-        //         padding: const EdgeInsets.only(left: 8.0),
-        //         child: const Center(
-        //           child: Align(
-        //             alignment: Alignment.centerLeft,
-        //             child: Text(
-        //               'Marked for Review',
-        //               style: TextStyle(
-        //                 color: Colors.white,
-        //                 fontSize: 16,
-        //                 fontFamily: 'SF Pro Display',
-        //                 fontWeight: FontWeight.w400,
-        //                 height: 1.50,
-        //               ),
-        //             ),
-        //           ),
-        //         ),
-        //       )
-        //     ],
-        //   ),
-        // )
       ],
     );
   }
@@ -1335,4 +1261,59 @@ Widget buildIndicator(Color colorCode, String text) {
       )
     ],
   );
+}
+
+List<InlineSpan> _buildQuestionContent(String question) {
+  final RegExp urlRegExp = RegExp(
+    r'(https?:\/\/[^\s]+(?:\.png|\.jpg|\.jpeg|\.gif))',
+    caseSensitive: false,
+  );
+  final List<InlineSpan> spans = [];
+  final matches = urlRegExp.allMatches(question);
+
+  int lastEnd = 0;
+  for (final match in matches) {
+    // Add text before the image
+    if (match.start > lastEnd) {
+      spans.add(TextSpan(
+        text: question.substring(lastEnd, match.start),
+        style: const TextStyle(
+          color: Color(0xFF1A1A1A),
+          fontSize: 16,
+          fontFamily: 'SF Pro Display',
+          fontWeight: FontWeight.w400,
+          height: 1.50,
+        ),
+      ));
+    }
+    // Add the image as a WidgetSpan
+    final url = match.group(0)!;
+    spans.add(WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Image.network(
+          url,
+          width: 200,
+          errorBuilder: (context, error, stackTrace) =>
+              const Icon(Icons.broken_image, size: 40),
+        ),
+      ),
+    ));
+    lastEnd = match.end;
+  }
+  // Add any remaining text after the last image
+  if (lastEnd < question.length) {
+    spans.add(TextSpan(
+      text: question.substring(lastEnd),
+      style: const TextStyle(
+        color: Color(0xFF1A1A1A),
+        fontSize: 16,
+        fontFamily: 'SF Pro Display',
+        fontWeight: FontWeight.w400,
+        height: 1.50,
+      ),
+    ));
+  }
+  return spans;
 }
