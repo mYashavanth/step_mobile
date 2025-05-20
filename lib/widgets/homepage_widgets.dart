@@ -8,7 +8,6 @@ import 'dart:convert';
 import 'package:ghastep/views/urlconfig.dart';
 import 'package:ghastep/widgets/full_screen_video_player.dart';
 
-
 Widget buildStatusCard(
     bool complete, String icon, bool selected, String title) {
   return Container(
@@ -74,6 +73,7 @@ Widget buildVedioLearnCard({
   required int? videoId, // Changed to int? to match FullScreenVideoPlayer
   required String videoUrl,
   String? videoPauseTime,
+  required String subjectName,
   required BuildContext context,
 }) {
   // Calculate remaining time
@@ -200,7 +200,7 @@ Widget buildVedioLearnCard({
                       ),
                       child: Center(
                         child: Text(
-                          duration,
+                          subjectName,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 10,
@@ -401,19 +401,26 @@ Widget buildStepWiseCourseCard(
           children: [
             Row(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Color(0xFF1A1A1A),
-                    fontSize: 16,
-                    fontFamily: 'SF Pro Display',
-                    fontWeight: FontWeight.w500,
-                    height: 1.50,
+                IntrinsicWidth(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.5,
+                    ),
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        color: Color(0xFF1A1A1A),
+                        fontSize: 16,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w500,
+                        height: 1.50,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
-                const SizedBox(
-                  width: 8,
-                ),
+                const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   decoration: ShapeDecoration(

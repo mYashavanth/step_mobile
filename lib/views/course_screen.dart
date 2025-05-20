@@ -75,8 +75,8 @@ class _CourseScreenState extends State<CourseScreen>
     }
     final args =
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        courseId = args['courseId'].toString(); // Update class variable
-        subjectId = args['subjectId'].toString(); // Update class variable
+    courseId = args['courseId'].toString(); // Update class variable
+    subjectId = args['subjectId'].toString(); // Update class variable
     print("_____________________$courseId, $subjectId");
     try {
       final url = Uri.parse(
@@ -117,7 +117,7 @@ class _CourseScreenState extends State<CourseScreen>
     try {
       final url =
           Uri.parse('$baseurl/app/get-video/$authToken/$courseStepDetailId');
-      print("Fetching video data from: $url");
+      print("++++++++++++++++++++++++++++++++Fetching video data from: $url");
       final response = await http.get(url);
 
       print("Video API Response: ${response.body}"); // Print response data
@@ -274,7 +274,7 @@ class _CourseScreenState extends State<CourseScreen>
                               : "Step name: ",
                           style: const TextStyle(
                             color: Color(0xFF1A1A1A),
-                            fontSize: 20,
+                            fontSize: 16,
                             fontFamily: 'SF Pro Display',
                             fontWeight: FontWeight.w500,
                             height: 1.40,
@@ -286,7 +286,7 @@ class _CourseScreenState extends State<CourseScreen>
                               : "step description",
                           style: const TextStyle(
                             color: Color(0xFF1A1A1A),
-                            fontSize: 20,
+                            fontSize: 16,
                             fontFamily: 'SF Pro Display',
                             fontWeight: FontWeight.w400,
                             height: 1.40,
@@ -387,6 +387,7 @@ Widget buildFacultyCard(courseStepDetails, String authToken) {
       ),
     ),
     child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           margin: const EdgeInsets.only(right: 12),
@@ -398,7 +399,8 @@ Widget buildFacultyCard(courseStepDetails, String authToken) {
               image: courseStepDetails.isNotEmpty
                   ? NetworkImage(
                       '$baseurl/app/doctor-image/${courseStepDetails['doctor_profile_pic']}/$authToken')
-                  : const AssetImage("assets/image/profile.jpg"),
+                  : const AssetImage("assets/image/profile.jpg")
+                      as ImageProvider,
               fit: BoxFit.cover,
             ),
             shape: RoundedRectangleBorder(
@@ -406,70 +408,68 @@ Widget buildFacultyCard(courseStepDetails, String authToken) {
             ),
           ),
         ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: courseStepDetails.isNotEmpty
-                        ? '${courseStepDetails['doctor_full_name']} '
-                        : "Doctor Name ",
-                    style: const TextStyle(
-                      color: Color(0xFF1A1A1A),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w500,
-                      height: 1.57,
-                    ),
-                  ),
-                  TextSpan(
-                    text: courseStepDetails.isNotEmpty
-                        ? ' ${courseStepDetails['doctor_practice_profession']} '
-                        : "( Doctor Profession )",
-                    style: const TextStyle(
-                      color: Color(0xFF737373),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      height: 1.57,
-                    ),
-                  ),
-                ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                courseStepDetails.isNotEmpty
+                    ? '${courseStepDetails['doctor_full_name']}'
+                    : "Doctor Name",
+                style: const TextStyle(
+                  color: Color(0xFF1A1A1A),
+                  fontSize: 14,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w500,
+                  height: 1.57,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: courseStepDetails.isNotEmpty
-                        ? '${courseStepDetails['doctor_education']} | '
-                        : "Doctor Education | ",
-                    style: const TextStyle(
-                      color: Color(0xFF737373),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      height: 1.57,
-                    ),
-                  ),
-                  TextSpan(
-                    text: courseStepDetails.isNotEmpty
-                        ? '${courseStepDetails['years_of_experience']} exp'
-                        : "15 years exp",
-                    style: const TextStyle(
-                      color: Color(0xFF737373),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      height: 1.57,
-                    ),
-                  ),
-                ],
+              Text(
+                courseStepDetails.isNotEmpty
+                    ? '${courseStepDetails['doctor_practice_profession']}'
+                    : "(Doctor Profession)",
+                style: const TextStyle(
+                  color: Color(0xFF737373),
+                  fontSize: 14,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w400,
+                  height: 1.57,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+              Text(
+                courseStepDetails.isNotEmpty
+                    ? '${courseStepDetails['doctor_education']}'
+                    : "Doctor Education",
+                style: const TextStyle(
+                  color: Color(0xFF737373),
+                  fontSize: 14,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w400,
+                  height: 1.57,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                courseStepDetails.isNotEmpty
+                    ? '${courseStepDetails['years_of_experience']} years exp'
+                    : "15 years exp",
+                style: const TextStyle(
+                  color: Color(0xFF737373),
+                  fontSize: 14,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w400,
+                  height: 1.57,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         )
       ],
     ),

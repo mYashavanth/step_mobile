@@ -24,6 +24,7 @@ class _OTPScreenState extends State<OTPScreen> {
   bool isResendingOtp = false;
   int resendCountdown = 30; // 30 seconds countdown for resend
   late Timer resendTimer;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -68,22 +69,35 @@ class _OTPScreenState extends State<OTPScreen> {
   }
 
   Future<void> _verifyOtp(String otp) async {
+    if (otp.length != 6) {
+      showCustomSnackBar(
+        context: context,
+        message: 'Please enter a valid 6-digit OTP',
+        isSuccess: false,
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
     // Get navigation arguments
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
 
-    // Determine which URL to use
-    String url;
-    bool fromProfileEdit = args != null && args['fromProfileEdit'] == true;
-    if (fromProfileEdit) {
-      url = '$baseurl/app-users/confirm-update-mobile';
-    } else {
-      url = '$baseurl/app-users/verify-otp';
-    }
-
-    print('URL for verify otp: $url');
-
     try {
+      // Determine which URL to use
+      String url;
+      bool fromProfileEdit = args != null && args['fromProfileEdit'] == true;
+      if (fromProfileEdit) {
+        url = '$baseurl/app-users/confirm-update-mobile';
+      } else {
+        url = '$baseurl/app-users/verify-otp';
+      }
+
+      print('URL for verify otp: $url');
+
       final response = await http.post(
         Uri.parse(url),
         body: {
@@ -95,7 +109,9 @@ class _OTPScreenState extends State<OTPScreen> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         print('Response data for verify otp: $data');
+
         if (data['errFlag'] == 0) {
+          // Clear OTP field
           setState(() {
             enteredOtp = "";
             clearOtpField = true;
@@ -104,65 +120,36 @@ class _OTPScreenState extends State<OTPScreen> {
           // Store token in secure storage
           await storage.write(key: 'token', value: data['token']);
 
-          // If fromProfileEdit and mobile updated successfully, update mobile and navigate
-          if (fromProfileEdit &&
-              data['message'] == 'Mobile updated successfully') {
-            // Get the new mobile from arguments (sent from previous page)
-            final newMobile = args['mobile'] as String?;
-            if (newMobile != null) {
-              await storage.write(key: 'mobile', value: newMobile);
+          // Handle profile edit case
+          if (fromProfileEdit) {
+            if (data['message'] == 'Mobile updated successfully') {
+              // Get the new mobile from arguments
+              final newMobile = args['mobile'] as String?;
+              if (newMobile != null) {
+                await storage.write(key: 'mobile', value: newMobile);
+              }
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/profile_details',
+                (route) => false,
+              );
+              showCustomSnackBar(
+                context: context,
+                message: data['message'],
+                isSuccess: true,
+              );
             }
-            Navigator.pushNamedAndRemoveUntil(
-              context,
-              '/profile_details',
-              (route) => false,
-            );
-            showCustomSnackBar(
-              context: context,
-              message: data['message'],
-              isSuccess: true,
-            );
             return;
           }
 
-          // Extract user_fields
+          // Handle normal OTP verification flow
           if (data['user_fields'] != null && data['user_fields'].isNotEmpty) {
             final userFields = data['user_fields'][0];
-            final userEmail = userFields['app_user_email'];
-            final userName = userFields['app_user_name'];
-            final college = userFields['college'];
-            final isGraduated = userFields['is_graduated'];
-            final isUg = userFields['is_ug'];
-            final yearOfGraduation = userFields['year_of_graduation'];
-
-            // Store user_fields in secure storage
-            await storage.write(key: 'userEmail', value: userEmail);
-            await storage.write(key: 'userName', value: userName);
-            await storage.write(key: 'college', value: college);
-            await storage.write(
-                key: 'isGraduated', value: isGraduated.toString());
-            await storage.write(key: 'isUg', value: isUg.toString());
-            await storage.write(
-                key: 'yearOfGraduation', value: yearOfGraduation ?? '');
-
-            // Navigation logic
-            if (userEmail == null || userName == null || college == null) {
-              Navigator.pushNamed(context, "/details_form");
-            } else if ((isGraduated != 1 && isUg != 1) ||
-                (yearOfGraduation == null || yearOfGraduation.isEmpty)) {
-              Navigator.pushNamed(context, "/select_course");
-            } else {
-              Navigator.pushNamed(context, "/home_page");
-            }
+            await _processUserFields(userFields);
           } else {
+            // No user fields - navigate to details form
             Navigator.pushNamed(context, "/details_form");
           }
-
-          showCustomSnackBar(
-            context: context,
-            message: data['message'],
-            isSuccess: true,
-          );
         } else {
           showCustomSnackBar(
             context: context,
@@ -184,6 +171,47 @@ class _OTPScreenState extends State<OTPScreen> {
         message: 'An error occurred: $e',
         isSuccess: false,
       );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _processUserFields(Map<String, dynamic> userFields) async {
+    final userEmail = userFields['app_user_email'];
+    final userName = userFields['app_user_name'];
+    final college = userFields['college'];
+    final isGraduated = userFields['is_graduated'] ?? 0;
+    final isUg = userFields['is_ug'] ?? 0;
+    final yearOfGraduation = userFields['year_of_graduation']?.toString() ?? '';
+    final selectedCourseId = await storage.read(key: 'selectedCourseId');
+
+    // Store user fields in secure storage
+    await storage.write(key: 'userEmail', value: userEmail);
+    await storage.write(key: 'userName', value: userName);
+    await storage.write(key: 'college', value: college);
+    await storage.write(key: 'isGraduated', value: isGraduated.toString());
+    await storage.write(key: 'isUg', value: isUg.toString());
+    await storage.write(key: 'yearOfGraduation', value: yearOfGraduation);
+    if (selectedCourseId != null) {
+      await storage.write(key: 'selectedCourseId', value: selectedCourseId);
+    }
+
+    // Determine where to navigate based on user data completeness
+    if (userEmail == null || userName == null || college == null) {
+      // Missing basic profile info
+      Navigator.pushNamed(context, "/details_form");
+    } else if (selectedCourseId == null || selectedCourseId.isEmpty) {
+      // Missing course selection
+      Navigator.pushNamed(context, "/select_course");
+    } else if ((isGraduated == 0 && isUg == 0) ||
+        (isGraduated == 1 && (yearOfGraduation.isEmpty))) {
+      // Missing graduation/year of study info
+      Navigator.pushNamed(context, "/select_course");
+    } else {
+      // All data complete - go to home
+      Navigator.pushNamed(context, "/home_page");
     }
   }
 
@@ -194,11 +222,9 @@ class _OTPScreenState extends State<OTPScreen> {
       isResendingOtp = true;
     });
 
-    String url = '$baseurl/app-users/login-register-mobile';
-
     try {
       final response = await http.post(
-        Uri.parse(url),
+        Uri.parse('$baseurl/app-users/login-register-mobile'),
         body: {'mobile': mobile},
       );
 
@@ -206,27 +232,18 @@ class _OTPScreenState extends State<OTPScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print('Resend OTP Response data: $data');
-
         if (data['errFlag'] == 0) {
           // Reset the countdown
           setState(() {
             resendCountdown = 30;
-            isResendingOtp = false;
           });
-
-          // Restart the timer
           startResendTimer();
-
           showCustomSnackBar(
             context: context,
             message: 'OTP resent successfully',
             isSuccess: true,
           );
         } else {
-          setState(() {
-            isResendingOtp = false;
-          });
           showCustomSnackBar(
             context: context,
             message: data['message'],
@@ -234,9 +251,6 @@ class _OTPScreenState extends State<OTPScreen> {
           );
         }
       } else {
-        setState(() {
-          isResendingOtp = false;
-        });
         showCustomSnackBar(
           context: context,
           message: 'Failed to resend OTP. Please try again.',
@@ -244,15 +258,16 @@ class _OTPScreenState extends State<OTPScreen> {
         );
       }
     } catch (e) {
-      setState(() {
-        isResendingOtp = false;
-      });
       print('Error resending OTP: $e');
       showCustomSnackBar(
         context: context,
         message: 'An error occurred while resending OTP.',
         isSuccess: false,
       );
+    } finally {
+      setState(() {
+        isResendingOtp = false;
+      });
     }
   }
 
@@ -292,7 +307,6 @@ class _OTPScreenState extends State<OTPScreen> {
                         Navigator.of(context)
                             .pushNamed('/terms_and_conditions');
                       },
-                    mouseCursor: SystemMouseCursors.click,
                   ),
                   const TextSpan(
                     text: ' and ',
@@ -317,7 +331,6 @@ class _OTPScreenState extends State<OTPScreen> {
                       ..onTap = () {
                         Navigator.of(context).pushNamed('/privacy_policy');
                       },
-                    mouseCursor: SystemMouseCursors.click,
                   ),
                 ],
               ),
@@ -367,10 +380,9 @@ class _OTPScreenState extends State<OTPScreen> {
               },
               onSubmit: (value) {
                 enteredOtp = value;
-                print('Complete OTP: $enteredOtp');
+                _verifyOtp(enteredOtp);
               },
             ),
-            const SizedBox(height: 12),
             const SizedBox(height: 12),
             GestureDetector(
               onTap: resendCountdown == 0 ? _resendOtp : null,
@@ -414,48 +426,35 @@ class _OTPScreenState extends State<OTPScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ElevatedButton(
-              onPressed: () {
-                print('Entered OTP: $enteredOtp');
-                if (enteredOtp.length == 6) {
-                  _verifyOtp(enteredOtp);
-                  setState(() {
-                    clearOtpField = false;
-                  });
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Please enter a valid 6-digit OTP.',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontFamily: 'SF Pro Display',
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      backgroundColor: Colors.red,
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(16.0)),
-                      ),
-                    ),
-                  );
-                }
-              },
+              onPressed: isLoading
+                  ? null
+                  : () {
+                      if (enteredOtp.length == 6) {
+                        _verifyOtp(enteredOtp);
+                      } else {
+                        showCustomSnackBar(
+                          context: context,
+                          message: 'Please enter a valid 6-digit OTP',
+                          isSuccess: false,
+                        );
+                      }
+                    },
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
                 backgroundColor: const Color(0xFF247E80),
               ),
-              child: const Text(
-                'Proceed',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w500,
-                  height: 1.50,
-                ),
-              ),
+              child: isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text(
+                      'Proceed',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w500,
+                        height: 1.50,
+                      ),
+                    ),
             ),
             const SizedBox(height: 32),
             const Text.rich(

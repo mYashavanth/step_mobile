@@ -611,6 +611,7 @@ class _HomePageState extends State<HomePage> {
                                   '0'), // Convert to int here
                           videoUrl: video['videoLink']?.toString() ?? '',
                           videoPauseTime: video['video_pause_time']?.toString(),
+                          subjectName: video['subject_name']?.toString() ?? '',
                           context: context,
                         );
                       }).toList(),
@@ -658,7 +659,7 @@ class _HomePageState extends State<HomePage> {
                   ...subjects.asMap().entries.map((entry) {
                     int index = entry.key;
                     var subject = entry.value;
-                    print('value: ${subject}');
+                    // print('value: ${subject}');
                     return Column(
                       children: [
                         buildStepWiseCourseCard(

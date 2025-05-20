@@ -60,7 +60,7 @@ class _SelectCourseState extends State<SelectCourse> {
   }
 
   Future<void> updateUGGStatus() async {
-    if (yearOfGraduation.text.isEmpty) {
+    if (graduate && yearOfGraduation.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter year of graduation')),
       );
@@ -95,12 +95,12 @@ class _SelectCourseState extends State<SelectCourse> {
         body: {
           'isUG': graduate ? '0' : '1',
           'isGraduated': graduate ? '1' : '0',
-          'yearOfStudy': yearOfStudy.text,
-          'yearOfGraduation': yearOfGraduation.text,
+          'yearOfStudy': graduate ? '' : yearOfStudy.text,
+          'yearOfGraduation': graduate ? yearOfGraduation.text : '',
           'token': token,
         },
       );
-      print('++++++++++++++++++++++++++response.body: ${response.body}');
+
       if (response.statusCode == 200) {
         Navigator.pushNamed(context, "/home_page");
       } else {
@@ -199,7 +199,6 @@ class _SelectCourseState extends State<SelectCourse> {
                         onTap: () {
                           setState(() {
                             graduate = true;
-                            yearOfStudy.clear();
                           });
                         },
                         child: Container(
@@ -240,20 +239,24 @@ class _SelectCourseState extends State<SelectCourse> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Always show both fields but enable/disable based on graduate status
-              formInputWithLabel(
-                yearOfStudy,
-                "Enter Year Of Study",
-                "Year Of Study (Undergraduate)",
-                readOnly: graduate, // Disable if graduate
-              ),
-              const SizedBox(height: 16),
-              formInputWithLabel(
-                yearOfGraduation,
-                "Enter Year Of Graduation",
-                "Year Of Graduation",
-              ),
-              const SizedBox(height: 16),
+              // Show year of study only for undergraduates
+              if (!graduate) ...[
+                formInputWithLabel(
+                  yearOfStudy,
+                  "Enter Year Of Study",
+                  "Year Of Study (Undergraduate)",
+                ),
+                const SizedBox(height: 16),
+              ],
+              // Show year of graduation only for graduates
+              if (graduate) ...[
+                formInputWithLabel(
+                  yearOfGraduation,
+                  "Enter Year Of Graduation",
+                  "Year Of Graduation",
+                ),
+                const SizedBox(height: 16),
+              ],
               const Text(
                 'Select course',
                 style: TextStyle(
