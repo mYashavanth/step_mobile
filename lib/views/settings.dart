@@ -151,7 +151,7 @@ class _SettingsState extends State<Settings> {
                     icon: Icons.logout,
                     title: "Sign out",
                     route: "log_out",
-                    iconColor: Colors.red, // Optional custom color for sign out
+                    iconColor: Colors.black,
                   )
                   // buildSettingsRow(
                   //     const Icon(Icons.delete), "Delete account", ""),
@@ -190,7 +190,7 @@ class _SettingsState extends State<Settings> {
     required IconData icon,
     required String title,
     required String route,
-    Color iconColor = const Color(0xFF247E80),
+    Color iconColor = Colors.black,
     double iconSize = 20,
   }) {
     return Material(
@@ -201,7 +201,7 @@ class _SettingsState extends State<Settings> {
         splashColor: Colors.grey.withOpacity(0.1),
         highlightColor: Colors.grey.withOpacity(0.05),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
           child: Row(
             children: [
               // Icon Container
@@ -245,8 +245,7 @@ class _SettingsState extends State<Settings> {
                 route.startsWith('http')
                     ? Icons.open_in_new_rounded
                     : Icons.chevron_right_rounded,
-                size: 20,
-                color: Colors.grey[400],
+                size: route.startsWith('http') ? 20 : 30,
               ),
             ],
           ),

@@ -456,7 +456,7 @@ Widget buildFacultyCard(courseStepDetails, String authToken) {
               ),
               Text(
                 courseStepDetails.isNotEmpty
-                    ? '${courseStepDetails['years_of_experience']} years exp'
+                    ? '${courseStepDetails['years_of_experience']}'
                     : "15 years exp",
                 style: const TextStyle(
                   color: Color(0xFF737373),
