@@ -280,7 +280,7 @@ Widget buildStepWiseCourseCard(
     color = const Color(0xFF34C759);
   }
 
-  Future<void> _makeApiCallAndNavigate() async {
+  Future<void> makeApiCallAndNavigate() async {
     const storage = FlutterSecureStorage();
     String token = await storage.read(key: 'token') ?? '';
     String selectedCourseId = await storage.read(key: 'selectedCourseId') ?? '';
@@ -348,145 +348,150 @@ Widget buildStepWiseCourseCard(
     }
   }
 
-  return Container(
-    height: 80,
-    clipBehavior: Clip.antiAlias,
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(12),
-      border: unlocked > 0
-          ? const Border(
-              left: BorderSide(width: 2, color: Color(0xFFA9DDEA)),
-              top: BorderSide(width: 2, color: Color(0xFFA9DDEA)),
-              right: BorderSide(width: 2, color: Color(0xFFA9DDEA)),
-              bottom: BorderSide(width: 6, color: Color(0xFFA9DDEA)),
-            )
-          : const Border(
-              left: BorderSide(width: 1, color: Color(0xFFDDDDDD)),
-              top: BorderSide(width: 1, color: Color(0xFFDDDDDD)),
-              right: BorderSide(width: 1, color: Color(0xFFDDDDDD)),
-              bottom: BorderSide(width: 1, color: Color(0xFFDDDDDD)),
-            ),
-    ),
-    child: Row(
-      children: [
-        Stack(
-          children: [
-            SvgPicture.asset("assets/icons/$icon"),
-            SizedBox(
-              width: 60,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
+  return InkWell(
+    onTap: () async {
+      await makeApiCallAndNavigate(); // Make API call before navigating
+    },
+    child: Container(
+      height: 80,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: unlocked > 0
+            ? const Border(
+                left: BorderSide(width: 2, color: Color(0xFFA9DDEA)),
+                top: BorderSide(width: 2, color: Color(0xFFA9DDEA)),
+                right: BorderSide(width: 2, color: Color(0xFFA9DDEA)),
+                bottom: BorderSide(width: 6, color: Color(0xFFA9DDEA)),
+              )
+            : const Border(
+                left: BorderSide(width: 1, color: Color(0xFFDDDDDD)),
+                top: BorderSide(width: 1, color: Color(0xFFDDDDDD)),
+                right: BorderSide(width: 1, color: Color(0xFFDDDDDD)),
+                bottom: BorderSide(width: 1, color: Color(0xFFDDDDDD)),
+              ),
+      ),
+      child: Row(
+        children: [
+          Stack(
+            children: [
+              SvgPicture.asset("assets/icons/$icon"),
+              SizedBox(
+                width: 60,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      num,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(
+            width: 12,
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Text(
-                    num,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w700,
+                  IntrinsicWidth(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.of(context).size.width * 0.38,
+                      ),
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          color: Color(0xFF1A1A1A),
+                          fontSize: 16,
+                          fontFamily: 'SF Pro Display',
+                          fontWeight: FontWeight.w500,
+                          height: 1.50,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: ShapeDecoration(
+                      color: color,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: Text(
+                      status,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w400,
+                        height: 1.67,
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-        const SizedBox(
-          width: 12,
-        ),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                IntrinsicWidth(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.38,
-                    ),
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        color: Color(0xFF1A1A1A),
-                        fontSize: 16,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w500,
-                        height: 1.50,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+              const Text(
+                '4 hr 30 mins • 10 steps',
+                style: TextStyle(
+                  color: Color(0xFF737373),
+                  fontSize: 12,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w400,
+                  height: 1.67,
                 ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: ShapeDecoration(
-                    color: color,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: Text(
-                    status,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      height: 1.67,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const Text(
-              '4 hr 30 mins • 10 steps',
-              style: TextStyle(
-                color: Color(0xFF737373),
-                fontSize: 12,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w400,
-                height: 1.67,
+              )
+            ],
+          ),
+          const Spacer(),
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            width: 30,
+            height: 30,
+            decoration: ShapeDecoration(
+              color: unlocked == 0
+                  ? const Color(0xFFEAEAEA)
+                  : const Color(0xFFD2F7FF),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
-            )
-          ],
-        ),
-        const Spacer(),
-        Container(
-          margin: const EdgeInsets.only(right: 16),
-          width: 30,
-          height: 30,
-          decoration: ShapeDecoration(
-            color: unlocked == 0
-                ? const Color(0xFFEAEAEA)
-                : const Color(0xFFD2F7FF),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Center(
+              child: unlocked == 0
+                  ? const Icon(
+                      Icons.lock,
+                      color: Color(0xFF737373),
+                      size: 20,
+                    )
+                  : GestureDetector(
+                      onTap: () async {
+                        await makeApiCallAndNavigate(); // Make API call before navigating
+                      },
+                      child: const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: Color(0xFF247E80),
+                        size: 20,
+                      ),
+                    ),
             ),
           ),
-          child: Center(
-            child: unlocked == 0
-                ? const Icon(
-                    Icons.lock,
-                    color: Color(0xFF737373),
-                    size: 20,
-                  )
-                : GestureDetector(
-                    onTap: () async {
-                      await _makeApiCallAndNavigate(); // Make API call before navigating
-                    },
-                    child: const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: Color(0xFF247E80),
-                      size: 20,
-                    ),
-                  ),
-          ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }

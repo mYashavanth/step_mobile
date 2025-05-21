@@ -160,20 +160,20 @@ class _ProfileState extends State<Profile> {
                                     height: 1.50,
                                   ),
                                 ),
-                                TextSpan(
-                                  text: userName,
-                                  style: const TextStyle(
-                                    color: Color(0xFF247E80),
+                                const TextSpan(
+                                  text: '👋 ',
+                                  style: TextStyle(
+                                    color: Color(0xFF887E5B),
                                     fontSize: 16,
                                     fontFamily: 'SF Pro Display',
                                     fontWeight: FontWeight.w700,
                                     height: 1.50,
                                   ),
                                 ),
-                                const TextSpan(
-                                  text: '👋 ',
-                                  style: TextStyle(
-                                    color: Color(0xFF887E5B),
+                                TextSpan(
+                                  text: userName,
+                                  style: const TextStyle(
+                                    color: Color(0xFF247E80),
                                     fontSize: 16,
                                     fontFamily: 'SF Pro Display',
                                     fontWeight: FontWeight.w700,

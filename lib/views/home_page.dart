@@ -51,6 +51,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _loadUserName();
     _initializeState();
   }
 
@@ -58,7 +59,6 @@ class _HomePageState extends State<HomePage> {
     _fetchCourses();
     _fetchSubjects();
     _fetchBannerImages();
-    await _loadUserName(); // Load the username from secure storage
     final storedId = await storage.read(key: 'selectedCourseId');
     if (storedId == null) {
       // Store default course ID if none exists
@@ -505,8 +505,8 @@ class _HomePageState extends State<HomePage> {
                                       letterSpacing: 1,
                                     ),
                                   ),
-                                  TextSpan(
-                                    text: totalSteps.toString(),
+                                  const TextSpan(
+                                    text: "60",
                                     style: const TextStyle(
                                       color: Color(0xFFFE7D14),
                                       fontSize: 14,

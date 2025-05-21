@@ -85,6 +85,8 @@ class _DetailsFormState extends State<DetailsForm> {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
+        print(
+            '++++++++++++++++++++++++++++++++Response data: $data, api: $baseurl/app/colleges/search/$prefix/$token');
         setState(() {
           _colleges = data.map((college) => College.fromJson(college)).toList();
         });
@@ -127,10 +129,21 @@ class _DetailsFormState extends State<DetailsForm> {
             'token': token,
             'name': _nameController.text.trim(),
             'email': _emailController.text.trim(),
-            'college': _selectedCollege?.collegeName ?? '',
+            'college': _selectedCollege?.collegeName != null
+                ? _selectedCollege!.collegeName
+                : _collegeSearchController.text.trim(),
           },
         );
-
+        print(
+            '++++++++++++++++++++++++++++++++Response data: ${response.body}, api: $url');
+        print({
+          'token': token,
+          'name': _nameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'college': _selectedCollege?.collegeName != null
+              ? _selectedCollege!.collegeName
+              : _collegeSearchController.text.trim(),
+        });
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           if (data['errFlag'] == 0) {
@@ -140,6 +153,8 @@ class _DetailsFormState extends State<DetailsForm> {
               message: data['message'],
               isSuccess: true,
             );
+            await storage.write(
+                key: 'userName', value: _nameController.text.trim());
             Navigator.pushNamed(context, "/select_course");
           } else {
             // Error from backend
