@@ -111,7 +111,13 @@ class _DetailsFormState extends State<DetailsForm> {
   }
 
   void _onCollegeSearchChanged(String query) {
-    // _searchQuery = query;
+    // Clear selected college if user manually deletes the text
+    if (query.isEmpty) {
+      setState(() {
+        _selectedCollege = null;
+      });
+    }
+
     _debounceTimer?.cancel();
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
       _fetchColleges(query);
@@ -129,9 +135,8 @@ class _DetailsFormState extends State<DetailsForm> {
             'token': token,
             'name': _nameController.text.trim(),
             'email': _emailController.text.trim(),
-            'college': _selectedCollege?.collegeName != null
-                ? _selectedCollege!.collegeName
-                : _collegeSearchController.text.trim(),
+            'college': _selectedCollege?.collegeName ??
+                _collegeSearchController.text.trim(),
           },
         );
         print(
@@ -140,9 +145,8 @@ class _DetailsFormState extends State<DetailsForm> {
           'token': token,
           'name': _nameController.text.trim(),
           'email': _emailController.text.trim(),
-          'college': _selectedCollege?.collegeName != null
-              ? _selectedCollege!.collegeName
-              : _collegeSearchController.text.trim(),
+          'college': _selectedCollege?.collegeName ??
+              _collegeSearchController.text.trim(),
         });
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -232,6 +236,7 @@ class _DetailsFormState extends State<DetailsForm> {
                                     _selectedCollege = null;
                                     _colleges = [];
                                   });
+                                  _onCollegeSearchChanged('');
                                 },
                               )
                             : const Icon(Icons.search),
@@ -247,7 +252,7 @@ class _DetailsFormState extends State<DetailsForm> {
                             : null,
                       ),
                       validator: (value) {
-                        if (_selectedCollege == null &&
+                        if ((_selectedCollege == null) &&
                             (value == null || value.isEmpty)) {
                           return 'Please select a college';
                         }
