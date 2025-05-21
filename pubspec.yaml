@@ -43,13 +43,12 @@ dependencies:
   url_launcher: ^6.1.11
   video_player: ^2.8.0
   chewie: ^1.4.0
-  better_player_plus: ^1.0.8
   quiver: ^3.2.1
   share_plus: ^10.1.4
   open_file: ^3.5.10
   flutter_microsoft_clarity: ^1.0.0
   firebase_core: ^3.10.1
-  firebase_analytics: ^11.4.5
+  firebase_analytics: ^11.4.6
 
 dev_dependencies:
   flutter_test:

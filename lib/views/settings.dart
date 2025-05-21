@@ -61,8 +61,11 @@ class _SettingsState extends State<Settings> {
                       height: 1.50,
                     ),
                   ),
-                  buildSettingsRow(const Icon(Icons.person_2_outlined),
-                      "Profile", "/profile_details"),
+                  buildSettingsRow(
+                    icon: Icons.person_2_outlined,
+                    title: "Profile",
+                    route: "/profile_details",
+                  ),
                 ],
               ),
             ),
@@ -84,12 +87,16 @@ class _SettingsState extends State<Settings> {
                     ),
                   ),
                   buildSettingsRow(
-                    const Icon(Icons.star_border_purple500_outlined),
-                    "Rate the app",
-                    "https://play.google.com/store/apps/details?id=com.ghastep&hl=en",
+                    icon: Icons.star_border_purple500_outlined,
+                    title: "Rate the app",
+                    route:
+                        "https://play.google.com/store/apps/details?id=com.ghastep&hl=en",
                   ),
-                  // buildSettingsRow(const Icon(Icons.flag_outlined),
-                  //     "Report a problem", "/report_problem"),
+                  // buildSettingsRow(
+                  //   icon: Icons.flag_outlined,
+                  //   title: "Report a problem",
+                  //   route: "/report_problem",
+                  // ),
                 ],
               ),
             ),
@@ -110,10 +117,16 @@ class _SettingsState extends State<Settings> {
                       height: 1.50,
                     ),
                   ),
-                  buildSettingsRow(const Icon(Icons.gavel),
-                      "Terms and conditions", "/terms_and_conditions"),
-                  buildSettingsRow(const Icon(Icons.privacy_tip_outlined),
-                      "Privacy policy", "/privacy_policy"),
+                  buildSettingsRow(
+                    icon: Icons.gavel,
+                    title: "Terms and conditions",
+                    route: "/terms_and_conditions",
+                  ),
+                  buildSettingsRow(
+                    icon: Icons.privacy_tip_outlined,
+                    title: "Privacy policy",
+                    route: "/privacy_policy",
+                  ),
                 ],
               ),
             ),
@@ -135,7 +148,11 @@ class _SettingsState extends State<Settings> {
                     ),
                   ),
                   buildSettingsRow(
-                      const Icon(Icons.logout), "Sign out", "log_out"),
+                    icon: Icons.logout,
+                    title: "Sign out",
+                    route: "log_out",
+                    iconColor: Colors.red, // Optional custom color for sign out
+                  )
                   // buildSettingsRow(
                   //     const Icon(Icons.delete), "Delete account", ""),
                 ],
@@ -169,65 +186,92 @@ class _SettingsState extends State<Settings> {
     );
   }
 
-  Widget buildSettingsRow(Icon iconWidget, String title, String route) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(4),
-          width: 35,
-          height: 35,
-          margin: const EdgeInsets.only(right: 12),
-          decoration: ShapeDecoration(
-            color: const Color(0xFFEDEEF0),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(200),
-            ),
-            shadows: const [
-              BoxShadow(
-                color: Color(0x0C86F57F),
-                blurRadius: 10,
-                offset: Offset(0, 1),
-                spreadRadius: 0,
-              )
+  Widget buildSettingsRow({
+    required IconData icon,
+    required String title,
+    required String route,
+    Color iconColor = const Color(0xFF247E80),
+    double iconSize = 20,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _handleRouteNavigation(route),
+        borderRadius: BorderRadius.circular(12),
+        splashColor: Colors.grey.withOpacity(0.1),
+        highlightColor: Colors.grey.withOpacity(0.05),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              // Icon Container
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEDEEF0),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  icon,
+                  size: iconSize,
+                  color: iconColor,
+                ),
+              ),
+
+              // Title
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Color(0xFF1A1A1A),
+                    fontSize: 16,
+                    fontFamily: 'SF Pro Display',
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+
+              // Navigation Indicator
+              Icon(
+                route.startsWith('http')
+                    ? Icons.open_in_new_rounded
+                    : Icons.chevron_right_rounded,
+                size: 20,
+                color: Colors.grey[400],
+              ),
             ],
           ),
-          child: Center(
-            child: iconWidget,
-          ),
         ),
-        Text(
-          title,
-          style: const TextStyle(
-            color: Color(0xFF1A1A1A),
-            fontSize: 16,
-            fontFamily: 'SF Pro Display',
-            fontWeight: FontWeight.w400,
-            height: 1.50,
-          ),
-        ),
-        const Spacer(),
-        IconButton(
-          onPressed: () async {
-            if (route == "log_out") {
-              logOutPopUp(context);
-              return;
-            }
-            if (route.startsWith('http')) {
-              // Handle URL launch
-              final Uri url = Uri.parse(route);
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url, mode: LaunchMode.externalApplication);
-              } else {
-                throw 'Could not launch $url';
-              }
-            } else if (route.isNotEmpty) {
-              Navigator.pushNamed(context, route);
-            }
-          },
-          icon: const Icon(Icons.arrow_forward_ios_rounded),
-        ),
-      ],
+      ),
     );
+  }
+
+  Future<void> _handleRouteNavigation(String route) async {
+    if (route == "log_out") {
+      logOutPopUp(context);
+      return;
+    }
+
+    if (route.startsWith('http')) {
+      final Uri url = Uri.parse(route);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(
+          url,
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    } else if (route.isNotEmpty) {
+      Navigator.pushNamed(context, route);
+    }
   }
 }
 

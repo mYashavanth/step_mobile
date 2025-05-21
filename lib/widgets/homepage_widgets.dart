@@ -352,6 +352,7 @@ Widget buildStepWiseCourseCard(
     onTap: () async {
       await makeApiCallAndNavigate(); // Make API call before navigating
     },
+    borderRadius: BorderRadius.circular(12),
     child: Container(
       height: 80,
       clipBehavior: Clip.antiAlias,
