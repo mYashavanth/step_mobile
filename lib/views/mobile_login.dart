@@ -197,7 +197,7 @@ class _MobileLoginState extends State<MobileLogin> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Your trusted guide to ace NEET PG, FMGE, and INI-DET',
+                'Your trusted guide to ace NEET PG, FMGE, and INI-CET',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Color(0xFF737373),
