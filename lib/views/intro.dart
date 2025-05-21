@@ -9,6 +9,7 @@ class Intro extends StatefulWidget {
 }
 
 class _IntroState extends State<Intro> {
+  bool _isLoading = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,24 +99,62 @@ class _IntroState extends State<Intro> {
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: () {
-                    // Handle login with mobile number
-                    Navigator.pushNamed(context, "/mobile_login");
-                  },
+                  onPressed: _isLoading
+                      ? null // This disables the button when loading
+                      : () async {
+                          setState(() => _isLoading = true);
+                          try {
+                            await Navigator.pushNamed(context, "/mobile_login");
+                          } finally {
+                            if (mounted) {
+                              setState(() => _isLoading = false);
+                            }
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 50),
-                    backgroundColor: const Color(0xFF247E80),
+                    backgroundColor: _isLoading
+                        ? const Color(0xFF247E80).withOpacity(0.7)
+                        : const Color(0xFF247E80),
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: const Color(0xFF247E80)
+                        .withOpacity(0.7), // Disabled state color
+                    disabledForegroundColor: Colors.white.withOpacity(0.9),
                   ),
-                  child: const Text(
-                    'Login with mobile number',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w500,
-                      height: 1.50,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Processing...',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontFamily: 'SF Pro Display',
+                                fontWeight: FontWeight.w500,
+                                height: 1.50,
+                              ),
+                            ),
+                          ],
+                        )
+                      : const Text(
+                          'Login with mobile number',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w500,
+                            height: 1.50,
+                          ),
+                        ),
                 ),
                 // const SizedBox(height: 16),
                 // OutlinedButton(

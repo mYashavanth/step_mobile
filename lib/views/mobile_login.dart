@@ -19,48 +19,51 @@ class _MobileLoginState extends State<MobileLogin> {
   final List<String> prefixes = ['+91', '+1', '+44', '+81']; // List of prefixes
   final TextEditingController mobileController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false; // Add loading state
 
   Future<void> _submitMobileNumber() async {
-    if (_formKey.currentState!.validate()) {
-      String mobile = mobileController.text.trim();
+    if (_formKey.currentState!.validate() && !_isLoading) {
+      setState(() => _isLoading = true);
 
-      // Get navigation arguments
-      final args =
-          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-
-      // Choose URL based on navigation source
-      bool fromProfileEdit = args != null && args['fromProfileEdit'] == true;
-      String url = fromProfileEdit
-          ? '$baseurl/app-users/request-update-mobile'
-          : '$baseurl/app-users/login-register-mobile';
-
-      Map<String, String> body;
-
-      if (fromProfileEdit) {
-        String? token = await storage.read(key: 'token');
-        body = {
-          'newMobile': mobile,
-          if (token != null) 'token': token,
-        };
-      } else {
-        body = {'mobile': mobile};
-      }
-
-      print('URL for request mobile login page: $url,  and body is: $body');
       try {
+        String mobile = mobileController.text.trim();
+
+        final args =
+            ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+
+        bool fromProfileEdit = args != null && args['fromProfileEdit'] == true;
+        String url = fromProfileEdit
+            ? '$baseurl/app-users/request-update-mobile'
+            : '$baseurl/app-users/login-register-mobile';
+
+        Map<String, String> body;
+
+        if (fromProfileEdit) {
+          String? token = await storage.read(key: 'token');
+          body = {
+            'newMobile': mobile,
+            if (token != null) 'token': token,
+          };
+        } else {
+          body = {'mobile': mobile};
+        }
+
+        print('URL for request mobile login page: $url, and body is: $body');
+
         final response = await http.post(
           Uri.parse(url),
           body: body,
         );
+
         print('Response status: ${response.body}');
+
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           print('Response data: $data');
+
           if (data['errFlag'] == 0) {
-            // Store the mobile number securely
             await storage.write(key: 'mobile', value: mobile);
 
-            // Only update appUserId if NOT coming from profile edit
             if (!fromProfileEdit) {
               await storage.write(
                 key: 'appUserId',
@@ -69,51 +72,58 @@ class _MobileLoginState extends State<MobileLogin> {
             }
 
             // Handle success
-            Navigator.pushNamed(
-              context,
-              "/otp_verify",
-              arguments: {
-                'mobile': mobile,
-                'fromProfileEdit': fromProfileEdit,
-              },
-            );
-            showCustomSnackBar(
-              context: context,
-              message: data['message'],
-              isSuccess: true,
-            );
+            if (mounted) {
+              Navigator.pushNamed(
+                context,
+                "/otp_verify",
+                arguments: {
+                  'mobile': mobile,
+                  'fromProfileEdit': fromProfileEdit,
+                },
+              );
+              showCustomSnackBar(
+                context: context,
+                message: data['message'],
+                isSuccess: true,
+              );
+            }
           } else {
-            // Handle error
-            showCustomSnackBar(
-                context: context, message: data['message'], isSuccess: false);
-            return;
+            if (mounted) {
+              showCustomSnackBar(
+                  context: context, message: data['message'], isSuccess: false);
+            }
           }
         } else {
-          // Handle error
-          showCustomSnackBar(
+          if (mounted) {
+            showCustomSnackBar(
               context: context,
               message: 'Failed to send mobile number.',
-              isSuccess: false);
+              isSuccess: false,
+            );
+          }
         }
       } catch (e) {
         print('Error: $e');
-        // Handle exception
-        showCustomSnackBar(
-          context: context,
-          message: 'An error occurred. Please try again.',
-          isSuccess: false,
-        );
+        if (mounted) {
+          showCustomSnackBar(
+            context: context,
+            message: 'An error occurred. Please try again.',
+            isSuccess: false,
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Read arguments
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
 
-    // Print the state if present
     final bool fromProfileEdit =
         args != null && args['fromProfileEdit'] == true;
     if (fromProfileEdit) {
@@ -256,7 +266,7 @@ class _MobileLoginState extends State<MobileLogin> {
                           ),
                         );
                       }).toList(),
-                      underline: Container(), // Remove the underline
+                      underline: Container(),
                     ),
                   ),
                   border: OutlineInputBorder(
@@ -285,21 +295,51 @@ class _MobileLoginState extends State<MobileLogin> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ElevatedButton(
-              onPressed: _submitMobileNumber,
+              onPressed: _isLoading ? null : _submitMobileNumber,
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
-                backgroundColor: const Color(0xFF247E80),
+                backgroundColor: _isLoading
+                    ? const Color(0xFF247E80).withOpacity(0.7)
+                    : const Color(0xFF247E80),
+                disabledBackgroundColor:
+                    const Color(0xFF247E80).withOpacity(0.7),
               ),
-              child: const Text(
-                'Proceed',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w500,
-                  height: 1.50,
-                ),
-              ),
+              child: _isLoading
+                  ? const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Processing...',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w500,
+                            height: 1.50,
+                          ),
+                        ),
+                      ],
+                    )
+                  : const Text(
+                      'Proceed',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w500,
+                        height: 1.50,
+                      ),
+                    ),
             ),
             const SizedBox(height: 32),
             Text.rich(

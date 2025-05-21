@@ -33,6 +33,8 @@ class _DetailsFormState extends State<DetailsForm> {
   // String _searchQuery = '';
   final ScrollController _scrollController = ScrollController();
 
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -125,8 +127,11 @@ class _DetailsFormState extends State<DetailsForm> {
   }
 
   Future<void> _updateUserDetails() async {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState!.validate() && !_isLoading) {
       String url = '$baseurl/app-users/update-app-user-details';
+      setState(() {
+        _isLoading = true;
+      });
 
       try {
         final response = await http.post(
@@ -183,6 +188,10 @@ class _DetailsFormState extends State<DetailsForm> {
           message: 'An error occurred: $e',
           isSuccess: false,
         );
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
     }
   }
@@ -338,18 +347,49 @@ class _DetailsFormState extends State<DetailsForm> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16),
         child: ElevatedButton(
-          onPressed: _updateUserDetails,
+          onPressed: _isLoading ? null : _updateUserDetails,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 50),
-            backgroundColor: const Color(0xFF247E80),
+            backgroundColor: _isLoading
+                ? const Color(0xFF247E80).withOpacity(0.7)
+                : const Color(0xFF247E80),
+            disabledBackgroundColor: const Color(0xFF247E80).withOpacity(0.7),
           ),
-          child: const Text('Proceed',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w600,
-              )),
+          child: _isLoading
+              ? const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Processing...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w500,
+                        height: 1.50,
+                      ),
+                    ),
+                  ],
+                )
+              : const Text(
+                  'Proceed',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontFamily: 'SF Pro Display',
+                    fontWeight: FontWeight.w500,
+                    height: 1.50,
+                  ),
+                ),
         ),
       ),
     );

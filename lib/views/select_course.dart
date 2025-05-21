@@ -303,10 +303,38 @@ class _SelectCourseState extends State<SelectCourse> {
               onPressed: isLoading ? null : updateUGGStatus,
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
-                backgroundColor: const Color(0xFF247E80),
+                backgroundColor: isLoading
+                    ? const Color(0xFF247E80).withOpacity(0.7)
+                    : const Color(0xFF247E80),
+                disabledBackgroundColor:
+                    const Color(0xFF247E80).withOpacity(0.7),
               ),
               child: isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
+                  ? const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Processing...',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w500,
+                            height: 1.50,
+                          ),
+                        ),
+                      ],
+                    )
                   : const Text(
                       'Proceed',
                       style: TextStyle(

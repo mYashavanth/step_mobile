@@ -18,6 +18,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
   final FlutterSecureStorage storage = const FlutterSecureStorage();
   Map<String, dynamic> testData = {};
   bool isPreCourse = true; // Default to pre-course test
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -124,6 +125,9 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
   }
 
   Future<void> _startTest() async {
+    setState(() {
+      _isLoading = true;
+    });
     try {
       String? token = await storage.read(key: "token");
       String? testId = testData['id'].toString();
@@ -189,6 +193,10 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
         message: "An error occurred: $e",
         isSuccess: false,
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -455,23 +463,49 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: ElevatedButton(
-          onPressed: () async {
-            await _startTest(); // Call the API to start the test before navigating
-          },
+          onPressed: _isLoading ? null : _startTest,
           style: ElevatedButton.styleFrom(
             minimumSize: const Size(double.infinity, 50),
-            backgroundColor: const Color(0xFF247E80),
+            backgroundColor: _isLoading
+                ? const Color(0xFF247E80).withOpacity(0.7)
+                : const Color(0xFF247E80),
+            disabledBackgroundColor: const Color(0xFF247E80).withOpacity(0.7),
           ),
-          child: const Text(
-            'Start test',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontFamily: 'SF Pro Display',
-              fontWeight: FontWeight.w500,
-              height: 1.50,
-            ),
-          ),
+          child: _isLoading
+              ? const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Processing...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w500,
+                        height: 1.50,
+                      ),
+                    ),
+                  ],
+                )
+              : const Text(
+                  'Start Test',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontFamily: 'SF Pro Display',
+                    fontWeight: FontWeight.w500,
+                    height: 1.50,
+                  ),
+                ),
         ),
       ),
     );
