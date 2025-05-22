@@ -182,68 +182,72 @@ class _IntroState extends State<Intro> {
                 //     ],
                 //   ),
                 // ),
-                const SizedBox(height: 32),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      const TextSpan(
-                        text: 'By using our services you are agreeing to our ',
-                        style: TextStyle(
-                          color: Color(0xFF737373),
-                          fontSize: 12,
-                          fontFamily: 'SF Pro Display',
-                          fontWeight: FontWeight.w400,
-                          height: 1.67,
-                        ),
-                      ),
-                      TextSpan(
-                        text: 'Terms',
-                        style: const TextStyle(
-                          color: Color(0xFF247E80),
-                          fontSize: 14,
-                          fontFamily: 'SF Pro Display',
-                          fontWeight: FontWeight.w500,
-                          height: 1.67,
-                        ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () {
-                            Navigator.of(context)
-                                .pushNamed('/terms_and_conditions');
-                          },
-                        mouseCursor: SystemMouseCursors.click,
-                      ),
-                      const TextSpan(
-                        text: ' and ',
-                        style: TextStyle(
-                          color: Color(0xFF737373),
-                          fontSize: 12,
-                          fontFamily: 'SF Pro Display',
-                          fontWeight: FontWeight.w400,
-                          height: 1.67,
-                        ),
-                      ),
-                      TextSpan(
-                        text: 'Privacy Policy',
-                        style: const TextStyle(
-                          color: Color(0xFF247E80),
-                          fontSize: 14,
-                          fontFamily: 'SF Pro Display',
-                          fontWeight: FontWeight.w500,
-                          height: 1.67,
-                        ),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () {
-                            Navigator.of(context).pushNamed('/privacy_policy');
-                          },
-                        mouseCursor: SystemMouseCursors.click,
-                      ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
-                )
+                // const SizedBox(height: 32),
               ],
             ),
           ),
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.only(
+          bottom: 32.0,
+        ),
+        child: Text.rich(
+          TextSpan(
+            children: [
+              const TextSpan(
+                text: 'By using our services you are agreeing to our \n',
+                style: TextStyle(
+                  color: Color(0xFF737373),
+                  fontSize: 14,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w400,
+                  height: 1.67,
+                ),
+              ),
+              TextSpan(
+                text: 'Terms',
+                style: const TextStyle(
+                  color: Color(0xFF247E80),
+                  fontSize: 14,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w500,
+                  height: 1.67,
+                ),
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () {
+                    Navigator.of(context).pushNamed('/terms_and_conditions');
+                  },
+                mouseCursor: SystemMouseCursors.click,
+              ),
+              const TextSpan(
+                text: ' and ',
+                style: TextStyle(
+                  color: Color(0xFF737373),
+                  fontSize: 14,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w400,
+                  height: 1.67,
+                ),
+              ),
+              TextSpan(
+                text: 'Privacy Policy',
+                style: const TextStyle(
+                  color: Color(0xFF247E80),
+                  fontSize: 14,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w500,
+                  height: 1.67,
+                ),
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () {
+                    Navigator.of(context).pushNamed('/privacy_policy');
+                  },
+                mouseCursor: SystemMouseCursors.click,
+              ),
+            ],
+          ),
+          textAlign: TextAlign.center,
         ),
       ),
     );

@@ -1003,7 +1003,7 @@ class _CalendarSectionState extends State<CalendarSection> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              "Calendar of events",
+              "Your steps journey",
               style: TextStyle(
                 color: Color(0xFF1A1A1A),
                 fontSize: 20,
@@ -1036,7 +1036,7 @@ class _CalendarSectionState extends State<CalendarSection> {
             )
           ],
         ),
-        // const SizedBox(height: 8),
+        const SizedBox(height: 8),
         Row(
           children: [
             Text(
@@ -1049,13 +1049,14 @@ class _CalendarSectionState extends State<CalendarSection> {
                 height: 1,
               ),
             ),
+            const Spacer(),
             Text(
               daysToExam != null
                   ? " Exam in $daysToExam days"
                   : " Exam in ... days",
               style: const TextStyle(
                 color: Color(0xFFFE860A),
-                fontSize: 12,
+                fontSize: 16,
                 fontFamily: 'SF Pro Display',
                 fontWeight: FontWeight.w500,
                 height: 1,
@@ -1063,7 +1064,7 @@ class _CalendarSectionState extends State<CalendarSection> {
             )
           ],
         ),
-        const SizedBox(height: 5),
+        const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.all(4),
           child: Row(

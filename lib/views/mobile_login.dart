@@ -341,15 +341,15 @@ class _MobileLoginState extends State<MobileLogin> {
                       ),
                     ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 12),
             Text.rich(
               TextSpan(
                 children: [
                   const TextSpan(
-                    text: 'By using our services you are agreeing to our ',
+                    text: 'By using our services you are agreeing to our \n',
                     style: TextStyle(
                       color: Color(0xFF737373),
-                      fontSize: 12,
+                      fontSize: 14,
                       fontFamily: 'SF Pro Display',
                       fontWeight: FontWeight.w400,
                       height: 1.67,
@@ -375,7 +375,7 @@ class _MobileLoginState extends State<MobileLogin> {
                     text: ' and ',
                     style: TextStyle(
                       color: Color(0xFF737373),
-                      fontSize: 12,
+                      fontSize: 14,
                       fontFamily: 'SF Pro Display',
                       fontWeight: FontWeight.w400,
                       height: 1.67,

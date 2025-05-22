@@ -283,23 +283,13 @@ class _OTPScreenState extends State<OTPScreen> {
             Text.rich(
               TextSpan(
                 children: [
-                  const TextSpan(
-                    text: 'By using our services you are agreeing to our ',
-                    style: TextStyle(
-                      color: Color(0xFF737373),
-                      fontSize: 12,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      height: 1.67,
-                    ),
-                  ),
                   TextSpan(
-                    text: 'Terms',
+                    text: 'OTP',
                     style: const TextStyle(
                       color: Color(0xFF247E80),
-                      fontSize: 14,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w700,
                       fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w500,
                       height: 1.67,
                     ),
                     recognizer: TapGestureRecognizer()
@@ -309,28 +299,13 @@ class _OTPScreenState extends State<OTPScreen> {
                       },
                   ),
                   const TextSpan(
-                    text: ' and ',
+                    text: ' Verification',
                     style: TextStyle(
-                      color: Color(0xFF737373),
-                      fontSize: 12,
+                      fontSize: 30,
                       fontFamily: 'SF Pro Display',
                       fontWeight: FontWeight.w400,
                       height: 1.67,
                     ),
-                  ),
-                  TextSpan(
-                    text: 'Privacy Policy',
-                    style: const TextStyle(
-                      color: Color(0xFF247E80),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w500,
-                      height: 1.67,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        Navigator.of(context).pushNamed('/privacy_policy');
-                      },
                   ),
                 ],
               ),
@@ -484,15 +459,15 @@ class _OTPScreenState extends State<OTPScreen> {
                       ),
                     ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 12),
             const Text.rich(
               TextSpan(
                 children: [
                   TextSpan(
-                    text: 'By using our services you are agreeing to our ',
+                    text: 'By using our services you are agreeing to our \n',
                     style: TextStyle(
                       color: Color(0xFF737373),
-                      fontSize: 12,
+                      fontSize: 14,
                       fontFamily: 'SF Pro Display',
                       fontWeight: FontWeight.w400,
                       height: 1.67,
@@ -502,7 +477,7 @@ class _OTPScreenState extends State<OTPScreen> {
                     text: 'Terms',
                     style: TextStyle(
                       color: Color(0xFF247E80),
-                      fontSize: 12,
+                      fontSize: 14,
                       fontFamily: 'SF Pro Display',
                       fontWeight: FontWeight.w500,
                       height: 1.67,
@@ -512,7 +487,7 @@ class _OTPScreenState extends State<OTPScreen> {
                     text: ' and ',
                     style: TextStyle(
                       color: Color(0xFF737373),
-                      fontSize: 12,
+                      fontSize: 14,
                       fontFamily: 'SF Pro Display',
                       fontWeight: FontWeight.w400,
                       height: 1.67,
@@ -522,7 +497,7 @@ class _OTPScreenState extends State<OTPScreen> {
                     text: 'Privacy Policy',
                     style: TextStyle(
                       color: Color(0xFF247E80),
-                      fontSize: 12,
+                      fontSize: 14,
                       fontFamily: 'SF Pro Display',
                       fontWeight: FontWeight.w500,
                       height: 1.67,

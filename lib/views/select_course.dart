@@ -142,6 +142,7 @@ class _SelectCourseState extends State<SelectCourse> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 width: double.maxFinite,
                 height: 48,
                 decoration: ShapeDecoration(
@@ -161,7 +162,7 @@ class _SelectCourseState extends State<SelectCourse> {
                           });
                         },
                         child: Container(
-                          height: 48,
+                          height: 42,
                           decoration: ShapeDecoration(
                             color: graduate ? Colors.transparent : Colors.white,
                             shape: RoundedRectangleBorder(
@@ -202,7 +203,7 @@ class _SelectCourseState extends State<SelectCourse> {
                           });
                         },
                         child: Container(
-                          height: 48,
+                          height: 42,
                           decoration: ShapeDecoration(
                               color:
                                   graduate ? Colors.white : Colors.transparent,
@@ -238,7 +239,7 @@ class _SelectCourseState extends State<SelectCourse> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               // Show year of study only for undergraduates
               if (!graduate) ...[
                 formInputWithLabel(
@@ -246,7 +247,7 @@ class _SelectCourseState extends State<SelectCourse> {
                   "Enter Year Of Study",
                   "Year Of Study (Undergraduate)",
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 32),
               ],
               // Show year of graduation only for graduates
               if (graduate) ...[
@@ -255,10 +256,10 @@ class _SelectCourseState extends State<SelectCourse> {
                   "Enter Year Of Graduation",
                   "Year Of Graduation",
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 32),
               ],
               const Text(
-                'Select course',
+                'Select Course',
                 style: TextStyle(
                   color: Color(0xFF323836),
                   fontSize: 16,
@@ -267,7 +268,7 @@ class _SelectCourseState extends State<SelectCourse> {
                   height: 1.38,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : Column(
@@ -282,7 +283,7 @@ class _SelectCourseState extends State<SelectCourse> {
                             },
                             child: createSelectCourseCard(
                               course['course_name'],
-                              "Critical steps (crash course)",
+                              "Critical Steps (Crash Course)",
                               "microscope.svg",
                               selectedCourseId == course['id'],
                             ),
