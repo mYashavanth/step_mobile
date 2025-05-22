@@ -793,137 +793,137 @@ class CourseBanner extends StatelessWidget {
           //     fit: BoxFit.cover,
           //   ),
           ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Join Course,  NEET-PG 2025',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontFamily: 'SF Pro Display',
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const Text(
-                  'Your shortcut to NEET-PG success!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontFamily: 'SF Pro Display',
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.star_rate_rounded,
-                      color: Color(0xFFFFC107),
-                      size: 20,
-                    ),
-                    Text(
-                      'Recorded Classes',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    )
-                  ],
-                ),
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.star_rate_rounded,
-                      color: Color(0xFFFFC107),
-                      size: 20,
-                    ),
-                    Text(
-                      'Mock Tests',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    )
-                  ],
-                ),
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.star_rate_rounded,
-                      color: Color(0xFFFFC107),
-                      size: 20,
-                    ),
-                    Text(
-                      'Study Materials',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    )
-                  ],
-                ),
-                ElevatedButton(
-                  style: ButtonStyle(backgroundColor: getColor()),
-                  onPressed: () {},
-                  child: const Text(
-                    'Enroll Now @ ₹1000',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 13.7,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                const Row(
-                  children: [
-                    Icon(
-                      Icons.date_range_outlined,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    SizedBox(
-                      width: 4,
-                    ),
-                    Text(
-                      "Mar 17",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      " onwards",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ),
-          const Expanded(
-            flex: 1,
-            child: Column(),
-          ),
-        ],
-      ),
+      // child: Row(
+      //   children: [
+      //     Expanded(
+      //       flex: 2,
+      //       child: Column(
+      //         crossAxisAlignment: CrossAxisAlignment.start,
+      //         children: [
+      //           const Text(
+      //             'Join Course,  NEET-PG 2025',
+      //             style: TextStyle(
+      //               color: Colors.white,
+      //               fontSize: 20,
+      //               fontFamily: 'SF Pro Display',
+      //               fontWeight: FontWeight.w700,
+      //             ),
+      //           ),
+      //           const Text(
+      //             'Your shortcut to NEET-PG success!',
+      //             style: TextStyle(
+      //               color: Colors.white,
+      //               fontSize: 12,
+      //               fontFamily: 'SF Pro Display',
+      //               fontWeight: FontWeight.w400,
+      //             ),
+      //           ),
+      //           const Row(
+      //             children: [
+      //               Icon(
+      //                 Icons.star_rate_rounded,
+      //                 color: Color(0xFFFFC107),
+      //                 size: 20,
+      //               ),
+      //               Text(
+      //                 'Recorded Classes',
+      //                 style: TextStyle(
+      //                   color: Colors.white,
+      //                   fontSize: 10,
+      //                   fontFamily: 'SF Pro Display',
+      //                   fontWeight: FontWeight.w400,
+      //                 ),
+      //               )
+      //             ],
+      //           ),
+      //           const Row(
+      //             children: [
+      //               Icon(
+      //                 Icons.star_rate_rounded,
+      //                 color: Color(0xFFFFC107),
+      //                 size: 20,
+      //               ),
+      //               Text(
+      //                 'Mock Tests',
+      //                 style: TextStyle(
+      //                   color: Colors.white,
+      //                   fontSize: 10,
+      //                   fontFamily: 'SF Pro Display',
+      //                   fontWeight: FontWeight.w400,
+      //                 ),
+      //               )
+      //             ],
+      //           ),
+      //           const Row(
+      //             children: [
+      //               Icon(
+      //                 Icons.star_rate_rounded,
+      //                 color: Color(0xFFFFC107),
+      //                 size: 20,
+      //               ),
+      //               Text(
+      //                 'Study Materials',
+      //                 style: TextStyle(
+      //                   color: Colors.white,
+      //                   fontSize: 10,
+      //                   fontFamily: 'SF Pro Display',
+      //                   fontWeight: FontWeight.w400,
+      //                 ),
+      //               )
+      //             ],
+      //           ),
+      //           ElevatedButton(
+      //             style: ButtonStyle(backgroundColor: getColor()),
+      //             onPressed: () {},
+      //             child: const Text(
+      //               'Enroll Now @ ₹1000',
+      //               style: TextStyle(
+      //                 color: Colors.white,
+      //                 fontSize: 13.7,
+      //                 fontFamily: 'SF Pro Display',
+      //                 fontWeight: FontWeight.w700,
+      //               ),
+      //             ),
+      //           ),
+      //           const Row(
+      //             children: [
+      //               Icon(
+      //                 Icons.date_range_outlined,
+      //                 color: Colors.white,
+      //                 size: 24,
+      //               ),
+      //               SizedBox(
+      //                 width: 4,
+      //               ),
+      //               Text(
+      //                 "Mar 17",
+      //                 style: TextStyle(
+      //                   color: Colors.white,
+      //                   fontSize: 10,
+      //                   fontFamily: 'SF Pro Display',
+      //                   fontWeight: FontWeight.w700,
+      //                 ),
+      //               ),
+      //               Text(
+      //                 " onwards",
+      //                 style: TextStyle(
+      //                   color: Colors.white,
+      //                   fontSize: 10,
+      //                   fontFamily: 'SF Pro Display',
+      //                   fontWeight: FontWeight.w400,
+      //                 ),
+      //               ),
+      //             ],
+      //           )
+      //         ],
+      //       ),
+      //     ),
+      //     const Expanded(
+      //       flex: 1,
+      //       child: Column(),
+      //     ),
+      //   ],
+      // ),
     );
   }
 }
@@ -1113,23 +1113,31 @@ class _CalendarSectionState extends State<CalendarSection> {
         ),
         GestureDetector(
           onTap: () {
-            statusSelectList[0] = true;
-            statusSelectList[1] = false;
-            statusSelectList[2] = false;
-            setState(() {});
+            // statusSelectList[0] = true;
+            // statusSelectList[1] = false;
+            // statusSelectList[2] = false;
+            // setState(() {});
+            Navigator.pushNamed(context, "/course_screen" , arguments: {
+              'courseId': 1,
+              'subjectId': 1,
+            });
           },
           child: buildStatusCard(
-              true, 'list2.svg', statusSelectList[0], "Pre-Test"),
+              false, 'list2.svg', statusSelectList[0], "Pre-Test"),
         ),
         const SizedBox(
           height: 12,
         ),
         GestureDetector(
           onTap: () {
-            statusSelectList[0] = false;
-            statusSelectList[1] = true;
-            statusSelectList[2] = false;
-            setState(() {});
+            // statusSelectList[0] = false;
+            // statusSelectList[1] = true;
+            // statusSelectList[2] = false;
+            // setState(() {});
+            Navigator.pushNamed(context, "/course_screen" , arguments: {
+              'courseId': 1,
+              'subjectId': 1,
+            });
           },
           child: buildStatusCard(
               false, 'vedio.svg', statusSelectList[1], "Videos Lessons"),
@@ -1139,10 +1147,14 @@ class _CalendarSectionState extends State<CalendarSection> {
         ),
         GestureDetector(
           onTap: () {
-            statusSelectList[0] = false;
-            statusSelectList[1] = false;
-            statusSelectList[2] = true;
-            setState(() {});
+            // statusSelectList[0] = false;
+            // statusSelectList[1] = false;
+            // statusSelectList[2] = true;
+            // setState(() {});
+            Navigator.pushNamed(context, "/course_screen", arguments: {
+              'courseId': 1,
+              'subjectId': 1,
+            });
           },
           child: buildStatusCard(
               false, 'list2.svg', statusSelectList[2], "Post-lesson test"),
