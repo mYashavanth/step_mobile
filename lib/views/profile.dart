@@ -274,9 +274,9 @@ class _ProfileState extends State<Profile> {
                                     letterSpacing: 1,
                                   ),
                                 ),
-                                TextSpan(
-                                  text: totalSteps.toString(),
-                                  style: const TextStyle(
+                               const TextSpan(
+                                  text: "60",
+                                  style: TextStyle(
                                     color: Color(0xFFFE7D14),
                                     fontSize: 14,
                                     fontFamily: 'SF Pro Display',

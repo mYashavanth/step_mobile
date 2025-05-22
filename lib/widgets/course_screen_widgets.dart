@@ -131,17 +131,28 @@ Widget buildStepTabButton(
     children: List.generate(5, (i) {
       return GestureDetector(
         onTap: () {
+          if(i == 1 || i == 2 || i == 4) {
+            // If Step 2 or Step 3 is tapped, show a message
+            print("Step ${i + 1} tab selected");
+          }else{
           setState(() {
             stepTabSelectedIndex[0] = i; // Update selected tab index
             chooseStepList[0] = i + 1; // Update chosen step
           });
+          }
           storage.write(
             key: "selectedStepNo",
             value: (i + 1).toString(), // Store the new selection
           );
-          if (i < 3) {
+          if (i == 0) {
             // Step 1, Step 2, Step 3 (indices 0, 1, 2)
             onStepChanged(i + 1); // Trigger step-related logic
+          } else if (i == 1) {
+            // Step 2 tab (index 1)
+            print("Step 2 tab selected");
+          } else if (i == 2) {
+            // Step 3 tab (index 2)
+            print("Step 3 tab selected");
           } else if (i == 3) {
             // Notes tab (index 3)
             print(

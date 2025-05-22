@@ -28,9 +28,9 @@ class _CourseScreenState extends State<CourseScreen>
   List<int> stepTabSelectedIndex = [0];
   List<Map> selectStepList = [
     {"name": "Step 1", "id": 1},
-    {"name": "Step 2", "id": 2},
-    {"name": "Step 3", "id": 3},
-    {"name": "Notes", "id": 4},
+    // {"name": "Step 2", "id": 2},
+    // {"name": "Step 3", "id": 3},
+    // {"name": "Notes", "id": 4},
   ];
   List<int> chooseStepList = [0];
   String courseId = '0'; // Default value until set
@@ -142,18 +142,50 @@ class _CourseScreenState extends State<CourseScreen>
       body: SingleChildScrollView(
         child: Column(
           children: [
-            SizedBox(
+           SizedBox(
               height: 300,
               width: double.maxFinite,
-              child: courseStepDetails.isNotEmpty
-                  ? Image.network(
-                      '$baseurl/app/course-step-detail-banner-image/${courseStepDetails['banner_image_name']}/$authToken',
-                      fit: BoxFit.cover,
-                    )
-                  : Image.asset(
-                      "assets/image/vedio_image.png",
-                      fit: BoxFit.cover,
+              child: Stack(
+                children: [
+                  // The background image
+                  courseStepDetails.isNotEmpty
+                      ? Image.network(
+                          '$baseurl/app/course-step-detail-banner-image/${courseStepDetails['banner_image_name']}/$authToken',
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                        )
+                      : Image.asset(
+                          "assets/image/vedio_image.png",
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
+
+                  // The back button
+                  Positioned(
+                    top: 40, // Adjust this value as needed
+                    left: 16, // Adjust this value as needed
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
                     ),
+                  ),
+                ],
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(12),
@@ -205,47 +237,48 @@ class _CourseScreenState extends State<CourseScreen>
                         ),
                         child: InkWell(
                           onTap: () {
-                            showModalBottomSheet(
-                                isScrollControlled: true,
-                                context: context,
-                                backgroundColor: Colors.transparent,
-                                builder: (context) {
-                                  return StatefulBuilder(builder:
-                                      (BuildContext context,
-                                          StateSetter modalSetState) {
-                                    return buidSelectCourseBottomSheetStep(
-                                      context,
-                                      modalSetState,
-                                      selectStepList,
-                                      chooseStepList,
-                                      "Select your Course",
-                                      (String stepName) {
-                                        final selectedStep =
-                                            selectStepList.firstWhere(
-                                          (step) => step["name"] == stepName,
-                                          orElse: () => selectStepList[0],
-                                        );
-                                        setState(() {
-                                          selectedStepId = selectedStep["id"];
-                                          chooseStepList[0] = selectedStepId;
-                                          stepTabSelectedIndex[0] =
-                                              selectedStepId - 1;
-                                        });
-                                        storage.write(
-                                          key: "selectedStepNo",
-                                          value: selectedStep["id"].toString(),
-                                        );
-                                        // fetchVideoData();
-                                        fetchCourseStepDetails();
-                                      },
-                                    );
-                                  });
-                                });
+                            // showModalBottomSheet(
+                            //     isScrollControlled: true,
+                            //     context: context,
+                            //     backgroundColor: Colors.transparent,
+                            //     builder: (context) {
+                            //       return StatefulBuilder(builder:
+                            //           (BuildContext context,
+                            //               StateSetter modalSetState) {
+                            //         return buidSelectCourseBottomSheetStep(
+                            //           context,
+                            //           modalSetState,
+                            //           selectStepList,
+                            //           chooseStepList,
+                            //           "Select your Course",
+                            //           (String stepName) {
+                            //             final selectedStep =
+                            //                 selectStepList.firstWhere(
+                            //               (step) => step["name"] == stepName,
+                            //               orElse: () => selectStepList[0],
+                            //             );
+                            //             setState(() {
+                            //               selectedStepId = selectedStep["id"];
+                            //               chooseStepList[0] = selectedStepId;
+                            //               stepTabSelectedIndex[0] =
+                            //                   selectedStepId - 1;
+                            //             });
+                            //             storage.write(
+                            //               key: "selectedStepNo",
+                            //               value: selectedStep["id"].toString(),
+                            //             );
+                            //             // fetchVideoData();
+                            //             fetchCourseStepDetails();
+                            //           },
+                            //         );
+                            //       });
+                            //     });
                           },
                           child: Row(
                             children: [
                               Text(
-                                "STEP $selectedStepId",
+                                // "STEP $selectedStepId",
+                                "STEP 1",
                                 style: const TextStyle(
                                   color: Color(0xFF247E80),
                                   fontSize: 14,
