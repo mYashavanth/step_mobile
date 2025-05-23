@@ -20,7 +20,7 @@ PreferredSizeWidget testScreenAppBar(
         padding: const EdgeInsets.only(left: 12),
         child: Row(
           children: [
-             // InkWell(
+            // InkWell(
             //   borderRadius: BorderRadius.circular(24),
             //   onTap: () {},
             //   child: Container(
@@ -508,7 +508,7 @@ class _TestScreenWidgetsState extends State<TestScreenWidgets> {
               const SizedBox(height: 12),
               RichText(
                 text: TextSpan(
-                  children: _buildQuestionContent(data["question"]),
+                  children: _buildQuestionContent(data["question"], context),
                 ),
               ),
               const SizedBox(height: 20),
@@ -1331,7 +1331,7 @@ Widget buildIndicator(Color colorCode, String text) {
   );
 }
 
-List<InlineSpan> _buildQuestionContent(String question) {
+List<InlineSpan> _buildQuestionContent(String question, BuildContext context) {
   final RegExp urlRegExp = RegExp(
     r'(https?:\/\/[^\s]+(?:\.png|\.jpg|\.jpeg|\.gif))',
     caseSensitive: false,
@@ -1354,17 +1354,59 @@ List<InlineSpan> _buildQuestionContent(String question) {
         ),
       ));
     }
-    // Add the image as a WidgetSpan
+    // Add the image as a WidgetSpan with tap-to-zoom
     final url = match.group(0)!;
     spans.add(WidgetSpan(
       alignment: PlaceholderAlignment.middle,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Image.network(
-          url,
-          width: 200,
-          errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.broken_image, size: 40),
+        child: GestureDetector(
+          onTap: () {
+            showGeneralDialog(
+              context: context,
+              barrierDismissible: true,
+              barrierLabel: "Image",
+              pageBuilder: (context, anim1, anim2) {
+                return Scaffold(
+                  backgroundColor: Colors.black,
+                  body: Stack(
+                    children: [
+                      Center(
+                        child: InteractiveViewer(
+                          minScale: 0.5,
+                          maxScale: 4,
+                          child: Image.network(
+                            url,
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.broken_image,
+                                    color: Colors.white, size: 80),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 40,
+                        right: 24,
+                        child: IconButton(
+                          icon: const Icon(Icons.close,
+                              color: Colors.white, size: 32),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+          child: Image.network(
+            url,
+            width: 200,
+            errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.broken_image, size: 40),
+          ),
         ),
       ),
     ));
