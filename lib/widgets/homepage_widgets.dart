@@ -66,7 +66,9 @@ Widget buildStatusCard(
 }
 
 Widget buildVedioLearnCard({
+  required String token,
   required String imagePath,
+  String? bannerImageUrl,
   required String title,
   required String teacherName,
   required String duration,
@@ -80,6 +82,7 @@ Widget buildVedioLearnCard({
   final totalSeconds = (double.tryParse(duration) ?? 1) * 60;
   final pausedSeconds = double.tryParse(videoPauseTime ?? '0') ?? 0;
   final remainingMinutes = ((totalSeconds - pausedSeconds) / 60).ceil();
+  print('imagePath: $imagePath, bannerImageurl: $bannerImageUrl');
 
   return GestureDetector(
     onTap: () {
@@ -121,18 +124,26 @@ Widget buildVedioLearnCard({
                     height: 150,
                     width: 270,
                     clipBehavior: Clip.antiAlias,
-                    decoration: ShapeDecoration(
-                      image: DecorationImage(
-                        image: AssetImage("assets/image/$imagePath"),
-                        fit: BoxFit.cover,
-                      ),
-                      shape: const RoundedRectangleBorder(
+                    decoration: const ShapeDecoration(
+                      shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(8),
                           topRight: Radius.circular(8),
                         ),
                       ),
                     ),
+                    child: bannerImageUrl != null
+                        ? FadeInImage(
+                            placeholder: AssetImage("assets/image/$imagePath"),
+                            image: NetworkImage(
+                                '$baseurl/app/course-step-detail-banner-image/$bannerImageUrl/$token'),
+                            fit: BoxFit.cover,
+                            imageErrorBuilder: (context, error, stackTrace) =>
+                                Image.asset("assets/image/$imagePath",
+                                    fit: BoxFit.cover),
+                          )
+                        : Image.asset("assets/image/$imagePath",
+                            fit: BoxFit.cover),
                   ),
                   if (videoPauseTime != null && videoPauseTime.isNotEmpty)
                     Positioned(

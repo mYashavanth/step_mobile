@@ -161,7 +161,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
+        // centerTitle: true,
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: Colors.black,
+          ),
+        ),
         title: const Text(
           'Your steps journey',
           style: TextStyle(
@@ -172,13 +181,80 @@ class _CalendarScreenState extends State<CalendarScreen> {
             height: 1.40,
           ),
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: ShapeDecoration(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  side: const BorderSide(width: 2, color: Color(0xB231B5B9)),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                shadows: const [
+                  BoxShadow(
+                    color: Color(0x0C000000),
+                    blurRadius: 20,
+                    offset: Offset(0, 4),
+                    spreadRadius: 0,
+                  )
+                ],
+              ),
+              child: Row(
+                children: [
+                  SvgPicture.asset("assets/icons/Group (6).svg"),
+                  const SizedBox(width: 12),
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: stepsCompleted.toString(),
+                          style: const TextStyle(
+                            color: Color(0xFF1A1A1A),
+                            fontSize: 14,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w400,
+                            height: 1.57,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const TextSpan(
+                          text: '/',
+                          style: TextStyle(
+                            color: Color(0xFF1A1A1A),
+                            fontSize: 14,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w500,
+                            height: 1.57,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const TextSpan(
+                          text: "60",
+                          style: const TextStyle(
+                            color: Color(0xFFFE7D14),
+                            fontSize: 14,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w700,
+                            height: 1.57,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0), // adjust as needed
+              padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -198,75 +274,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         : " Exam in ... days",
                     style: const TextStyle(
                       color: Color(0xFFFE860A),
-                      fontSize: 12,
+                      fontSize: 16,
                       fontFamily: 'SF Pro Display',
                       fontWeight: FontWeight.w500,
                       height: 1,
-                    ),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: ShapeDecoration(
-                      color: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        side: const BorderSide(
-                            width: 2, color: Color(0xB231B5B9)),
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                      shadows: const [
-                        BoxShadow(
-                          color: Color(0x0C000000),
-                          blurRadius: 20,
-                          offset: Offset(0, 4),
-                          spreadRadius: 0,
-                        )
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        SvgPicture.asset("assets/icons/Group (6).svg"),
-                        const SizedBox(width: 12),
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: stepsCompleted.toString(),
-                                style: const TextStyle(
-                                  color: Color(0xFF1A1A1A),
-                                  fontSize: 14,
-                                  fontFamily: 'SF Pro Display',
-                                  fontWeight: FontWeight.w400,
-                                  height: 1.57,
-                                  letterSpacing: 1,
-                                ),
-                              ),
-                              const TextSpan(
-                                text: '/',
-                                style: TextStyle(
-                                  color: Color(0xFF1A1A1A),
-                                  fontSize: 14,
-                                  fontFamily: 'SF Pro Display',
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.57,
-                                  letterSpacing: 1,
-                                ),
-                              ),
-                            const TextSpan(
-                                text: "60",
-                                style: const TextStyle(
-                                  color: Color(0xFFFE7D14),
-                                  fontSize: 14,
-                                  fontFamily: 'SF Pro Display',
-                                  fontWeight: FontWeight.w700,
-                                  height: 1.57,
-                                  letterSpacing: 1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      ],
                     ),
                   ),
                 ],
@@ -294,7 +305,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               height: 12,
             ),
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
                   const Row(
@@ -534,7 +545,7 @@ Widget buildCalendar(List<DateTime> dateList, List<DateTime> highlightedDates) {
   );
 
   return SizedBox(
-    height: 400,
+    height: 300,
     child: CalendarDatePicker2(
       config: config,
       value: dateList,

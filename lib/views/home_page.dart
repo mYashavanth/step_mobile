@@ -21,6 +21,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final storage = const FlutterSecureStorage();
+  var token = '';
 
   int videosWatched = 0;
   bool isLoadingVideosWatched = false;
@@ -53,6 +54,12 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _loadUserName();
     _initializeState();
+    _loadAuthToken();
+  }
+
+  Future<void> _loadAuthToken() async {
+    token = await storage.read(key: 'token') ?? '';
+    setState(() {});
   }
 
   Future<void> _initializeState() async {
@@ -570,7 +577,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                const UpcomingTests(),
+                // const UpcomingTests(),
                 bannerNotes(context),
                 // Replace the current Resume learning section with this:
                 const Text(
@@ -599,7 +606,10 @@ class _HomePageState extends State<HomePage> {
                       scrollDirection: Axis.horizontal,
                       children: resumeVideos.map((video) {
                         return buildVedioLearnCard(
+                          token: token,
                           imagePath: 'vedio1.png',
+                          bannerImageUrl:
+                              video['banner_image_name']?.toString(),
                           title: video['video_title']?.toString() ?? 'No title',
                           teacherName: video['doctor_name']?.toString() ??
                               'Unknown teacher',
@@ -607,8 +617,7 @@ class _HomePageState extends State<HomePage> {
                               video['video_duration_in_mins']?.toString() ??
                                   '0',
                           videoId: int.tryParse(
-                              video['videoLearningId']?.toString() ??
-                                  '0'), // Convert to int here
+                              video['videoLearningId']?.toString() ?? '0'),
                           videoUrl: video['videoLink']?.toString() ?? '',
                           videoPauseTime: video['video_pause_time']?.toString(),
                           subjectName: video['subject_name']?.toString() ?? '',
@@ -1012,8 +1021,8 @@ class _CalendarSectionState extends State<CalendarSection> {
                 height: 1.40,
               ),
             ),
-            TextButton(
-              onPressed: () {
+            InkWell(
+              onTap: () {
                 Navigator.pushNamed(
                   context,
                   "/calendar_view",
@@ -1036,7 +1045,7 @@ class _CalendarSectionState extends State<CalendarSection> {
             )
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         Row(
           children: [
             Text(
@@ -1112,57 +1121,57 @@ class _CalendarSectionState extends State<CalendarSection> {
             }),
           ),
         ),
-        GestureDetector(
-          onTap: () {
-            // statusSelectList[0] = true;
-            // statusSelectList[1] = false;
-            // statusSelectList[2] = false;
-            // setState(() {});
-            Navigator.pushNamed(context, "/course_screen" , arguments: {
-              'courseId': 1,
-              'subjectId': 1,
-            });
-          },
-          child: buildStatusCard(
-              false, 'list2.svg', statusSelectList[0], "Pre-Test"),
-        ),
-        const SizedBox(
-          height: 12,
-        ),
-        GestureDetector(
-          onTap: () {
-            // statusSelectList[0] = false;
-            // statusSelectList[1] = true;
-            // statusSelectList[2] = false;
-            // setState(() {});
-            Navigator.pushNamed(context, "/course_screen" , arguments: {
-              'courseId': 1,
-              'subjectId': 1,
-            });
-          },
-          child: buildStatusCard(
-              false, 'vedio.svg', statusSelectList[1], "Videos Lessons"),
-        ),
-        const SizedBox(
-          height: 12,
-        ),
-        GestureDetector(
-          onTap: () {
-            // statusSelectList[0] = false;
-            // statusSelectList[1] = false;
-            // statusSelectList[2] = true;
-            // setState(() {});
-            Navigator.pushNamed(context, "/course_screen", arguments: {
-              'courseId': 1,
-              'subjectId': 1,
-            });
-          },
-          child: buildStatusCard(
-              false, 'list2.svg', statusSelectList[2], "Post-lesson test"),
-        ),
-        const SizedBox(
-          height: 12,
-        ),
+        // GestureDetector(
+        //   onTap: () {
+        //     // statusSelectList[0] = true;
+        //     // statusSelectList[1] = false;
+        //     // statusSelectList[2] = false;
+        //     // setState(() {});
+        //     Navigator.pushNamed(context, "/course_screen" , arguments: {
+        //       'courseId': 1,
+        //       'subjectId': 1,
+        //     });
+        //   },
+        //   child: buildStatusCard(
+        //       false, 'list2.svg', statusSelectList[0], "Pre-Test"),
+        // ),
+        // const SizedBox(
+        //   height: 12,
+        // ),
+        // GestureDetector(
+        //   onTap: () {
+        //     // statusSelectList[0] = false;
+        //     // statusSelectList[1] = true;
+        //     // statusSelectList[2] = false;
+        //     // setState(() {});
+        //     Navigator.pushNamed(context, "/course_screen" , arguments: {
+        //       'courseId': 1,
+        //       'subjectId': 1,
+        //     });
+        //   },
+        //   child: buildStatusCard(
+        //       false, 'vedio.svg', statusSelectList[1], "Videos Lessons"),
+        // ),
+        // const SizedBox(
+        //   height: 12,
+        // ),
+        // GestureDetector(
+        //   onTap: () {
+        //     // statusSelectList[0] = false;
+        //     // statusSelectList[1] = false;
+        //     // statusSelectList[2] = true;
+        //     // setState(() {});
+        //     Navigator.pushNamed(context, "/course_screen", arguments: {
+        //       'courseId': 1,
+        //       'subjectId': 1,
+        //     });
+        //   },
+        //   child: buildStatusCard(
+        //       false, 'list2.svg', statusSelectList[2], "Post-lesson test"),
+        // ),
+        // const SizedBox(
+        //   height: 12,
+        // ),
       ],
     );
   }

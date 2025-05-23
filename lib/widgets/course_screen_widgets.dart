@@ -131,14 +131,14 @@ Widget buildStepTabButton(
     children: List.generate(5, (i) {
       return GestureDetector(
         onTap: () {
-          if(i == 1 || i == 2 || i == 4) {
+          if (i == 1 || i == 2 || i == 4) {
             // If Step 2 or Step 3 is tapped, show a message
             print("Step ${i + 1} tab selected");
-          }else{
-          setState(() {
-            stepTabSelectedIndex[0] = i; // Update selected tab index
-            chooseStepList[0] = i + 1; // Update chosen step
-          });
+          } else {
+            setState(() {
+              stepTabSelectedIndex[0] = i; // Update selected tab index
+              chooseStepList[0] = i + 1; // Update chosen step
+            });
           }
           storage.write(
             key: "selectedStepNo",
@@ -316,7 +316,25 @@ Widget preCourseCard(bool pending, BuildContext context, bool isPreCourse) {
         ),
       ),
       child: ListTile(
-        leading: SvgPicture.asset("assets/icons/list_icon.svg"),
+        leading: Container(
+            width: 40,
+            height: 40,
+            // margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.all(10),
+            decoration: ShapeDecoration(
+              color: isPreCourse
+                  ? const Color(0xFFC7F3F4)
+                  : const Color(0x29FE840A),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(50),
+              ),
+            ),
+            child: SvgPicture.asset(
+              "assets/icons/list_icon.svg",
+              colorFilter: isPreCourse
+                  ? const ColorFilter.mode(Color(0xFF31B5B9), BlendMode.srcIn)
+                  : const ColorFilter.mode(Color(0xFFFE860A), BlendMode.srcIn),
+            )),
         title: Text(
           isPreCourse ? "Pre-course test" : "Post-course test",
           style: const TextStyle(
@@ -341,6 +359,7 @@ Widget preCourseCard(bool pending, BuildContext context, bool isPreCourse) {
                 height: 1.67,
               ),
             ),
+            const SizedBox(height: 4),
             Container(
               width: 75,
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -399,7 +418,7 @@ Widget collapseStepClassCard(
         Container(
           width: 40,
           height: 40,
-          margin: const EdgeInsets.only(right: 8),
+          margin: const EdgeInsets.all(8),
           padding: const EdgeInsets.all(10),
           decoration: ShapeDecoration(
             color: const Color(0xFFEAEAEA),
@@ -407,74 +426,48 @@ Widget collapseStepClassCard(
               borderRadius: BorderRadius.circular(50),
             ),
           ),
-          child: Center(
-            child: Text(
-              "$num",
-              style: const TextStyle(
-                color: Color(0xFF5C5C5C),
-                fontSize: 16,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w500,
-                height: 1.50,
-              ),
-            ),
-          ),
+          child:
+              Center(child: SvgPicture.asset("assets/icons/video_player.svg")),
         ),
         Expanded(
-          child: Column(
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Video $num: $videoTitle',
-                      style: const TextStyle(
-                        color: Color(0xFF1A1A1A),
-                        fontSize: 16,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w400,
-                        height: 1.50,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 8.0),
+            child: Column(
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        // 'Video $num: $videoTitle',
+                        videoTitle,
+                        style: const TextStyle(
+                          color: Color(0xFF1A1A1A),
+                          fontSize: 16,
+                          fontFamily: 'SF Pro Display',
+                          fontWeight: FontWeight.w400,
+                          height: 1.50,
+                        ),
                       ),
                     ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      showList[num - 1] = !showList[num - 1];
-                      setState(() {});
-                    },
-                    child: Icon(
-                      !showList[num - 1]
-                          ? Icons.keyboard_arrow_down
-                          : Icons.keyboard_arrow_up,
-                      color: const Color(0xFF737373),
+                    GestureDetector(
+                      onTap: () {
+                        showList[num - 1] = !showList[num - 1];
+                        setState(() {});
+                      },
+                      child: Icon(
+                        !showList[num - 1]
+                            ? Icons.keyboard_arrow_down
+                            : Icons.keyboard_arrow_up,
+                        color: const Color(0xFF737373),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              Visibility(
-                visible: showList[num - 1],
-                child: Text(
-                  videoDescription,
-                  style: const TextStyle(
-                    color: Color(0xFF737373),
-                    fontSize: 12,
-                    fontFamily: 'SF Pro Display',
-                    fontWeight: FontWeight.w400,
-                    height: 1.67,
-                  ),
+                  ],
                 ),
-              ),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.access_time_filled_rounded,
-                    color: Color(0xFF737373),
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    videoDuration,
+                Visibility(
+                  visible: showList[num - 1],
+                  child: Text(
+                    videoDescription,
                     style: const TextStyle(
                       color: Color(0xFF737373),
                       fontSize: 12,
@@ -483,9 +476,29 @@ Widget collapseStepClassCard(
                       height: 1.67,
                     ),
                   ),
-                ],
-              ),
-            ],
+                ),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.access_time_filled_rounded,
+                      color: Color(0xFF737373),
+                      size: 16,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      videoDuration,
+                      style: const TextStyle(
+                        color: Color(0xFF737373),
+                        fontSize: 12,
+                        fontFamily: 'SF Pro Display',
+                        fontWeight: FontWeight.w400,
+                        height: 1.67,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(width: 8),
