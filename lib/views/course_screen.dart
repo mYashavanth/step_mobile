@@ -142,7 +142,7 @@ class _CourseScreenState extends State<CourseScreen>
       body: SingleChildScrollView(
         child: Column(
           children: [
-           SizedBox(
+            SizedBox(
               height: 300,
               width: double.maxFinite,
               child: Stack(
@@ -162,10 +162,30 @@ class _CourseScreenState extends State<CourseScreen>
                           height: double.infinity,
                         ),
 
+                  // Glass morphism effect at the bottom
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 60, // Adjust height as needed
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Color.fromRGBO(255, 255, 255, 0),
+                            Color.fromRGBO(255, 255, 255, 1),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
                   // The back button
                   Positioned(
-                    top: 40, // Adjust this value as needed
-                    left: 16, // Adjust this value as needed
+                    top: 40,
+                    left: 16,
                     child: GestureDetector(
                       onTap: () {
                         Navigator.pop(context);
