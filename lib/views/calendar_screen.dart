@@ -30,6 +30,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
   String metricsError = '';
   int? daysToExam;
   int? stepsToTakeEachDay;
+  DateTime? selectedDate;
+
+  late ScrollController _calendarScrollController;
+  int _visibleMonth = DateTime.now().month;
+  int _visibleYear = DateTime.now().year;
 
   Future<void> fetchUserMetrics() async {
     final token = await storage.read(key: 'token') ?? '';
@@ -115,6 +120,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
   void initState() {
     super.initState();
     fetchUserMetrics();
+    _calendarScrollController = ScrollController();
+    _calendarScrollController.addListener(_onCalendarScroll);
+  }
+
+  void _onCalendarScroll() {
+    // Estimate: Each month is about 300px tall (adjust as needed)
+    double monthHeight = 300;
+    int monthsScrolled =
+        (_calendarScrollController.offset / monthHeight).round();
+    DateTime base = DateTime(DateTime.now().year, DateTime.now().month);
+    DateTime visible = DateTime(base.year, base.month + monthsScrolled);
+
+    if (visible.month != _visibleMonth || visible.year != _visibleYear) {
+      setState(() {
+        _visibleMonth = visible.month;
+        _visibleYear = visible.year;
+      });
+      // print('Visible month: ${_monthName(_visibleMonth)}, year: $_visibleYear');
+    }
+  }
+
+  @override
+  void dispose() {
+    _calendarScrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -122,7 +152,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     if (args != null && args['examDateData'] != null) {
-      print('Received exam date data: ${args['examDateData']}');
+      // print('Received exam date data: ${args['examDateData']}');
       highlightedDates = (args['examDateData'] as List)
           .map((item) {
             final dateStr = item['neet_exam_date'];
@@ -219,9 +249,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             letterSpacing: 1,
                           ),
                         ),
-                        const TextSpan(
+                      const  TextSpan(
                           text: '/',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Color(0xFF1A1A1A),
                             fontSize: 14,
                             fontFamily: 'SF Pro Display',
@@ -230,7 +260,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             letterSpacing: 1,
                           ),
                         ),
-                        const TextSpan(
+                       const TextSpan(
                           text: "60",
                           style: const TextStyle(
                             color: Color(0xFFFE7D14),
@@ -259,7 +289,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "${DateTime.now().year}/${_monthName(DateTime.now().month)}",
+                    "$_visibleYear/${_monthName(_visibleMonth)}",
                     style: const TextStyle(
                       color: Color(0xFF1A1A1A),
                       fontSize: 16,
@@ -284,7 +314,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            buildCalendar(dateList, highlightedDates),
+            buildCalendar(dateList, highlightedDates, _calendarScrollController,
+                (dates) {
+              setState(() {
+                dateList = dates;
+                selectedDate = (dates.isNotEmpty) ? dates.first : null;
+              });
+            }),
             const SizedBox(
               height: 8,
             ),
@@ -308,10 +344,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         "Statistics",
                         style: TextStyle(
                           color: Color(0xFF1A1A1A),
@@ -322,15 +358,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         ),
                       ),
                       Text(
-                        "Today",
-                        style: TextStyle(
+                        selectedDate != null
+                            ? "${selectedDate!.day} ${_monthName(selectedDate!.month)} ${selectedDate!.year}"
+                            : "Today",
+                        style: const TextStyle(
                           color: Color(0xFF1A1A1A),
                           fontSize: 14,
                           fontFamily: 'SF Pro Display',
                           fontWeight: FontWeight.w400,
                           height: 1.57,
                         ),
-                      )
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -377,9 +415,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: homeStepsCard(
+                       child: homeStepsCard(
                           "STEPS TO TAKE EACH DAY",
-                          "${daysToExam != null && daysToExam != 0 ? (totalSteps / daysToExam!).ceil() : '0'}",
+                          stepsCompleted >= 60
+                              ? "0 (Completed!)"
+                              : "${daysToExam != null && daysToExam != 0 ? '${((60 - stepsCompleted) / daysToExam!).ceil()}' : 'Calculate...'}",
                           "done.svg",
                         ),
                       ),
@@ -410,7 +450,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 }
 
-Widget buildCalendar(List<DateTime> dateList, List<DateTime> highlightedDates) {
+Widget buildCalendar(
+  List<DateTime> dateList,
+  List<DateTime> highlightedDates,
+  ScrollController controller,
+  void Function(List<DateTime>) onDateChanged,
+) {
   final config = CalendarDatePicker2Config(
     calendarType: CalendarDatePicker2Type.single,
     dayBuilder: ({
@@ -424,16 +469,16 @@ Widget buildCalendar(List<DateTime> dateList, List<DateTime> highlightedDates) {
       final isExamDate = highlightedDates.any((d) =>
           d.year == date.year && d.month == date.month && d.day == date.day);
 
-      if (isToday == true) {
-        // Today: blue background, white text
+      // Selected day: green background, white text
+      if (isSelected == true) {
         return Stack(
           alignment: Alignment.center,
           children: [
             Container(
               width: 36,
               height: 36,
-              decoration: const BoxDecoration(
-                color: Color(0xFF247E80), // blue background
+              decoration: BoxDecoration(
+                color: Colors.green, // Your selected color
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
@@ -463,7 +508,46 @@ Widget buildCalendar(List<DateTime> dateList, List<DateTime> highlightedDates) {
         );
       }
 
-      // Exam date (not today): orange text and dot
+      // Today (not selected): blue background, white text
+      if (isToday == true) {
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                color: Color(0xFF247E80),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                '${date.day}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                  fontFamily: "SF Pro Display",
+                ),
+              ),
+            ),
+            if (isExamDate)
+              Positioned(
+                bottom: 2,
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: Colors.orange,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+          ],
+        );
+      }
+
+      // Exam date (not today, not selected): orange text and dot
       return Stack(
         alignment: Alignment.center,
         children: [
@@ -502,8 +586,8 @@ Widget buildCalendar(List<DateTime> dateList, List<DateTime> highlightedDates) {
     selectedDayHighlightColor: const Color(0xFF247E80),
     centerAlignModePicker: true,
     calendarViewMode: CalendarDatePicker2Mode.scroll,
+    scrollViewController: controller,
     hideScrollViewMonthWeekHeader: true,
-    scrollViewController: ScrollController(),
     weekdayLabelTextStyle: const TextStyle(
       color: Color(0xFF030917),
       fontSize: 16,
@@ -549,7 +633,7 @@ Widget buildCalendar(List<DateTime> dateList, List<DateTime> highlightedDates) {
     child: CalendarDatePicker2(
       config: config,
       value: dateList,
-      onValueChanged: (dates) {},
+      onValueChanged: onDateChanged,
     ),
   );
 }
