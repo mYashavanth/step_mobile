@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:ghastep/widgets/common_widgets.dart';
 import 'package:ghastep/views/dry.dart';
+import 'dart:ui';
 
 String title = "Exam title name should go here";
 
@@ -1368,9 +1369,17 @@ List<InlineSpan> _buildQuestionContent(String question, BuildContext context) {
               barrierLabel: "Image",
               pageBuilder: (context, anim1, anim2) {
                 return Scaffold(
-                  backgroundColor: Colors.black,
+                  backgroundColor: Colors.transparent,
                   body: Stack(
                     children: [
+                      // Glassmorphism background
+                      BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                        child: Container(
+                          color: const Color.fromRGBO(255, 255, 255, 0.2),
+                        ),
+                      ),
+                      // Centered zoomable image
                       Center(
                         child: InteractiveViewer(
                           minScale: 0.5,
@@ -1386,13 +1395,20 @@ List<InlineSpan> _buildQuestionContent(String question, BuildContext context) {
                           ),
                         ),
                       ),
+                      // Close button
                       Positioned(
                         top: 40,
                         right: 24,
-                        child: IconButton(
-                          icon: const Icon(Icons.close,
-                              color: Colors.white, size: 32),
-                          onPressed: () => Navigator.of(context).pop(),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Color.fromRGBO(0, 0, 0, 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.close,
+                                color: Colors.white, size: 32),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
                         ),
                       ),
                     ],

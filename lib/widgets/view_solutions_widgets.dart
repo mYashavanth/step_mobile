@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ghastep/views/dry.dart';
+import 'dart:ui';
 
 Widget buildTopSelectCards(bool selected, String title) {
   return Container(
@@ -71,13 +72,15 @@ class _QuestAnsSolWidgetState extends State<QuestAnsSolWidget> {
     print("Solution Data: ${widget.solutionData}");
     return Column(
       children: List.generate(widget.solutionData.length, (i) {
-        return buildQuestionAnsSol(widget.solutionData[i], isPreCourse);
+        return buildQuestionAnsSol(
+            widget.solutionData[i], isPreCourse, context);
       }),
     );
   }
 }
 
-Widget buildQuestionAnsSol(Map<String, dynamic> data, bool isPreCourse) {
+Widget buildQuestionAnsSol(
+    Map<String, dynamic> data, bool isPreCourse, context) {
   return Container(
     color: Colors.white,
     margin: const EdgeInsets.only(bottom: 12),
@@ -111,7 +114,7 @@ Widget buildQuestionAnsSol(Map<String, dynamic> data, bool isPreCourse) {
         const SizedBox(height: 8),
         RichText(
           text: TextSpan(
-            children: buildQuestionContent(data["question"]),
+            children: buildQuestionContent(data["question"], context),
           ),
         ),
         const SizedBox(height: 8),
@@ -161,7 +164,8 @@ Widget buildQuestionAnsSol(Map<String, dynamic> data, bool isPreCourse) {
                 const SizedBox(height: 8),
                 RichText(
                   text: TextSpan(
-                    children: buildSolutionContent(data["solution_text"] ?? ''),
+                    children: buildSolutionContent(
+                        data["solution_text"] ?? '', context),
                   ),
                 ),
               ],
@@ -278,7 +282,7 @@ Widget solAnswerCard(bool selected, String title, String optionText, String ans,
   );
 }
 
-List<InlineSpan> buildSolutionContent(String solution) {
+List<InlineSpan> buildSolutionContent(String solution, BuildContext context) {
   final RegExp urlRegExp = RegExp(
     r'(https?:\/\/[^\s]+(?:\.png|\.jpg|\.jpeg|\.gif))',
     caseSensitive: false,
@@ -307,11 +311,68 @@ List<InlineSpan> buildSolutionContent(String solution) {
       alignment: PlaceholderAlignment.middle,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Image.network(
-          url,
-          width: 200,
-          errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.broken_image, size: 40),
+        child: GestureDetector(
+          onTap: () {
+            showGeneralDialog(
+              context: context,
+              barrierDismissible: true,
+              barrierLabel: "Image",
+              pageBuilder: (context, anim1, anim2) {
+                return Scaffold(
+                  backgroundColor: Colors.transparent,
+                  body: Stack(
+                    children: [
+                      // Glassmorphism background
+                      BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                        child: Container(
+                          color: const Color.fromRGBO(255, 255, 255, 0.2),
+                        ),
+                      ),
+                      // Centered zoomable image
+                      Center(
+                        child: InteractiveViewer(
+                          minScale: 0.5,
+                          maxScale: 4,
+                          child: Image.network(
+                            url,
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.broken_image,
+                                    color: Colors.white, size: 80),
+                          ),
+                        ),
+                      ),
+                      // Close button
+                      Positioned(
+                        top: 40,
+                        right: 24,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Color.fromRGBO(0, 0, 0, 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.close,
+                                color: Colors.white, size: 32),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+          child: Image.network(
+            url,
+            width: 200,
+            errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.broken_image, size: 40),
+          ),
         ),
       ),
     ));
@@ -333,7 +394,7 @@ List<InlineSpan> buildSolutionContent(String solution) {
   return spans;
 }
 
-List<InlineSpan> buildQuestionContent(String question) {
+List<InlineSpan> buildQuestionContent(String question, BuildContext context) {
   final RegExp urlRegExp = RegExp(
     r'(https?:\/\/[^\s]+(?:\.png|\.jpg|\.jpeg|\.gif))',
     caseSensitive: false,
@@ -356,17 +417,74 @@ List<InlineSpan> buildQuestionContent(String question) {
         ),
       ));
     }
-    // Add the image as a WidgetSpan
+    // Add the image as a WidgetSpan with tap-to-zoom
     final url = match.group(0)!;
     spans.add(WidgetSpan(
       alignment: PlaceholderAlignment.middle,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Image.network(
-          url,
-          width: 200,
-          errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.broken_image, size: 40),
+        child: GestureDetector(
+          onTap: () {
+            showGeneralDialog(
+              context: context,
+              barrierDismissible: true,
+              barrierLabel: "Image",
+              pageBuilder: (context, anim1, anim2) {
+                return Scaffold(
+                  backgroundColor: Colors.transparent,
+                  body: Stack(
+                    children: [
+                      // Glassmorphism background
+                      BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+                        child: Container(
+                          color: const Color.fromRGBO(255, 255, 255, 0.2),
+                        ),
+                      ),
+                      // Centered zoomable image
+                      Center(
+                        child: InteractiveViewer(
+                          minScale: 0.5,
+                          maxScale: 4,
+                          child: Image.network(
+                            url,
+                            fit: BoxFit.contain,
+                            width: double.infinity,
+                            height: double.infinity,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.broken_image,
+                                    color: Colors.white, size: 80),
+                          ),
+                        ),
+                      ),
+                      // Close button
+                      Positioned(
+                        top: 40,
+                        right: 24,
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Color.fromRGBO(0, 0, 0, 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.close,
+                                color: Colors.white, size: 32),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+          child: Image.network(
+            url,
+            width: 200,
+            errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.broken_image, size: 40),
+          ),
         ),
       ),
     ));
