@@ -26,6 +26,42 @@ class _SelectCourseState extends State<SelectCourse> {
   void initState() {
     super.initState();
     fetchCourses();
+    _loadSavedData();
+  }
+
+  Future<void> _loadSavedData() async {
+    try {
+      // Load all saved values from storage
+      final isGraduated = await storage.read(key: 'isGraduated');
+      final isUg = await storage.read(key: 'isUg');
+      final yearOfGrad = await storage.read(key: 'yearOfGraduation');
+      final yearOfStd = await storage.read(key: 'yearOfStudy');
+      final courseId = await storage.read(key: 'selectedCourseId');
+
+      if (mounted) {
+        setState(() {
+          // Set graduate status based on stored values
+          if (isGraduated == "1") {
+            graduate = true;
+          } else if (isUg == "1") {
+            graduate = false;
+          }
+
+          // Set year fields
+          if (yearOfGrad != null) yearOfGraduation.text = yearOfGrad;
+          if (yearOfStd != null) yearOfStudy.text = yearOfStd;
+
+          // Set selected course
+          if (courseId != null) selectedCourseId = int.tryParse(courseId);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading saved data: $e')),
+        );
+      }
+    }
   }
 
   Future<void> fetchCourses() async {

@@ -80,6 +80,9 @@ class TermsAndConditionsPage extends StatelessWidget {
             BulletPoint(
                 text: 'No refunds unless decided otherwise by GHA STEP.'),
             BulletPoint(text: 'Notes are bundled only with video courses.'),
+            BulletPoint(
+                text:
+                    'Approved Refunds will be credited to your original method of payment within 8-10 business days.'),
             SectionHeader(title: '5. Privacy and Data Use'),
             BulletPoint(
                 text:

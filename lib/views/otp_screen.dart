@@ -185,6 +185,7 @@ class _OTPScreenState extends State<OTPScreen> {
     final isGraduated = userFields['is_graduated'] ?? 0;
     final isUg = userFields['is_ug'] ?? 0;
     final yearOfGraduation = userFields['year_of_graduation']?.toString() ?? '';
+    final yearOfStudy = userFields['study_year']?.toString() ?? '';
     final selectedCourseId = await storage.read(key: 'selectedCourseId');
 
     // Store user fields in secure storage
@@ -194,6 +195,7 @@ class _OTPScreenState extends State<OTPScreen> {
     await storage.write(key: 'isGraduated', value: isGraduated.toString());
     await storage.write(key: 'isUg', value: isUg.toString());
     await storage.write(key: 'yearOfGraduation', value: yearOfGraduation);
+    await storage.write(key: 'yearOfStudy', value: yearOfStudy);
     if (selectedCourseId != null) {
       await storage.write(key: 'selectedCourseId', value: selectedCourseId);
     }

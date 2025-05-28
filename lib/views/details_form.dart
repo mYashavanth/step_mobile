@@ -140,8 +140,9 @@ class _DetailsFormState extends State<DetailsForm> {
             'token': token,
             'name': _nameController.text.trim(),
             'email': _emailController.text.trim(),
-            'college': _selectedCollege?.collegeName ??
-                _collegeSearchController.text.trim(),
+            'college': _selectedCollege?.collegeName ?? "",
+            // 'college': _selectedCollege?.collegeName ??
+            //     _collegeSearchController.text.trim(),
           },
         );
         print(
@@ -169,7 +170,7 @@ class _DetailsFormState extends State<DetailsForm> {
             // Error from backend
             showCustomSnackBar(
               context: context,
-              message: data['message'],
+              message: 'Please select a college',
               isSuccess: false,
             );
           }
