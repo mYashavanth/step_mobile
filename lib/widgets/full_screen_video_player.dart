@@ -58,7 +58,10 @@ class _FullScreenVideoPlayerState extends State<FullScreenVideoPlayer> {
       'videoLearningId': videoLearningId,
     };
     if (!isPlay && pauseTime != null) {
-      body['pauseTime'] = pauseTime.toString();
+      // body['pauseTime'] = pauseTime.toString();
+      final minutes = (pauseTime ~/ 60).toString().padLeft(2, '0');
+      final seconds = (pauseTime % 60).toString().padLeft(2, '0');
+      body['pauseTime'] = '$minutes:$seconds';
     }
 
     try {
