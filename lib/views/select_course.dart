@@ -158,6 +158,7 @@ class _SelectCourseState extends State<SelectCourse> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         centerTitle: true,
         title: const Text(
@@ -327,63 +328,56 @@ class _SelectCourseState extends State<SelectCourse> {
                         );
                       }).toList(),
                     ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: isLoading ? null : updateUGGStatus,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: isLoading
+                      ? const Color(0xFF247E80).withOpacity(0.7)
+                      : const Color(0xFF247E80),
+                  disabledBackgroundColor:
+                      const Color(0xFF247E80).withOpacity(0.7),
+                ),
+                child: isLoading
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            'Processing...',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontFamily: 'SF Pro Display',
+                              fontWeight: FontWeight.w500,
+                              height: 1.50,
+                            ),
+                          ),
+                        ],
+                      )
+                    : const Text(
+                        'Proceed',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontFamily: 'SF Pro Display',
+                          fontWeight: FontWeight.w500,
+                          height: 1.50,
+                        ),
+                      ),
+              ),
             ],
           ),
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ElevatedButton(
-              onPressed: isLoading ? null : updateUGGStatus,
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: isLoading
-                    ? const Color(0xFF247E80).withOpacity(0.7)
-                    : const Color(0xFF247E80),
-                disabledBackgroundColor:
-                    const Color(0xFF247E80).withOpacity(0.7),
-              ),
-              child: isLoading
-                  ? const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Processing...',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontFamily: 'SF Pro Display',
-                            fontWeight: FontWeight.w500,
-                            height: 1.50,
-                          ),
-                        ),
-                      ],
-                    )
-                  : const Text(
-                      'Proceed',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w500,
-                        height: 1.50,
-                      ),
-                    ),
-            ),
-          ],
         ),
       ),
     );

@@ -276,6 +276,7 @@ class _OTPScreenState extends State<OTPScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -393,53 +394,61 @@ class _OTPScreenState extends State<OTPScreen> {
                   ],
                 ),
               ),
-            )
-          ],
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () {
-                      if (enteredOtp.length == 6) {
-                        _verifyOtp(enteredOtp);
-                      } else {
-                        showCustomSnackBar(
-                          context: context,
-                          message: 'Please enter a valid 6-digit OTP',
-                          isSuccess: false,
-                        );
-                      }
-                    },
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                backgroundColor: isLoading
-                    ? const Color(0xFF247E80).withOpacity(0.7)
-                    : const Color(0xFF247E80),
-                disabledBackgroundColor:
-                    const Color(0xFF247E80).withOpacity(0.7),
-              ),
-              child: isLoading
-                  ? const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Processing...',
+            ),
+            const SizedBox(height: 16),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () {
+                          if (enteredOtp.length == 6) {
+                            _verifyOtp(enteredOtp);
+                          } else {
+                            showCustomSnackBar(
+                              context: context,
+                              message: 'Please enter a valid 6-digit OTP',
+                              isSuccess: false,
+                            );
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 50),
+                    backgroundColor: isLoading
+                        ? const Color(0xFF247E80).withOpacity(0.7)
+                        : const Color(0xFF247E80),
+                    disabledBackgroundColor:
+                        const Color(0xFF247E80).withOpacity(0.7),
+                  ),
+                  child: isLoading
+                      ? const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Processing...',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontFamily: 'SF Pro Display',
+                                fontWeight: FontWeight.w500,
+                                height: 1.50,
+                              ),
+                            ),
+                          ],
+                        )
+                      : const Text(
+                          'Proceed',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16,
@@ -448,68 +457,61 @@ class _OTPScreenState extends State<OTPScreen> {
                             height: 1.50,
                           ),
                         ),
-                      ],
-                    )
-                  : const Text(
-                      'Proceed',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w500,
-                        height: 1.50,
-                      ),
-                    ),
+                ),
+                const SizedBox(height: 12),
+              ],
             ),
-            const SizedBox(height: 12),
-            const Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'By using our services you are agreeing to our \n',
-                    style: TextStyle(
-                      color: Color(0xFF737373),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      height: 1.67,
-                    ),
-                  ),
-                  TextSpan(
-                    text: 'Terms',
-                    style: TextStyle(
-                      color: Color(0xFF247E80),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w500,
-                      height: 1.67,
-                    ),
-                  ),
-                  TextSpan(
-                    text: ' and ',
-                    style: TextStyle(
-                      color: Color(0xFF737373),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      height: 1.67,
-                    ),
-                  ),
-                  TextSpan(
-                    text: 'Privacy Policy',
-                    style: TextStyle(
-                      color: Color(0xFF247E80),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w500,
-                      height: 1.67,
-                    ),
-                  ),
-                ],
-              ),
-              textAlign: TextAlign.center,
-            )
           ],
+        ),
+      ),
+      bottomNavigationBar: const Padding(
+        padding: EdgeInsets.fromLTRB(16.0, 0, 16.0, 24.0),
+        child: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: 'By using our services you are agreeing to our \n',
+                style: TextStyle(
+                  color: Color(0xFF737373),
+                  fontSize: 14,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w400,
+                  height: 1.67,
+                ),
+              ),
+              TextSpan(
+                text: 'Terms',
+                style: TextStyle(
+                  color: Color(0xFF247E80),
+                  fontSize: 14,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w500,
+                  height: 1.67,
+                ),
+              ),
+              TextSpan(
+                text: ' and ',
+                style: TextStyle(
+                  color: Color(0xFF737373),
+                  fontSize: 14,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w400,
+                  height: 1.67,
+                ),
+              ),
+              TextSpan(
+                text: 'Privacy Policy',
+                style: TextStyle(
+                  color: Color(0xFF247E80),
+                  fontSize: 14,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w500,
+                  height: 1.67,
+                ),
+              ),
+            ],
+          ),
+          textAlign: TextAlign.center,
         ),
       ),
     );

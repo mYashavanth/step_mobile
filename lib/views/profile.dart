@@ -133,6 +133,7 @@ class _ProfileState extends State<Profile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF3F4F6),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -274,7 +275,7 @@ class _ProfileState extends State<Profile> {
                                     letterSpacing: 1,
                                   ),
                                 ),
-                               const TextSpan(
+                                const TextSpan(
                                   text: "60",
                                   style: TextStyle(
                                     color: Color(0xFFFE7D14),

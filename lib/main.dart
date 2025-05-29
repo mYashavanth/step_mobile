@@ -20,7 +20,7 @@ import 'package:ghastep/views/rankings_leaderbord_screen.dart';
 import 'package:ghastep/views/report_problem.dart';
 import 'package:ghastep/views/saved_items.dart';
 import 'package:ghastep/views/select_course.dart';
-import 'package:flutter_localization/flutter_localization.dart';
+// import 'package:flutter_localization/flutter_localization.dart';
 import 'package:ghastep/views/settings.dart';
 import 'package:ghastep/views/subscription_page.dart';
 import 'package:ghastep/views/terms_and_conditions.dart';

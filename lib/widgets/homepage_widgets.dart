@@ -320,22 +320,24 @@ Widget buildStepWiseCourseCard(
             'subjectId': id,
           });
           await storage.write(key: "selectedSubjectId", value: id);
-          showCustomSnackBar(
-            context: context,
-            message: data['message'],
-            isSuccess: true,
-          );
+          // showCustomSnackBar(
+          //   context: context,
+          //   message: data['message'],
+          //   isSuccess: true,
+          // );
+          print('Success message: ${data['message']}');
         } else if (data['errFlag'] == 2) {
           Navigator.pushNamed(context, "/course_screen", arguments: {
             'courseId': selectedCourseId,
             'subjectId': id,
           });
           await storage.write(key: "selectedSubjectId", value: id);
-          showCustomSnackBar(
-            context: context,
-            message: data['message'],
-            isSuccess: true,
-          );
+          // showCustomSnackBar(
+          //   context: context,
+          //   message: data['message'],
+          //   isSuccess: true,
+          // );
+          print('Error message: ${data['message']}');
         } else {
           showCustomSnackBar(
             context: context,
