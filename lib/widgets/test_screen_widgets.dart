@@ -1332,20 +1332,176 @@ Widget buildIndicator(Color colorCode, String text) {
   );
 }
 
-List<InlineSpan> _buildQuestionContent(String question, BuildContext context) {
+List<InlineSpan> _buildQuestionContent(
+    dynamic questionData, BuildContext context) {
+  final List<InlineSpan> spans = [];
+
+  // Handle case when questionData is already a Map (parsed JSON)
+  if (questionData is Map<String, dynamic>) {
+    return _buildEditorJsContent(questionData, context);
+  }
+
+  // Handle case when questionData is a String
+  if (questionData is String) {
+    // First try to parse it as JSON
+    try {
+      final parsedData = jsonDecode(questionData);
+      if (parsedData is Map<String, dynamic>) {
+        return _buildEditorJsContent(parsedData, context);
+      }
+    } catch (e) {
+      // If parsing fails, treat it as plain text
+      return _buildPlainTextContent(questionData, context);
+    }
+  }
+
+  // Fallback to empty content
+  return spans;
+}
+
+List<InlineSpan> _buildEditorJsContent(
+    Map<String, dynamic> questionData, BuildContext context) {
+  final List<InlineSpan> spans = [];
+
+  try {
+    final List<dynamic> blocks = questionData['blocks'] ?? [];
+
+    for (final block in blocks) {
+      final String type = block['type'];
+      final Map<String, dynamic> data = block['data'];
+
+      switch (type) {
+        case 'paragraph':
+          if (data['text'] != null && data['text'].toString().isNotEmpty) {
+            // Handle all variations of line breaks
+            String paragraphText = data['text']
+                .replaceAll('<br>', '\n')
+                .replaceAll('<br/>', '\n')
+                .replaceAll('<br />', '\n');
+
+            // Split text by newlines and add each part as separate TextSpan
+            List<String> lines = paragraphText.split('\n');
+            for (int i = 0; i < lines.length; i++) {
+              if (lines[i].isNotEmpty) {
+                spans.add(TextSpan(
+                  text: lines[i],
+                  style: const TextStyle(
+                    color: Color(0xFF1A1A1A),
+                    fontSize: 16,
+                    fontFamily: 'SF Pro Display',
+                    fontWeight: FontWeight.w400,
+                    height: 1.50,
+                  ),
+                ));
+              }
+              // Add newline unless it's the last line
+              if (i < lines.length - 1) {
+                spans.add(const TextSpan(text: '\n'));
+              }
+            }
+            // Add spacing after paragraph
+            spans.add(const TextSpan(text: '\n\n'));
+          }
+          break;
+
+        case 'image':
+          // Handle images
+          final String? imageUrl = data['file']?['url'];
+          if (imageUrl != null && imageUrl.isNotEmpty) {
+            spans.add(WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: GestureDetector(
+                  onTap: () => _showFullScreenImage(context, imageUrl),
+                  child: Image.network(
+                    imageUrl,
+                    width: 200,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.broken_image, size: 40),
+                  ),
+                ),
+              ),
+            ));
+            // Add spacing after image
+            spans.add(const TextSpan(text: '\n\n'));
+          }
+          break;
+
+        // Add more cases for other Editor.js block types as needed
+        case 'header':
+          if (data['text'] != null && data['text'].toString().isNotEmpty) {
+            spans.add(TextSpan(
+              text: data['text'],
+              style: TextStyle(
+                color: const Color(0xFF1A1A1A),
+                fontSize: _getHeaderFontSize(data['level'] ?? 1),
+                fontWeight: FontWeight.bold,
+                height: 1.50,
+              ),
+            ));
+            spans.add(const TextSpan(text: '\n\n'));
+          }
+          break;
+
+        case 'list':
+          if (data['items'] != null && data['items'] is List) {
+            for (var item in data['items']) {
+              spans.add(TextSpan(
+                text: '• ${item}\n',
+                style: const TextStyle(
+                  color: Color(0xFF1A1A1A),
+                  fontSize: 16,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w400,
+                  height: 1.50,
+                ),
+              ));
+            }
+            spans.add(const TextSpan(text: '\n'));
+          }
+          break;
+
+        default:
+          // For unsupported types, try to display any text content
+          if (data['text'] != null && data['text'].toString().isNotEmpty) {
+            spans.add(TextSpan(
+              text: data['text'],
+              style: const TextStyle(
+                color: Color(0xFF1A1A1A),
+                fontSize: 16,
+                fontFamily: 'SF Pro Display',
+                fontWeight: FontWeight.w400,
+                height: 1.50,
+              ),
+            ));
+            spans.add(const TextSpan(text: '\n\n'));
+          }
+          break;
+      }
+    }
+  } catch (e) {
+    // If something goes wrong with JSON processing, fall back to showing raw data
+    spans.addAll(_buildPlainTextContent(jsonEncode(questionData), context));
+  }
+
+  return spans;
+}
+
+List<InlineSpan> _buildPlainTextContent(String text, BuildContext context) {
+  final List<InlineSpan> spans = [];
   final RegExp urlRegExp = RegExp(
     r'(https?:\/\/[^\s]+(?:\.png|\.jpg|\.jpeg|\.gif))',
     caseSensitive: false,
   );
-  final List<InlineSpan> spans = [];
-  final matches = urlRegExp.allMatches(question);
+  final matches = urlRegExp.allMatches(text);
 
   int lastEnd = 0;
   for (final match in matches) {
     // Add text before the image
     if (match.start > lastEnd) {
       spans.add(TextSpan(
-        text: question.substring(lastEnd, match.start),
+        text: text.substring(lastEnd, match.start),
         style: const TextStyle(
           color: Color(0xFF1A1A1A),
           fontSize: 16,
@@ -1355,68 +1511,14 @@ List<InlineSpan> _buildQuestionContent(String question, BuildContext context) {
         ),
       ));
     }
-    // Add the image as a WidgetSpan with tap-to-zoom
+    // Add the image as a WidgetSpan
     final url = match.group(0)!;
     spans.add(WidgetSpan(
       alignment: PlaceholderAlignment.middle,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: GestureDetector(
-          onTap: () {
-            showGeneralDialog(
-              context: context,
-              barrierDismissible: true,
-              barrierLabel: "Image",
-              pageBuilder: (context, anim1, anim2) {
-                return Scaffold(
-                  backgroundColor: Colors.transparent,
-                  body: Stack(
-                    children: [
-                      // Glassmorphism background
-                      BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-                        child: Container(
-                          color: const Color.fromRGBO(255, 255, 255, 0.2),
-                        ),
-                      ),
-                      // Centered zoomable image
-                      Center(
-                        child: InteractiveViewer(
-                          minScale: 0.5,
-                          maxScale: 4,
-                          child: Image.network(
-                            url,
-                            fit: BoxFit.contain,
-                            width: double.infinity,
-                            height: double.infinity,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.broken_image,
-                                    color: Colors.white, size: 80),
-                          ),
-                        ),
-                      ),
-                      // Close button
-                      Positioned(
-                        top: 40,
-                        right: 24,
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            color: Color.fromRGBO(0, 0, 0, 0.5),
-                            shape: BoxShape.circle,
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.close,
-                                color: Colors.white, size: 32),
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
+          onTap: () => _showFullScreenImage(context, url),
           child: Image.network(
             url,
             width: 200,
@@ -1429,9 +1531,9 @@ List<InlineSpan> _buildQuestionContent(String question, BuildContext context) {
     lastEnd = match.end;
   }
   // Add any remaining text after the last image
-  if (lastEnd < question.length) {
+  if (lastEnd < text.length) {
     spans.add(TextSpan(
-      text: question.substring(lastEnd),
+      text: text.substring(lastEnd),
       style: const TextStyle(
         color: Color(0xFF1A1A1A),
         fontSize: 16,
@@ -1442,4 +1544,73 @@ List<InlineSpan> _buildQuestionContent(String question, BuildContext context) {
     ));
   }
   return spans;
+}
+
+double _getHeaderFontSize(int level) {
+  switch (level) {
+    case 1:
+      return 24;
+    case 2:
+      return 20;
+    case 3:
+      return 18;
+    default:
+      return 16;
+  }
+}
+
+void _showFullScreenImage(BuildContext context, String imageUrl) {
+  showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: "Image",
+    pageBuilder: (context, anim1, anim2) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            // Glassmorphism background
+            BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+              child: Container(
+                color: const Color.fromRGBO(255, 255, 255, 0.2),
+              ),
+            ),
+            // Centered zoomable image
+            Center(
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4,
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.contain,
+                  width: double.infinity,
+                  height: double.infinity,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.broken_image,
+                      color: Colors.white,
+                      size: 80),
+                ),
+              ),
+            ),
+            // Close button
+            Positioned(
+              top: 40,
+              right: 24,
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Color.fromRGBO(0, 0, 0, 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }
