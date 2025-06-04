@@ -491,7 +491,6 @@ List<InlineSpan> _buildEditorJsContent(
           }
           break;
 
-        // Add more cases for other Editor.js block types as needed
         case 'header':
           if (data['text'] != null && data['text'].toString().isNotEmpty) {
             spans.add(TextSpan(
@@ -525,6 +524,18 @@ List<InlineSpan> _buildEditorJsContent(
           }
           break;
 
+        case 'table':
+          if (data['content'] != null && data['content'] is List) {
+            spans.add(WidgetSpan(
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                child: _buildTableWidget(data, context),
+              ),
+            ));
+            spans.add(const TextSpan(text: '\n\n'));
+          }
+          break;
+
         default:
           // For unsupported types, try to display any text content
           if (data['text'] != null && data['text'].toString().isNotEmpty) {
@@ -549,6 +560,87 @@ List<InlineSpan> _buildEditorJsContent(
   }
 
   return spans;
+}
+
+Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
+  final bool withHeadings = tableData['withHeadings'] ?? false;
+  final bool stretched = tableData['stretched'] ?? false;
+  final List<List<String>> content = List<List<String>>.from(
+    tableData['content']?.map((row) => List<String>.from(row)) ?? [],
+  );
+
+  if (content.isEmpty) return const SizedBox();
+
+  // Calculate the required width based on content
+  final screenWidth = MediaQuery.of(context).size.width;
+  final columnCount = content.isNotEmpty ? content[0].length : 0;
+  final columnWidth = (screenWidth - 32) / columnCount; // 32 for padding
+
+  return ConstrainedBox(
+    constraints: BoxConstraints(
+      maxWidth: screenWidth,
+      minWidth: stretched ? screenWidth : 0,
+    ),
+    child: SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        constraints: BoxConstraints(
+          minWidth: stretched ? screenWidth : columnCount * columnWidth,
+        ),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Table(
+          defaultColumnWidth:
+              const FixedColumnWidth(120), // Fixed width for columns
+          border: TableBorder(
+            horizontalInside: BorderSide(color: Colors.grey.shade300),
+            verticalInside: BorderSide(color: Colors.grey.shade300),
+          ),
+          children: [
+            // Header row if withHeadings is true
+            if (withHeadings && content.isNotEmpty)
+              TableRow(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                ),
+                children: content[0].map((cell) {
+                  return Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Text(
+                      cell,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+
+            // Data rows
+            ...content
+                .sublist(withHeadings ? 1 : 0)
+                .map((row) => TableRow(
+                      children: row.map((cell) {
+                        return Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Text(
+                            cell,
+                            style: const TextStyle(
+                              fontSize: 14,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ))
+                .toList(),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 List<InlineSpan> _buildPlainTextContent(String text, BuildContext context) {
