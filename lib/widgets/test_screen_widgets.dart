@@ -1508,6 +1508,115 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
 
   if (content.isEmpty) return const SizedBox();
 
+  // Helper to split plain text and image URLs
+  List<Widget> _splitTextAndImages(String text) {
+    final List<Widget> widgets = [];
+    final parts = text.split(RegExp(r'(\s+)'));
+    for (var part in parts) {
+      if (part.toLowerCase().endsWith('.png') ||
+          part.toLowerCase().endsWith('.jpg') ||
+          part.toLowerCase().endsWith('.jpeg') ||
+          part.toLowerCase().endsWith('.gif')) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 4),
+            child: GestureDetector(
+              onTap: () => _showFullScreenImage(context, part),
+              child: Image.network(
+                part,
+                width: 150,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.broken_image, size: 40),
+              ),
+            ),
+          ),
+        );
+      } else if (part.trim().isNotEmpty) {
+        widgets.add(Text(
+          part,
+          style: const TextStyle(fontSize: 14, color: Color(0xFF1A1A1A)),
+        ));
+      }
+    }
+    return widgets;
+  }
+
+  // Function to render cell content with proper image handling
+  Widget buildTableCell(String cellText) {
+    final List<Widget> widgets = [];
+    String remaining = cellText;
+
+    while (true) {
+      int anchorStart = remaining.indexOf('<a');
+      if (anchorStart == -1) break;
+
+      // Add text before anchor
+      if (anchorStart > 0) {
+        widgets
+            .addAll(_splitTextAndImages(remaining.substring(0, anchorStart)));
+      }
+
+      int hrefStart = remaining.indexOf('href="', anchorStart);
+      if (hrefStart == -1) break;
+      hrefStart += 6;
+      int hrefEnd = remaining.indexOf('"', hrefStart);
+      if (hrefEnd == -1) break;
+      String url = remaining.substring(hrefStart, hrefEnd);
+
+      int tagClose = remaining.indexOf('>', hrefEnd);
+      int anchorEnd = remaining.indexOf('</a>', tagClose);
+      if (tagClose == -1 || anchorEnd == -1) break;
+      String linkText = remaining.substring(tagClose + 1, anchorEnd);
+
+      // If it's an image URL
+      if (url.toLowerCase().endsWith('.png') ||
+          url.toLowerCase().endsWith('.jpg') ||
+          url.toLowerCase().endsWith('.jpeg') ||
+          url.toLowerCase().endsWith('.gif')) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 4),
+            child: GestureDetector(
+              onTap: () => _showFullScreenImage(context, url),
+              child: Image.network(
+                url,
+                width: 150,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.broken_image, size: 40),
+              ),
+            ),
+          ),
+        );
+      } else {
+        widgets.add(
+          InkWell(
+            onTap: () => _showFullScreenImage(context, url),
+            child: Text(
+              linkText.isNotEmpty ? linkText : url,
+              style: const TextStyle(
+                color: Colors.blue,
+                decoration: TextDecoration.underline,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        );
+      }
+
+      remaining = remaining.substring(anchorEnd + 4);
+    }
+
+    // Add any remaining text and images
+    if (remaining.isNotEmpty) {
+      widgets.addAll(_splitTextAndImages(remaining));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: widgets,
+    );
+  }
+
   // Calculate the required width based on content
   final screenWidth = MediaQuery.of(context).size.width;
   final columnCount = content.isNotEmpty ? content[0].length : 0;
@@ -1529,8 +1638,7 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
           borderRadius: BorderRadius.circular(4),
         ),
         child: Table(
-          defaultColumnWidth:
-              const FixedColumnWidth(120), // Fixed width for columns
+          defaultColumnWidth: const FixedColumnWidth(120),
           border: TableBorder(
             horizontalInside: BorderSide(color: Colors.grey.shade300),
             verticalInside: BorderSide(color: Colors.grey.shade300),
@@ -1563,12 +1671,7 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
                       children: row.map((cell) {
                         return Padding(
                           padding: const EdgeInsets.all(8),
-                          child: Text(
-                            cell,
-                            style: const TextStyle(
-                              fontSize: 14,
-                            ),
-                          ),
+                          child: buildTableCell(cell),
                         );
                       }).toList(),
                     ))
