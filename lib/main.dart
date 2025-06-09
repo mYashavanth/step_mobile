@@ -31,6 +31,7 @@ import 'package:ghastep/views/view_solutions.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ghastep/views/urlconfig.dart';
 import 'package:ghastep/views/dry.dart';
+import 'package:ghastep/widgets/payment_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
@@ -45,6 +46,12 @@ void main() async {
     runApp(const MyApp());
   } catch (e) {
     print('Firebase initialization error: $e');
+  }
+  try {
+    await PaymentService.initializePhonePe('SANDBOX');
+  } catch (e) {
+    print('Initialization failed: $e');
+    // Handle error (e.g., show alert)
   }
 }
 

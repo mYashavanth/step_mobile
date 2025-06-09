@@ -49,6 +49,7 @@ dependencies:
   # flutter_microsoft_clarity: ^1.0.0
   firebase_core: ^3.10.1
   firebase_analytics: ^11.4.6
+  phonepe_payment_sdk: ^3.0.0
 
 dev_dependencies:
   flutter_test:

@@ -125,6 +125,7 @@ Widget bannerNotes(BuildContext context) {
                   child: ElevatedButton(
                     onPressed: () {
                       // Handle button press
+                      Navigator.pushNamed(context, "/subscribe");
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFE860A),

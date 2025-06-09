@@ -1,6 +1,10 @@
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import "package:ghastep/widgets/homepage_widgets.dart";
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:ghastep/views/urlconfig.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SubscribePage extends StatefulWidget {
   const SubscribePage({super.key});
@@ -17,6 +21,48 @@ class _SubscribePage extends State<SubscribePage> {
     {"name": "FMGE ( December - 2025 )", "id": 2},
   ];
   List<int> selectedCourse = [1];
+  List courses = [];
+  bool isLoading = false;
+  final storage = const FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    fetchCourses();
+  }
+
+  Future<void> fetchCourses() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      String token = await storage.read(key: 'token') ?? '';
+      final response = await http.get(
+        Uri.parse('$baseurl/app/get-all-course-names/$token'),
+      );
+      print("url: ${'$baseurl/app/get-all-course-names/$token'}");
+
+      if (response.statusCode == 200) {
+        setState(() {
+          courses = json.decode(response.body);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching courses: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,7 +90,9 @@ class _SubscribePage extends State<SubscribePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         InkWell(
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
                             child: const Icon(Icons.arrow_back_ios_new)),
                         const SizedBox(
                           height: 12,
