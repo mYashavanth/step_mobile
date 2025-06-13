@@ -47,12 +47,13 @@ void main() async {
   } catch (e) {
     print('Firebase initialization error: $e');
   }
-  try {
-    await PaymentService.initializePhonePe('SANDBOX');
-  } catch (e) {
-    print('Initialization failed: $e');
-    // Handle error (e.g., show alert)
-  }
+  // try {
+  //   await PaymentService.initialize(enableLogs: true);
+  //   print('PaymentService initialized successfully+++++++++++===');
+  // } catch (e) {
+  //   print('Initialization failed: $e');
+  //   // Handle error (e.g., show alert)
+  // }
 }
 
 class MyApp extends StatefulWidget {

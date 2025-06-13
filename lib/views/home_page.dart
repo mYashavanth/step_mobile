@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:ghastep/services/iap_payment_screen.dart';
+import 'package:ghastep/services/phonepe_payment_screen.dart';
+import 'package:ghastep/widgets/payment_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:ghastep/views/notes.dart';
@@ -571,6 +574,50 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ),
+                  // Initialize PhonePe (only needed for Android)
+                  // Call this once at app startup
+                  // await PaymentService.initializePhonePe('SANDBOX'); // or 'PRODUCTION'
+
+                  // In your widget tree:
+                  // PlatformPaymentButton(
+                  //   amount: 100.0,
+                  //   merchantTransactionId:
+                  //       'txn_${DateTime.now().millisecondsSinceEpoch}',
+                  //   mobileNumber: '9876543210',
+                  //   productName: 'Premium Subscription',
+                  //   onSuccess: () {
+                  //     ScaffoldMessenger.of(context).showSnackBar(
+                  //       const SnackBar(content: Text('Payment successful!')),
+                  //     );
+                  //   },
+                  //   onError: (error) {
+                  //     ScaffoldMessenger.of(context).showSnackBar(
+                  //       SnackBar(content: Text('Payment failed: $error')),
+                  //     );
+                  //   },
+                  // ),
+
+                  // ElevatedButton(
+                  //   onPressed: () {
+                  //     Navigator.push(
+                  //       context,
+                  //       MaterialPageRoute(
+                  //           builder: (context) => const PhonePePaymentScreen()),
+                  //     );
+                  //   },
+                  //   child: const Text('Make Payment'),
+                  // ),
+                  // ElevatedButton(
+                  //   onPressed: () {
+                  //     Navigator.push(
+                  //       context,
+                  //       MaterialPageRoute(
+                  //           builder: (context) => const IAPPage()),
+                  //     );
+                  //   },
+                  //   child: const Text('IAP Payment'),
+                  // ),
+
                   const SizedBox(height: 12),
                   Container(
                     width: double.infinity,

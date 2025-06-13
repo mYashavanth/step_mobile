@@ -1,26 +1,53 @@
+import 'dart:convert';
 import 'dart:io';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // <-- Required for MethodChannel
+import 'package:flutter/services.dart';
 import 'package:phonepe_payment_sdk/phonepe_payment_sdk.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PaymentService {
-  static Future<void> initializePhonePe(String env) async {
+  // PhonePe Configuration
+  static const String _phonePeMerchantId = "PGTESTPAYUAT";
+  static const String _saltKey = "099eb0cd-02cf-4e2a-8aca-3e6c6aff0399";
+  static const String _saltIndex = "1";
+  static const String _callbackUrl =
+      "https://webhook.site/3df06f70-e343-41f2-85a4-d5039600e669";
+  static const String _apiEndpoint = "/pg/v1/pay";
+  static const String _appSchema = "";
+
+  // Apple Pay Configuration (for iOS)
+  static const String _applePayMerchantId = "merchant.your.identifier";
+  static const String _applePayCurrencyCode = "INR";
+  static const String _applePayCountryCode = "IN";
+
+  /// Initialize payment services for the current platform
+  static Future<void> initialize({bool enableLogs = true}) async {
+    if (Platform.isAndroid) {
+      await _initializePhonePe(enableLogs: enableLogs);
+    }
+    // Apple Pay doesn't require explicit initialization
+  }
+
+  /// Initialize PhonePe SDK (Android only)
+  static Future<void> _initializePhonePe({bool enableLogs = true}) async {
     try {
-      await PhonePePaymentSdk.init(env, "YOUR_MERCHANT_ID", "YOUR_APP_ID", true)
-          .then((val) {
-        debugPrint("PhonePe initialized: $val");
-      }).catchError((error) {
-        debugPrint("PhonePe initialization error: $error");
-      });
-    } catch (e) {
-      debugPrint("PhonePe initialization exception: $e");
+      final isInitialized = await PhonePePaymentSdk.init(
+        'SANDBOX', // or 'PRODUCTION'
+        _phonePeMerchantId,
+        "user123", // flowId
+        enableLogs,
+      );
+      debugPrint("PhonePe SDK Initialized: $isInitialized");
+    } catch (error) {
+      debugPrint("PhonePe SDK initialization error: $error");
+      rethrow;
     }
   }
 
+  /// Initiate payment based on platform
   static Future<void> initiatePayment({
     required double amount,
-    required String merchantId,
     required String merchantTransactionId,
     required String mobileNumber,
     required String productName,
@@ -32,7 +59,6 @@ class PaymentService {
       if (Platform.isIOS) {
         await _processApplePay(
           amount: amount,
-          merchantId: merchantId,
           productName: productName,
           context: context,
           onSuccess: onSuccess,
@@ -49,60 +75,42 @@ class PaymentService {
         );
       }
     } catch (e) {
-      onError?.call('Payment initialization failed: $e');
+      onError?.call('Payment initialization failed: ${e.toString()}');
     }
   }
 
+  /// Process Apple Pay payment (iOS only)
   static Future<void> _processApplePay({
     required double amount,
-    required String merchantId,
     required String productName,
     required BuildContext context,
     VoidCallback? onSuccess,
     Function(String)? onError,
   }) async {
     try {
-      // Implement Apple Pay using platform channels
-      final result = await _startApplePay(
-        amount: amount,
-        merchantId: merchantId,
-        productName: productName,
-      );
+      const platform = MethodChannel('apple_pay_channel');
+
+      final result = await platform.invokeMethod('startApplePay', {
+        'amount': amount,
+        'merchantId': _applePayMerchantId,
+        'productName': productName,
+        'currencyCode': _applePayCurrencyCode,
+        'countryCode': _applePayCountryCode,
+      });
 
       if (result['status'] == 'success') {
         onSuccess?.call();
       } else {
         onError?.call(result['message'] ?? 'Apple Pay payment failed');
       }
+    } on PlatformException catch (e) {
+      onError?.call('Apple Pay error: ${e.message}');
     } catch (e) {
-      onError?.call('Apple Pay error: $e');
+      onError?.call('Apple Pay error: ${e.toString()}');
     }
   }
 
-  static Future<Map<String, dynamic>> _startApplePay({
-    required double amount,
-    required String merchantId,
-    required String productName,
-  }) async {
-    if (Platform.isIOS) {
-      try {
-        // Implement platform channel method
-        const platform = MethodChannel('apple_pay_channel');
-        final result = await platform.invokeMethod('startApplePay', {
-          'amount': amount,
-          'merchantId': merchantId,
-          'productName': productName,
-          'currencyCode': 'INR',
-          'countryCode': 'IN',
-        });
-        return result;
-      } catch (e) {
-        return {'status': 'error', 'message': e.toString()};
-      }
-    }
-    return {'status': 'error', 'message': 'Apple Pay not available'};
-  }
-
+  /// Process PhonePe payment (Android only)
   static Future<void> _processPhonePePayment({
     required double amount,
     required String merchantTransactionId,
@@ -112,33 +120,42 @@ class PaymentService {
     Function(String)? onError,
   }) async {
     try {
+      // 1. Prepare payment payload
       final body = {
-        "merchantId": "YOUR_MERCHANT_ID",
+        "merchantId": _phonePeMerchantId,
         "merchantTransactionId": merchantTransactionId,
-        "merchantUserId": "USER_ID",
-        "amount": amount * 100, // Amount in paise
+        "merchantUserId": "user123",
+        "amount": (amount * 100).toInt(), // Convert to paise
         "mobileNumber": mobileNumber,
-        "callbackUrl": "YOUR_CALLBACK_URL",
+        "callbackUrl": _callbackUrl,
         "paymentInstrument": {"type": "PAY_PAGE"},
       };
 
-      final checksum = _generateChecksum(body); // Implement checksum generation
+      // 2. Generate checksum
+      final jsonBody = json.encode(body);
+      final base64Body = base64.encode(utf8.encode(jsonBody));
+      final checksum = _generatePhonePeChecksum(base64Body);
 
-      final result = await PhonePePaymentSdk.startTransaction(
-        body.toString(),
-        checksum,
-      );
+      // 3. Prepare final request
+      final requestPayload = json.encode({
+        "request": base64Body,
+        "checksum": checksum,
+        "endpoint": _apiEndpoint,
+      });
 
-      final status = result != null ? result['status']?.toString() : null;
-      if (status == 'SUCCESS') {
-        onSuccess?.call();
-      } else {
-        onError?.call(result != null
-            ? result['error']?.toString() ?? 'Unknown error'
-            : 'Unknown error');
-      }
+      debugPrint("Starting PhonePe transaction...");
+
+      // 4. Start transaction
+      final result =
+          await PhonePePaymentSdk.startTransaction(requestPayload, _appSchema);
+
+      // 5. Handle result
+      _handlePhonePeTransactionResult(result, onSuccess, onError);
     } catch (e) {
-      // Fallback to UPI payment if PhonePe app not installed
+      debugPrint("PhonePe Transaction Error: $e");
+      onError?.call('PhonePe payment failed: $e');
+
+      // Fallback to UPI intent if PhonePe app is not installed
       await _launchPhonePeUPI(
         amount: amount,
         context: context,
@@ -148,11 +165,36 @@ class PaymentService {
     }
   }
 
-  static String _generateChecksum(Map<String, dynamic> body) {
-    // Implement your checksum generation logic
-    return "YOUR_CHECKSUM";
+  /// Generate SHA256 checksum for PhonePe request
+  static String _generatePhonePeChecksum(String base64Body) {
+    final byteCodes = utf8.encode(base64Body + _apiEndpoint + _saltKey);
+    return '${sha256.convert(byteCodes)}###$_saltIndex';
   }
 
+  /// Handle PhonePe transaction result
+  static void _handlePhonePeTransactionResult(
+    dynamic result,
+    VoidCallback? onSuccess,
+    Function(String)? onError,
+  ) {
+    if (result != null) {
+      final status = result['status']?.toString() ?? 'UNKNOWN';
+      final error = result['error']?.toString() ?? 'No error details';
+
+      debugPrint("PhonePe Transaction Status: $status");
+      debugPrint("PhonePe Transaction Error: $error");
+
+      if (status == 'SUCCESS') {
+        onSuccess?.call();
+      } else {
+        onError?.call('PhonePe payment failed: $error');
+      }
+    } else {
+      onError?.call('PhonePe transaction returned no result');
+    }
+  }
+
+  /// Fallback UPI payment for Android when PhonePe app is not installed
   static Future<void> _launchPhonePeUPI({
     required double amount,
     required BuildContext context,
@@ -161,21 +203,23 @@ class PaymentService {
   }) async {
     try {
       final uri = Uri.parse(
-        'phonepe://pay?pa=YOUR_UPI_ID@ybl&pn=YourAppName&am=${amount.toStringAsFixed(2)}&cu=INR',
+        'phonepe://pay?pa=9481726689@ybl&pn=YourAppName&am=${amount.toStringAsFixed(2)}&cu=INR',
       );
 
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
-        // Note: You'll need to handle the callback separately
+        // Note: Actual success comes through callback URL
+        onSuccess?.call();
       } else {
-        onError?.call('PhonePe not installed');
+        onError?.call('PhonePe app not installed');
         _showAlternativePaymentOptions(context, amount);
       }
     } catch (e) {
-      onError?.call('Payment error: $e');
+      onError?.call('Failed to launch PhonePe UPI: $e');
     }
   }
 
+  /// Show alternative payment options if primary payment fails
   static void _showAlternativePaymentOptions(
       BuildContext context, double amount) {
     showDialog(
@@ -187,9 +231,10 @@ class PaymentService {
           children: [
             Text('Amount: ₹${amount.toStringAsFixed(2)}'),
             const SizedBox(height: 20),
-            const Text('Please choose another payment option:'),
-            const SizedBox(height: 20),
-            // Add other payment options here
+            const Text('Please choose another payment method:'),
+            const SizedBox(height: 10),
+            if (Platform.isAndroid) _buildUPIPaymentButton(context, amount),
+            // Add other payment options as needed
           ],
         ),
         actions: [
@@ -201,48 +246,71 @@ class PaymentService {
       ),
     );
   }
+
+  /// Build UPI payment button for Android fallback
+  static Widget _buildUPIPaymentButton(BuildContext context, double amount) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.purple[800],
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      ),
+      onPressed: () => _launchGenericUPI(context, amount),
+      child: const Text('Pay via any UPI App'),
+    );
+  }
+
+  /// Launch generic UPI payment intent
+  static Future<void> _launchGenericUPI(
+      BuildContext context, double amount) async {
+    try {
+      final uri = Uri.parse(
+        'upi://pay?pa=upimercahnt@upi&pn=MerchantName&am=${amount.toStringAsFixed(2)}&cu=INR',
+      );
+
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No UPI app found')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to launch UPI: $e')),
+      );
+    }
+  }
 }
 
 class PlatformPaymentButton extends StatelessWidget {
   final double amount;
-  final String productName;
   final String merchantTransactionId;
   final String mobileNumber;
-  final VoidCallback? onPaymentSuccess;
-  final Function(String)? onPaymentError;
+  final String productName;
+  final VoidCallback? onSuccess;
+  final Function(String)? onError;
   final ButtonStyle? style;
-  final Widget? iosIcon;
-  final Widget? androidIcon;
 
   const PlatformPaymentButton({
     super.key,
     required this.amount,
-    required this.productName,
     required this.merchantTransactionId,
     required this.mobileNumber,
-    this.onPaymentSuccess,
-    this.onPaymentError,
+    required this.productName,
+    this.onSuccess,
+    this.onError,
     this.style,
-    this.iosIcon,
-    this.androidIcon,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Only show the button if the platform is supported
-    if (!Platform.isIOS && !Platform.isAndroid) {
-      return const SizedBox.shrink();
-    }
-
     return ElevatedButton(
       style: style ?? _defaultButtonStyle(),
-      onPressed: () => _handlePayment(context),
+      onPressed: () => _initiatePayment(context),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (Platform.isIOS) iosIcon ?? const Icon(Icons.apple, size: 24),
-          if (Platform.isAndroid)
-            androidIcon ?? const Icon(Icons.phone_android, size: 24),
+          Icon(Platform.isIOS ? Icons.apple : Icons.payment, size: 24),
           const SizedBox(width: 8),
           Text(Platform.isIOS ? 'Pay with Apple Pay' : 'Pay with PhonePe'),
         ],
@@ -255,7 +323,7 @@ class PlatformPaymentButton extends StatelessWidget {
       backgroundColor: WidgetStateProperty.all(
         Platform.isIOS
             ? Colors.black
-            : const Color(0xFF5F259F), // PhonePe purple
+            : const Color(0xFF5F259F), // Apple Black / PhonePe Purple
       ),
       padding: WidgetStateProperty.all(
         const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -263,35 +331,17 @@ class PlatformPaymentButton extends StatelessWidget {
     );
   }
 
-  void _handlePayment(BuildContext context) {
-    PaymentService.initiatePayment(
+  Future<void> _initiatePayment(BuildContext context) async {
+    await PaymentService.initialize();
+
+    await PaymentService.initiatePayment(
       amount: amount,
-      merchantId: 'merchant.your.identifier',
       merchantTransactionId: merchantTransactionId,
       mobileNumber: mobileNumber,
       productName: productName,
       context: context,
-      onSuccess: onPaymentSuccess,
-      onError: onPaymentError,
+      onSuccess: onSuccess,
+      onError: onError,
     );
   }
 }
-
-
-                  
-// PlatformPaymentButton(
-//   amount: 100.0, // Payment amount
-//   productName: 'Premium Subscription', // Product description
-//   merchantTransactionId:
-//       'txn_${DateTime.now().millisecondsSinceEpoch}', // Unique ID
-//   mobileNumber: '9876543210', // User's mobile number
-//   onPaymentSuccess: () {
-//     // Handle successful payment
-//     print('Payment successful!');
-//   },
-//   onPaymentError: (error) {
-//     // Handle payment error
-//     print('Payment failed: $error');
-//   },
-// ),
-                  

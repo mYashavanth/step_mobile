@@ -1379,26 +1379,8 @@ List<InlineSpan> _buildEditorJsContent(
                 .replaceAll('<br/>', '\n')
                 .replaceAll('<br />', '\n');
 
-            // Split text by newlines and add each part as separate TextSpan
-            List<String> lines = paragraphText.split('\n');
-            for (int i = 0; i < lines.length; i++) {
-              if (lines[i].isNotEmpty) {
-                spans.add(TextSpan(
-                  text: lines[i],
-                  style: const TextStyle(
-                    color: Color(0xFF1A1A1A),
-                    fontSize: 16,
-                    fontFamily: 'SF Pro Display',
-                    fontWeight: FontWeight.w400,
-                    height: 1.50,
-                  ),
-                ));
-              }
-              // Add newline unless it's the last line
-              if (i < lines.length - 1) {
-                spans.add(const TextSpan(text: '\n'));
-              }
-            }
+            // Process bold tags and split text by newlines
+            spans.addAll(_processTextWithFormatting(paragraphText));
             // Add spacing after paragraph
             spans.add(const TextSpan(text: '\n\n'));
           }
@@ -1430,9 +1412,9 @@ List<InlineSpan> _buildEditorJsContent(
 
         case 'header':
           if (data['text'] != null && data['text'].toString().isNotEmpty) {
-            spans.add(TextSpan(
-              text: data['text'],
-              style: TextStyle(
+            spans.addAll(_processTextWithFormatting(
+              data['text'],
+              baseStyle: TextStyle(
                 color: const Color(0xFF1A1A1A),
                 fontSize: _getHeaderFontSize(data['level'] ?? 1),
                 fontWeight: FontWeight.bold,
@@ -1446,16 +1428,7 @@ List<InlineSpan> _buildEditorJsContent(
         case 'list':
           if (data['items'] != null && data['items'] is List) {
             for (var item in data['items']) {
-              spans.add(TextSpan(
-                text: '• ${item}\n',
-                style: const TextStyle(
-                  color: Color(0xFF1A1A1A),
-                  fontSize: 16,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w400,
-                  height: 1.50,
-                ),
-              ));
+              spans.addAll(_processTextWithFormatting('• $item\n'));
             }
             spans.add(const TextSpan(text: '\n'));
           }
@@ -1476,16 +1449,7 @@ List<InlineSpan> _buildEditorJsContent(
         default:
           // For unsupported types, try to display any text content
           if (data['text'] != null && data['text'].toString().isNotEmpty) {
-            spans.add(TextSpan(
-              text: data['text'],
-              style: const TextStyle(
-                color: Color(0xFF1A1A1A),
-                fontSize: 16,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w400,
-                height: 1.50,
-              ),
-            ));
+            spans.addAll(_processTextWithFormatting(data['text']));
             spans.add(const TextSpan(text: '\n\n'));
           }
           break;
@@ -1493,13 +1457,85 @@ List<InlineSpan> _buildEditorJsContent(
     }
   } catch (e) {
     // If something goes wrong with JSON processing, fall back to showing raw data
-    spans.addAll(_buildPlainTextContent(jsonEncode(questionData), context));
+    spans.addAll(_processTextWithFormatting(jsonEncode(questionData)));
+  }
+
+  return spans;
+}
+
+List<InlineSpan> _processTextWithFormatting(String text,
+    {TextStyle? baseStyle}) {
+  final List<InlineSpan> spans = [];
+  final baseTextStyle = baseStyle ??
+      const TextStyle(
+        color: Color(0xFF1A1A1A),
+        fontSize: 16,
+        fontFamily: 'SF Pro Display',
+        fontWeight: FontWeight.w400,
+        height: 1.50,
+      );
+
+  // Split text by lines first
+  final lines = text.split('\n');
+
+  for (int lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    final line = lines[lineIndex];
+    int currentPos = 0;
+    final boldPattern = RegExp(r'<b>(.*?)<\/b>');
+    final matches = boldPattern.allMatches(line);
+
+    if (matches.isEmpty) {
+      if (line.isNotEmpty) {
+        spans.add(TextSpan(text: line, style: baseTextStyle));
+      }
+    } else {
+      for (final match in matches) {
+        // Add text before the bold tag
+        if (match.start > currentPos) {
+          spans.add(TextSpan(
+            text: line.substring(currentPos, match.start),
+            style: baseTextStyle,
+          ));
+        }
+
+        // Add the bold text
+        spans.add(TextSpan(
+          text: match.group(1),
+          style: baseTextStyle.copyWith(fontWeight: FontWeight.bold),
+        ));
+
+        currentPos = match.end;
+      }
+
+      // Add remaining text after last bold tag
+      if (currentPos < line.length) {
+        spans.add(TextSpan(
+          text: line.substring(currentPos),
+          style: baseTextStyle,
+        ));
+      }
+    }
+
+    // Add newline if it's not the last line
+    if (lineIndex < lines.length - 1) {
+      spans.add(const TextSpan(text: '\n'));
+    }
   }
 
   return spans;
 }
 
 Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
+  String _decodeHtmlEntities(String text) {
+    return text
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'")
+        .replaceAll('&nbsp;', ' ');
+  }
+
   final bool withHeadings = tableData['withHeadings'] ?? false;
   final bool stretched = tableData['stretched'] ?? false;
   final List<List<String>> content = List<List<String>>.from(
@@ -1508,7 +1544,6 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
 
   if (content.isEmpty) return const SizedBox();
 
-  // Helper to split plain text and image URLs
   List<Widget> _splitTextAndImages(String text) {
     final List<Widget> widgets = [];
     final parts = text.split(RegExp(r'(\s+)'));
@@ -1541,19 +1576,54 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
     return widgets;
   }
 
-  // Function to render cell content with proper image handling
-  Widget buildTableCell(String cellText) {
+  List<Widget> _processTableCellContent(String text) {
     final List<Widget> widgets = [];
-    String remaining = cellText;
+    int currentPos = 0;
+    final boldPattern = RegExp(r'<b>(.*?)<\/b>');
+    final matches = boldPattern.allMatches(text);
+
+    if (matches.isEmpty) {
+      return _splitTextAndImages(text);
+    } else {
+      for (final match in matches) {
+        if (match.start > currentPos) {
+          widgets.addAll(
+              _splitTextAndImages(text.substring(currentPos, match.start)));
+        }
+
+        final boldText = match.group(1)!;
+        widgets.add(Text(
+          boldText,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF1A1A1A),
+            fontWeight: FontWeight.bold,
+          ),
+        ));
+
+        currentPos = match.end;
+      }
+
+      if (currentPos < text.length) {
+        widgets.addAll(_splitTextAndImages(text.substring(currentPos)));
+      }
+    }
+
+    return widgets;
+  }
+
+  Widget buildTableCell(String cellText) {
+    final decodedText = _decodeHtmlEntities(cellText);
+    final List<Widget> widgets = [];
+    String remaining = decodedText;
 
     while (true) {
       int anchorStart = remaining.indexOf('<a');
       if (anchorStart == -1) break;
 
-      // Add text before anchor
       if (anchorStart > 0) {
-        widgets
-            .addAll(_splitTextAndImages(remaining.substring(0, anchorStart)));
+        widgets.addAll(
+            _processTableCellContent(remaining.substring(0, anchorStart)));
       }
 
       int hrefStart = remaining.indexOf('href="', anchorStart);
@@ -1568,7 +1638,6 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
       if (tagClose == -1 || anchorEnd == -1) break;
       String linkText = remaining.substring(tagClose + 1, anchorEnd);
 
-      // If it's an image URL
       if (url.toLowerCase().endsWith('.png') ||
           url.toLowerCase().endsWith('.jpg') ||
           url.toLowerCase().endsWith('.jpeg') ||
@@ -1606,9 +1675,8 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
       remaining = remaining.substring(anchorEnd + 4);
     }
 
-    // Add any remaining text and images
     if (remaining.isNotEmpty) {
-      widgets.addAll(_splitTextAndImages(remaining));
+      widgets.addAll(_processTableCellContent(remaining));
     }
 
     return Column(
@@ -1617,10 +1685,9 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
     );
   }
 
-  // Calculate the required width based on content
   final screenWidth = MediaQuery.of(context).size.width;
   final columnCount = content.isNotEmpty ? content[0].length : 0;
-  final columnWidth = (screenWidth - 32) / columnCount; // 32 for padding
+  final columnWidth = (screenWidth - 32) / columnCount;
 
   return ConstrainedBox(
     constraints: BoxConstraints(
@@ -1644,7 +1711,6 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
             verticalInside: BorderSide(color: Colors.grey.shade300),
           ),
           children: [
-            // Header row if withHeadings is true
             if (withHeadings && content.isNotEmpty)
               TableRow(
                 decoration: BoxDecoration(
@@ -1654,7 +1720,8 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
                   return Padding(
                     padding: const EdgeInsets.all(8),
                     child: Text(
-                      cell,
+                      _decodeHtmlEntities(
+                          cell.replaceAll('<b>', '').replaceAll('</b>', '')),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -1663,8 +1730,6 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
                   );
                 }).toList(),
               ),
-
-            // Data rows
             ...content
                 .sublist(withHeadings ? 1 : 0)
                 .map((row) => TableRow(
