@@ -19,8 +19,14 @@ class PhonePeApiService {
     required String clientVersion,
   }) async {
     try {
-      final url = Uri.parse('$_baseUrl/identity-manager/v1/oauth/token');
+      final url = Uri.parse('$_baseUrl/v1/oauth/token');
       debugPrint('Fetching token from: $url');
+
+      if (kDebugMode) {
+        debugPrint('Client ID: $clientId');
+        debugPrint('Client Secret: $clientSecret');
+        debugPrint('Client Version: $clientVersion');
+      }
 
       final response = await http.post(
         url,
@@ -34,6 +40,9 @@ class PhonePeApiService {
           'grant_type': 'client_credentials',
         },
       );
+
+      print('print body: $clientId $clientSecret $clientVersion');
+
       debugPrint('Token fetch status code: $response');
       debugPrint('Token fetch response: ${response.body}');
 
@@ -58,7 +67,7 @@ class PhonePeApiService {
     Map<String, dynamic>? paymentModeConfig,
   }) async {
     try {
-      final url = Uri.parse('$_baseUrl/pg/checkout/v2/sdk/order');
+      final url = Uri.parse('$_baseUrl/checkout/v2/sdk/order');
 
       final body = {
         'merchantOrderId': merchantOrderId,

@@ -317,7 +317,7 @@ class _ProfileState extends State<Profile> {
                 ],
               ),
             ),
-            profileBannerNotes(),
+            profileBannerNotes(context),
             Container(
               margin: const EdgeInsets.only(top: 6, bottom: 6),
               padding: const EdgeInsets.all(12),
@@ -430,7 +430,7 @@ Widget buildProfileCard(String title, String icon) {
   );
 }
 
-Widget profileBannerNotes() {
+Widget profileBannerNotes(BuildContext context) {
   return Container(
     color: Colors.white,
     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -474,14 +474,14 @@ Widget profileBannerNotes() {
           ),
           ElevatedButton(
             onPressed: () {
-              // Handle login with mobile number
-              // Navigator.pushNamed(context, "/otp_verify");
+              // Handle button press
+              Navigator.pushNamed(context, "/subscribe");
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFE860A),
             ),
             child: const Text(
-              'Enroll Now @ ₹1000',
+              'Enroll Now',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 16,

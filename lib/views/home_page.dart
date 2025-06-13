@@ -1103,7 +1103,7 @@ class CourseBanner extends StatelessWidget {
   }
 }
 
-List<String> weeksList = ['SUN', "MON", "TUE", "WED", "THUR", "FRI", "SAT"];
+List<String> weeksList = ['SUN', "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 DateTime today = DateTime.now();
 int weekday = today.weekday; // 1 (Mon) - 7 (Sun)
@@ -1244,45 +1244,38 @@ class _CalendarSectionState extends State<CalendarSection> {
           padding: const EdgeInsets.all(4),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: weekDates.map((date) {
-              return Text(
-                weeksList[date.weekday % 7], // weeksList = ['SUN', "MON", ...]
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Color(0xFF1A1A1A),
-                  fontSize: 12,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w500,
-                  height: 1.67,
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(7, (index) {
               final date = weekDates[index];
               final isToday = date.day == today.day &&
-                  date.month == today.month &&
-                  date.year == today.year;
+            date.month == today.month &&
+            date.year == today.year;
               return Column(
-                children: [
-                  Text(
-                    date.day.toString(),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w400,
-                      color: isToday ? Colors.orange : Colors.black,
-                    ),
-                  ),
-                  if (isToday)
-                    const Icon(Icons.circle, color: Colors.orange, size: 8),
-                ],
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              weeksList[date.weekday % 7],
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF1A1A1A),
+                fontSize: 12,
+                fontFamily: 'SF Pro Display',
+                fontWeight: FontWeight.w500,
+                height: 1.67,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              date.day.toString(),
+              style: TextStyle(
+                fontSize: 16,
+                fontFamily: 'SF Pro Display',
+                fontWeight: FontWeight.w400,
+                color: isToday ? Colors.orange : Colors.black,
+              ),
+            ),
+            if (isToday)
+              const Icon(Icons.circle, color: Colors.orange, size: 8),
+          ],
               );
             }),
           ),

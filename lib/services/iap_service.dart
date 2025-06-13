@@ -8,7 +8,7 @@ class IAPService {
   IAPService._internal();
 
   final InAppPurchase _iap = InAppPurchase.instance;
-  final String _productID = 'your_product_id'; // Match App Store product ID
+  final String _productID = 'stepneetpg'; // Match App Store product ID
   late StreamSubscription<List<PurchaseDetails>> _subscription;
 
   bool isAvailable = false;

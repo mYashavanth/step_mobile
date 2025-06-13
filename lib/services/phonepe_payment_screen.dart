@@ -38,7 +38,7 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
       bool isInitialized = await PhonePePaymentSdk.init(
         environment,
         merchantId,
-        "flow_${DateTime.now().millisecondsSinceEpoch}",
+        "flow${DateTime.now().millisecondsSinceEpoch}",
         enableLogging,
       );
       debugPrint(
