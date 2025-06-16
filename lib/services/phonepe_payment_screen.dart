@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:phonepe_payment_sdk/phonepe_payment_sdk.dart';
 import '../services/phonepe_payment_manager.dart';
@@ -15,8 +16,8 @@ class PhonePePaymentScreen extends StatefulWidget {
 
 class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
   late PhonePePaymentManager _paymentManager;
-  String environment = "SANDBOX";
-  String merchantId = "PGTESTPAYUAT";
+  String environment = "PRODUCTION"; // Use "SANDBOX" for live environment
+  String merchantId = "M23JNKHG11XBL"; // Get from PhonePe sandbox-PGTESTPAYUAT
   bool enableLogging = true;
   String result = "Ready";
   bool isLoading = false;
@@ -25,10 +26,12 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
   void initState() {
     super.initState();
     _paymentManager = PhonePePaymentManager(
-      apiService: PhonePeApiService(isProduction: false),
-      clientId: 'TEST-M23JNKHG11XBL_25061', // Get from PhonePe
+      apiService:
+          PhonePeApiService(isProduction: true), // Set to false for sandbox
+      clientId:
+          'SU2505301410333652987907', // Get from PhonePe sandbox-TEST-M23JNKHG11XBL_25061
       clientSecret:
-          'ODllZWY4MzktNDJiMi00OWE3LWE1ZDEtNjY1NTk0ZDE5N2Vi', // Get from PhonePe
+          '53f30118-d5df-4439-939c-f084329a2744', // Get from PhonePe sandbox-ODllZWY4MzktNDJiMi00OWE3LWE1ZDEtNjY1NTk0ZDE5N2Vi
       clientVersion: '1',
     );
     _initializePhonePe();
@@ -64,7 +67,7 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
       // 1. Create order
       final order = await _paymentManager.createNewOrder(
         merchantOrderId: "ORDER_${DateTime.now().millisecondsSinceEpoch}",
-        amount: 1000, // ₹10 in paise
+        amount: 100, // ₹10 in paise
       );
       debugPrint(
           "+++++++++++++++++++++++++++++++++++++++++Order Created: ${order.toString()}");
@@ -75,7 +78,7 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
         "token": order['token'],
         "paymentMode": {"type": "PAY_PAGE"},
         "merchantTransactionId": "MT_${DateTime.now().millisecondsSinceEpoch}",
-        "amount": 1000,
+        "amount": 100,
         "callbackUrl":
             "https://webhook.site/0d6fb306-a6c7-4283-b856-59c51837e119",
       };
@@ -102,16 +105,23 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
   }
 
   Future<void> _getOrderDetails(String orderId, String token) async {
+    final testToken = await _paymentManager.getValidToken();
     debugPrint(
-        "Fetching order details for Order ID: $orderId with token: $token");
+        "Fetching order details for Order ID: $orderId with token: $token ($testToken)");
     try {
       final uri = Uri.parse(
-          'https://api-preprod.phonepe.com/apis/pg-sandbox/payments/v2/order/$orderId/status?details=true');
+          'https://mercury-uat.phonepe.com/v3/transaction/$merchantId/$orderId/status');
+      // Compute SHA256 hash for X-VERIFY header
+      final String dataToHash = "/v3/transaction/$merchantId/$orderId/status" +
+          "53f30118-d5df-4439-939c-f084329a2744";
+      final String hash = sha256.convert(utf8.encode(dataToHash)).toString();
+      final String xVerify = "$hash###1";
+
       final response = await http.get(
         uri,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'O-Bearer $token',
+          'X-VERIFY': xVerify,
         },
       );
       debugPrint(
@@ -154,7 +164,7 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
                       const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
                 ),
                 child: const Text(
-                  'Pay ₹10 with PhonePe',
+                  'Pay ₹1 with PhonePe',
                   style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),

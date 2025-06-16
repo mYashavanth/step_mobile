@@ -3,14 +3,22 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class PhonePeApiService {
-  static const String _uatBaseUrl =
-      'https://api-preprod.phonepe.com/apis/pg-sandbox';
-  static const String _prodBaseUrl = 'https://api.phonepe.com/apis';
+  static const String _uatAuthUrl =
+      'https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token';
+  static const String _prodAuthUrl =
+      'https://api.phonepe.com/apis/identity-manager/v1/oauth/token';
+
+  static const String _uatOrderIdUrl =
+      'https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/sdk/order';
+  static const String _prodOrderIdUrl =
+      'https://api.phonepe.com/apis/pg/checkout/v2/sdk/order';
+
   final bool isProduction;
 
-  PhonePeApiService({this.isProduction = false});
+  PhonePeApiService({this.isProduction = true});
 
-  String get _baseUrl => isProduction ? _prodBaseUrl : _uatBaseUrl;
+  String get _authUrl => isProduction ? _prodAuthUrl : _uatAuthUrl;
+  String get _orderIdUrl => isProduction ? _prodOrderIdUrl : _uatOrderIdUrl;
 
   // Auth Token API
   Future<Map<String, dynamic>> fetchAuthToken({
@@ -19,7 +27,7 @@ class PhonePeApiService {
     required String clientVersion,
   }) async {
     try {
-      final url = Uri.parse('$_baseUrl/v1/oauth/token');
+      final url = Uri.parse(_authUrl);
       debugPrint('Fetching token from: $url');
 
       final Map<String, String> formData = {
@@ -75,7 +83,7 @@ class PhonePeApiService {
     Map<String, dynamic>? paymentModeConfig,
   }) async {
     try {
-      final url = Uri.parse('$_baseUrl/checkout/v2/sdk/order');
+      final url = Uri.parse(_orderIdUrl);
 
       final body = {
         'merchantOrderId': merchantOrderId,

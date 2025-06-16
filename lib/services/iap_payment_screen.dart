@@ -10,11 +10,24 @@ class IAPPage extends StatefulWidget {
 
 class _IAPPageState extends State<IAPPage> {
   final IAPService iapService = IAPService();
+  bool _isPremiumUser = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    iapService.initConnection();
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    setState(() => _isLoading = true);
+    await iapService.initConnection();
+    // Check if user already has premium access
+    final hasPremium = await iapService.checkPurchases();
+    setState(() {
+      _isPremiumUser = hasPremium;
+      _isLoading = false;
+    });
   }
 
   @override
@@ -27,25 +40,49 @@ class _IAPPageState extends State<IAPPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('In-App Purchase')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                iapService.buyProduct();
-              },
-              child: const Text('Buy Premium Access'),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_isPremiumUser)
+                    const Text(
+                      'Premium Access Active!',
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green),
+                    )
+                  else
+                    ElevatedButton(
+                      onPressed: () async {
+                        setState(() => _isLoading = true);
+                        final success = await iapService.buyProduct();
+                        if (success) {
+                          setState(() => _isPremiumUser = true);
+                        }
+                        setState(() => _isLoading = false);
+                      },
+                      child: const Text('Buy Premium Access'),
+                    ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () async {
+                      setState(() => _isLoading = true);
+                      final success = await iapService.restorePurchases();
+                      if (success) {
+                        setState(() => _isPremiumUser = true);
+                      }
+                      setState(() => _isLoading = false);
+                    },
+                    child: const Text('Restore Purchases'),
+                  ),
+                  const SizedBox(height: 20),
+                  if (_isLoading) const CircularProgressIndicator(),
+                ],
+              ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                iapService.restorePurchases();
-              },
-              child: const Text('Restore Purchases'),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
