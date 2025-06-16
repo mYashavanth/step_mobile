@@ -22,6 +22,20 @@ class PhonePeApiService {
       final url = Uri.parse('$_baseUrl/v1/oauth/token');
       debugPrint('Fetching token from: $url');
 
+      final Map<String, String> formData = {
+        'client_id': clientId,
+        'client_secret': clientSecret,
+        'client_version': isProduction ? clientVersion : '1',
+        'grant_type': 'client_credentials',
+      };
+
+      final body = formData.entries
+          .map((e) =>
+              '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}')
+          .join('&');
+
+      debugPrint('Serialized Form Body: $body');
+
       if (kDebugMode) {
         debugPrint('Client ID: $clientId');
         debugPrint('Client Secret: $clientSecret');
@@ -33,12 +47,7 @@ class PhonePeApiService {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: {
-          'client_id': clientId,
-          'client_version': isProduction ? clientVersion : '1',
-          'client_secret': clientSecret,
-          'grant_type': 'client_credentials',
-        },
+        body: utf8.encode(body),
       );
 
       print('print body: $clientId $clientSecret $clientVersion');
