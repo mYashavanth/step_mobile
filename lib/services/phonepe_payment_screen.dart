@@ -105,23 +105,23 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
   }
 
   Future<void> _getOrderDetails(String orderId, String token) async {
-    final testToken = await _paymentManager.getValidToken();
+    final accessToken = await _paymentManager.getValidToken();
     debugPrint(
-        "Fetching order details for Order ID: $orderId with token: $token ($testToken)");
+        "Fetching order details for Order ID: $orderId with token: $token ($accessToken)");
     try {
       final uri = Uri.parse(
-          'https://mercury-uat.phonepe.com/v3/transaction/$merchantId/$orderId/status');
-      // Compute SHA256 hash for X-VERIFY header
-      final String dataToHash = "/v3/transaction/$merchantId/$orderId/status" +
-          "53f30118-d5df-4439-939c-f084329a2744";
-      final String hash = sha256.convert(utf8.encode(dataToHash)).toString();
-      final String xVerify = "$hash###1";
+          'https://api.phonepe.com/apis/pg/checkout/v2/order/$orderId/status');
+      // // Compute SHA256 hash for X-VERIFY header
+      // final String dataToHash = "/v3/transaction/$merchantId/$orderId/status" +
+      //     "53f30118-d5df-4439-939c-f084329a2744";
+      // final String hash = sha256.convert(utf8.encode(dataToHash)).toString();
+      // final String xVerify = "$hash###1";
 
       final response = await http.get(
         uri,
         headers: {
           'Content-Type': 'application/json',
-          'X-VERIFY': xVerify,
+          'Authorization': 'O-Bearer $accessToken',
         },
       );
       debugPrint(
