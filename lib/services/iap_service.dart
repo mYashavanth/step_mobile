@@ -81,4 +81,13 @@ class IAPService {
   void dispose() {
     _subscription.cancel();
   }
+
+  Future<void> restorePurchases() async {
+    try {
+      await _iap.restorePurchases();
+      debugPrint('Restore initiated.');
+    } catch (e) {
+      debugPrint('Restore failed: $e');
+    }
+  }
 }

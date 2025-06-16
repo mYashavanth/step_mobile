@@ -28,11 +28,22 @@ class _IAPPageState extends State<IAPPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('In-App Purchase')),
       body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            iapService.buyProduct();
-          },
-          child: const Text('Buy Premium Access'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                iapService.buyProduct();
+              },
+              child: const Text('Buy Premium Access'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                iapService.restorePurchases();
+              },
+              child: const Text('Restore Purchases'),
+            ),
+          ],
         ),
       ),
     );
