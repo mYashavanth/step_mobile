@@ -50,9 +50,8 @@ class PhonePeApiService {
         body: utf8.encode(body),
       );
 
-      print('print body: $clientId $clientSecret $clientVersion');
-
-      debugPrint('Token fetch status code: $response');
+      debugPrint(
+          '++++++++++++++++++++++++++++++++++Token fetch status code: $response');
       debugPrint('Token fetch response: ${response.body}');
 
       if (response.statusCode == 200) {
@@ -90,7 +89,6 @@ class PhonePeApiService {
             'paymentModeConfig': paymentModeConfig,
           },
       };
-      debugPrint('Creating order with body: $body');
 
       final response = await http.post(
         url,
@@ -100,7 +98,10 @@ class PhonePeApiService {
         },
         body: jsonEncode(body),
       );
-      debugPrint('Order creation status code: $response');
+      debugPrint(
+          '+++++++++++++++++++++++++++++++Order creation status code: $response');
+      debugPrint(
+          '+++++++++++++++++++++++++++++++++++++++++++++++++Creating order with body: $body');
       debugPrint('Order creation response: ${response.body}');
 
       if (response.statusCode == 200) {

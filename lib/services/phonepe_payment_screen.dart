@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:phonepe_payment_sdk/phonepe_payment_sdk.dart';
 import '../services/phonepe_payment_manager.dart';
 import '../services/phonepe_api_service.dart';
+import 'package:http/http.dart' as http;
 
 class PhonePePaymentScreen extends StatefulWidget {
   const PhonePePaymentScreen({super.key});
@@ -65,7 +66,8 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
         merchantOrderId: "ORDER_${DateTime.now().millisecondsSinceEpoch}",
         amount: 1000, // ₹10 in paise
       );
-
+      debugPrint(
+          "+++++++++++++++++++++++++++++++++++++++++Order Created: ${order.toString()}");
       // 2. Prepare payment request
       final payload = {
         "orderId": order['orderId'],
@@ -74,17 +76,21 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
         "paymentMode": {"type": "PAY_PAGE"},
         "merchantTransactionId": "MT_${DateTime.now().millisecondsSinceEpoch}",
         "amount": 1000,
-        "callbackUrl": "https://your-webhook-url.com/callback",
+        "callbackUrl":
+            "https://webhook.site/0d6fb306-a6c7-4283-b856-59c51837e119",
       };
 
-      debugPrint("Payment Payload: $payload");
+      debugPrint(
+          "+++++++++++++++++++++++++++++++++++++++++Payment Payload: $payload");
       debugPrint("Payment JSON Payload: ${jsonEncode(payload)}");
 
       // 3. Start payment
       final response = await PhonePePaymentSdk.startTransaction(
           jsonEncode(payload), "yourapp" // Must match your iOS URL scheme
           );
-
+      debugPrint(
+          "---------------------------------------------------Payment Response: $response");
+      _getOrderDetails(order['orderId'], order['token']);
       _handlePaymentResponse(response);
     } catch (e) {
       debugPrint("Error: ${e.toString()}");
@@ -92,6 +98,28 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
         result = "Error: ${e.toString()}";
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> _getOrderDetails(String orderId, String token) async {
+    debugPrint(
+        "Fetching order details for Order ID: $orderId with token: $token");
+    try {
+      final uri = Uri.parse(
+          'https://api-preprod.phonepe.com/apis/pg-sandbox/payments/v2/order/$orderId/status?details=true');
+      final response = await http.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'O-Bearer $token',
+        },
+      );
+      debugPrint(
+          "+++++++++++++++++++++++++++++++++++++++++Order Details Response: ${response.statusCode}");
+      debugPrint(
+          "+++++++++++++++++++++++++++++++++++++++++Order Details Response: ${response.body}");
+    } catch (e) {
+      debugPrint("Error fetching order details: ${e.toString()}");
     }
   }
 

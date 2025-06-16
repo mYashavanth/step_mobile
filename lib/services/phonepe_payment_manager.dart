@@ -17,7 +17,7 @@ class PhonePePaymentManager {
   static const String _tokenKey = 'phonepe_auth_token';
   static const String _expiryKey = 'phonepe_token_expiry';
 
-  Future<String> _getValidToken() async {
+  Future<String> getValidToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(_tokenKey);
     final expiry = prefs.getInt(_expiryKey);
@@ -42,6 +42,8 @@ class PhonePePaymentManager {
 
   bool _isTokenExpired(int expiryTimestamp) {
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    print(
+        '###################################Current time: $now, Token expiry: $expiryTimestamp');
     return now >= expiryTimestamp;
   }
 
@@ -52,7 +54,7 @@ class PhonePePaymentManager {
     Map<String, dynamic>? metaInfo,
     Map<String, dynamic>? paymentModeConfig,
   }) async {
-    final token = await _getValidToken();
+    final token = await getValidToken();
     return await apiService.createOrder(
       accessToken: token,
       merchantOrderId: merchantOrderId,
