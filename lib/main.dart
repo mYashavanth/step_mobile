@@ -37,9 +37,11 @@ import 'dart:convert';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 // import 'package:flutter_microsoft_clarity/flutter_microsoft_clarity.dart';
+import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  InAppPurchaseStoreKitPlatform.registerPlatform();
   // FlutterMicrosoftClarity().init(projectId: 'rly2rlgrjp');
   try {
     await Firebase.initializeApp();

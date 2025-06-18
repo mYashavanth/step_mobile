@@ -336,7 +336,7 @@ Widget preCourseCard(bool pending, BuildContext context, bool isPreCourse) {
                   : const ColorFilter.mode(Color(0xFFFE860A), BlendMode.srcIn),
             )),
         title: Text(
-          isPreCourse ? "Pre-course test" : "Post-course test",
+          isPreCourse ? "PYQ based test" : "practice test",
           style: const TextStyle(
             color: Color(0xFF1A1A1A),
             fontSize: 16,
@@ -578,20 +578,21 @@ class _StepContentState extends State<StepContent> {
         preCourseCard(true, context, true),
         const SizedBox(height: 20),
         if (widget.videos.isEmpty)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Text(
-                "No videos available for this step",
-                style: TextStyle(
-                  color: Color(0xFF737373),
-                  fontSize: 16,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
-          )
+          const SizedBox()
+        // const Center(
+        //   child: Padding(
+        //     padding: EdgeInsets.symmetric(vertical: 20),
+        //     child: Text(
+        //       "No videos available for this step",
+        //       style: TextStyle(
+        //         color: Color(0xFF737373),
+        //         fontSize: 16,
+        //         fontFamily: 'SF Pro Display',
+        //         fontWeight: FontWeight.w400,
+        //       ),
+        //     ),
+        //   ),
+        // )
         else
           Column(
             children: List.generate(widget.videos.length, (i) {

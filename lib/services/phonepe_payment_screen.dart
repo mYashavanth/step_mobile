@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:ghastep/views/urlconfig.dart';
 import 'package:phonepe_payment_sdk/phonepe_payment_sdk.dart';
 import '../services/phonepe_payment_manager.dart';
 import '../services/phonepe_api_service.dart';
@@ -16,25 +18,66 @@ class PhonePePaymentScreen extends StatefulWidget {
 
 class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
   late PhonePePaymentManager _paymentManager;
-  String environment = "PRODUCTION"; // Use "SANDBOX" for live environment
-  String merchantId = "M23JNKHG11XBL"; // Get from PhonePe sandbox-PGTESTPAYUAT
+  String environment = "SANDBOX"; // Use "SANDBOX" for testing
+  // For production, use "PRODUCTION"
+  String merchantId =
+      "PGTESTPAYUAT"; // for sandbox-PGTESTPAYUAT, for production-M23JNKHG11XBL
   bool enableLogging = true;
   String result = "Ready";
   bool isLoading = false;
+  bool isInitializing = true;
+  Map<String, dynamic> courseData = {};
+  final storage = const FlutterSecureStorage();
 
   @override
   void initState() {
     super.initState();
     _paymentManager = PhonePePaymentManager(
-      apiService:
-          PhonePeApiService(isProduction: true), // Set to false for sandbox
+      apiService: PhonePeApiService(
+          isProduction: false), // Set to false for sandbox, true for production
       clientId:
-          'SU2505301410333652987907', // Get from PhonePe sandbox-TEST-M23JNKHG11XBL_25061
+          'TEST-M23JNKHG11XBL_25061', // Get from PhonePe sandbox-TEST-M23JNKHG11XBL_25061, // for production-SU2505301410333652987907907
       clientSecret:
-          '53f30118-d5df-4439-939c-f084329a2744', // Get from PhonePe sandbox-ODllZWY4MzktNDJiMi00OWE3LWE1ZDEtNjY1NTk0ZDE5N2Vi
+          'ODllZWY4MzktNDJiMi00OWE3LWE1ZDEtNjY1NTk0ZDE5N2Vi', // Get from PhonePe sandbox-ODllZWY4MzktNDJiMi00OWE3LWE1ZDEtNjY1NTk0ZDE5N2Vi, // for production-53f30118-d5df-4439-939c-f084329a2744
       clientVersion: '1',
     );
     _initializePhonePe();
+    _loadCourseData();
+  }
+
+  Future<void> _loadCourseData() async {
+    try {
+      String token = await storage.read(key: 'token') ?? '';
+      String selectedCourseId =
+          await storage.read(key: 'selectedCourseId') ?? '1';
+
+      debugPrint(
+          "++++++++++++++++++++++Fetching course data with token: $token and courseId: $selectedCourseId");
+
+      final response = await http.get(
+        Uri.parse(
+            '$baseurl/app/get-app-course-pricing/$selectedCourseId/$token'),
+      );
+
+      debugPrint(
+          "++++++++++++++++++++++Course data response: ${response.statusCode}");
+      debugPrint("++++++++++++++++++++++Course data body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        setState(() {
+          courseData = json.decode(response.body);
+          debugPrint("++++++++++++++++++++++Course data loaded: $courseData");
+        });
+      } else {
+        throw Exception('Failed to load course data');
+      }
+    } catch (e) {
+      debugPrint(
+          "++++++++++++++++++++++Error loading course data: ${e.toString()}");
+      setState(() {
+        result = "Error loading data: ${e.toString()}";
+      });
+    }
   }
 
   Future<void> _initializePhonePe() async {
@@ -49,25 +92,36 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
           "++++++++++++++++++++++PhonePe SDK initialized: $isInitialized, Merchant ID: $merchantId");
       setState(() {
         result = isInitialized ? "Ready to pay" : "Initialization failed";
+        isInitializing = false; // <-- Add this line
       });
     } catch (e) {
       setState(() {
         result = "Init error: ${e.toString()}";
+        isInitializing = false; // <-- Add this line
       });
     }
   }
 
   Future<void> _startPayment() async {
+    if (courseData.isEmpty) {
+      debugPrint("++++++++++++++++++++++Course data not available for payment");
+      return;
+    }
+
     setState(() {
       isLoading = true;
       result = "Processing...";
     });
 
     try {
+      final amountInPaise =
+          (double.parse(courseData['selling_price_inr']) * 100).toInt();
+      debugPrint(
+          "++++++++++++++++++++++Payment amount in paise: $amountInPaise");
       // 1. Create order
       final order = await _paymentManager.createNewOrder(
         merchantOrderId: "ORDER_${DateTime.now().millisecondsSinceEpoch}",
-        amount: 100, // ₹10 in paise
+        amount: amountInPaise, // ₹10 in paise
       );
       debugPrint(
           "+++++++++++++++++++++++++++++++++++++++++Order Created: ${order.toString()}");
@@ -110,7 +164,7 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
         "Fetching order details for Order ID: $orderId with token: $token ($accessToken)");
     try {
       final uri = Uri.parse(
-          'https://api.phonepe.com/apis/pg/checkout/v2/order/$orderId/status');
+          'https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order/$orderId/status');
       // // Compute SHA256 hash for X-VERIFY header
       // final String dataToHash = "/v3/transaction/$merchantId/$orderId/status" +
       //     "53f30118-d5df-4439-939c-f084329a2744";
@@ -149,33 +203,205 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('PhonePe Payment')),
-      body: Center(
+      appBar: AppBar(
+        title: const Text('PhonePe Payment'),
+        centerTitle: true,
+      ),
+      body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ElevatedButton(
-                onPressed: isLoading ? null : _startPayment,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+              if (courseData.isNotEmpty) ...[
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          courseData['course_name'] ?? 'NEET PG',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (final desc
+                                in (courseData['price_description'] as String)
+                                    .split(',')
+                                    .map((e) => e.trim()))
+                              buildRow(desc, true),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Total Amount:',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                if (courseData['actual_price_inr'] !=
+                                    courseData['selling_price_inr'])
+                                  Text(
+                                    '₹${courseData['actual_price_inr']}',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[500],
+                                      decoration: TextDecoration.lineThrough,
+                                    ),
+                                  ),
+                                Text(
+                                  '₹${courseData['selling_price_inr']}',
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                child: const Text(
-                  'Pay ₹1 with PhonePe',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+                const SizedBox(height: 30),
+              ],
+              const Text(
+                'Payment Method',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 30),
-              if (isLoading) const CircularProgressIndicator(),
+              const SizedBox(height: 10),
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(Icons.phone_android,
+                          color: Colors.deepPurple, size: 30),
+                      SizedBox(width: 16),
+                      Text(
+                        'PhonePe',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Spacer(),
+                      Icon(Icons.radio_button_checked,
+                          color: Colors.deepPurple),
+                    ],
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Center(
+                child: Text(
+                  result,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: result.contains("success")
+                        ? Colors.green
+                        : result.contains("Error") || result.contains("failed")
+                            ? Colors.red
+                            : Colors.grey[700],
+                  ),
+                ),
+              ),
               const SizedBox(height: 20),
-              Text(result, style: const TextStyle(fontSize: 16)),
             ],
           ),
         ),
       ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: ElevatedButton(
+            onPressed: (isLoading || isInitializing) ? null : _startPayment,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              minimumSize: const Size(double.infinity, 50),
+            ),
+            child: isLoading
+                ? const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : Text(
+                    'Pay ₹${courseData['selling_price_inr'] ?? 'Amount'}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildRow(String title, bool neet) {
+    return Row(
+      children: [
+        Icon(
+          Icons.check_circle,
+          size: 15,
+          color: neet
+              ? const Color.fromARGB(255, 65, 65, 65)
+              : const Color(0xFFEC7800),
+        ),
+        const SizedBox(
+          width: 4,
+        ),
+        Expanded(
+          child: Text(
+            title,
+            style: TextStyle(
+              color: neet
+                  ? const Color.fromARGB(255, 65, 65, 65)
+                  : const Color(0xFFEC7800),
+              fontSize: 14,
+              fontFamily: 'SF Pro Display',
+              fontWeight: FontWeight.w500,
+              height: 1.57,
+            ),
+          ),
+        )
+      ],
     );
   }
 }

@@ -15,7 +15,7 @@ class PhonePeApiService {
 
   final bool isProduction;
 
-  PhonePeApiService({this.isProduction = true});
+  PhonePeApiService({this.isProduction = false});
 
   String get _authUrl => isProduction ? _prodAuthUrl : _uatAuthUrl;
   String get _orderIdUrl => isProduction ? _prodOrderIdUrl : _uatOrderIdUrl;
