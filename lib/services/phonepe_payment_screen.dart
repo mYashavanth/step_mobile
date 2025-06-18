@@ -156,8 +156,8 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
           );
       debugPrint(
           "---------------------------------------------------Payment Response: $response");
-      _getOrderDetails(order['orderId'], order['token']);
-      _handlePaymentResponse(response);
+      // _getOrderDetails(order['orderId'], order['token']);
+      _handlePaymentResponse(response, order['orderId']);
     } catch (e) {
       debugPrint("Error: ${e.toString()}");
       setState(() {
@@ -168,41 +168,46 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
     }
   }
 
-  Future<void> _getOrderDetails(String orderId, String token) async {
-    final accessToken = await _paymentManager.getValidToken();
-    debugPrint(
-        "Fetching order details for Order ID: $orderId with token: $token ($accessToken)");
-    try {
-      final uri = Uri.parse(
-          'https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order/$orderId/status');
-      // // Compute SHA256 hash for X-VERIFY header
-      // final String dataToHash = "/v3/transaction/$merchantId/$orderId/status" +
-      //     "53f30118-d5df-4439-939c-f084329a2744";
-      // final String hash = sha256.convert(utf8.encode(dataToHash)).toString();
-      // final String xVerify = "$hash###1";
+  // Future<void> _getOrderDetails(String orderId, String token) async {
+  //   final accessToken = await _paymentManager.getValidToken();
+  //   debugPrint(
+  //       "Fetching order details for Order ID: $orderId with token: $token ($accessToken)");
+  //   try {
+  //     final uri = Uri.parse(
+  //         'https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order/$orderId/status');
+  //     // // Compute SHA256 hash for X-VERIFY header
+  //     // final String dataToHash = "/v3/transaction/$merchantId/$orderId/status" +
+  //     //     "53f30118-d5df-4439-939c-f084329a2744";
+  //     // final String hash = sha256.convert(utf8.encode(dataToHash)).toString();
+  //     // final String xVerify = "$hash###1";
 
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'O-Bearer $accessToken',
-        },
-      );
-      debugPrint(
-          "+++++++++++++++++++++++++++++++++++++++++Order Details Response: ${response.statusCode}");
-      debugPrint(
-          "+++++++++++++++++++++++++++++++++++++++++Order Details Response: ${response.body}");
-    } catch (e) {
-      debugPrint("Error fetching order details: ${e.toString()}");
-    }
-  }
+  //     final response = await http.get(
+  //       uri,
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'Authorization': 'O-Bearer $accessToken',
+  //       },
+  //     );
+  //     debugPrint(
+  //         "+++++++++++++++++++++++++++++++++++++++++Order Details Response: ${response.statusCode}");
+  //     debugPrint(
+  //         "+++++++++++++++++++++++++++++++++++++++++Order Details Response: ${response.body}");
+  //   } catch (e) {
+  //     debugPrint("Error fetching order details: ${e.toString()}");
+  //   }
+  // }
 
-  void _handlePaymentResponse(Map<dynamic, dynamic>? response) {
+  void _handlePaymentResponse(Map<dynamic, dynamic>? response, String orderId) {
     setState(() {
       isLoading = false;
       if (response == null) {
         result = "Payment incomplete";
         isPaymentFailed = true;
+        _updateBackendWithPaymentStatus(
+          phoneTxnId: orderId,
+          paymentStatus: 0,
+          appPurchaseId: courseData['app_purchase_id'],
+        );
         return;
       }
 
@@ -210,12 +215,55 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
         result = "Payment successful!";
         isPaymentSuccess = true;
         isPaymentFailed = false;
+        _updateBackendWithPaymentStatus(
+          phoneTxnId: orderId,
+          paymentStatus: 1,
+          appPurchaseId: courseData['app_purchase_id'],
+        );
       } else {
         result = "Payment failed: ${response['error']}";
         isPaymentFailed = true;
         isPaymentSuccess = false;
+        _updateBackendWithPaymentStatus(
+          phoneTxnId: orderId,
+          paymentStatus: 0,
+          appPurchaseId: courseData['app_purchase_id'],
+        );
       }
     });
+  }
+
+  Future<void> _updateBackendWithPaymentStatus({
+    required String phoneTxnId,
+    required int paymentStatus,
+    required int appPurchaseId,
+  }) async {
+    try {
+      String token = await storage.read(key: 'token') ?? '';
+      Map body = {};
+      body['phoneTxnId'] = phoneTxnId;
+      body['paymentStatus'] = paymentStatus.toString();
+      body['appPurchaseId'] = appPurchaseId.toString();
+      body['token'] = token;
+      body['appleTxnId'] = ''; // Assuming no Apple payment for PhonePe
+
+      debugPrint(
+          "+++++++++++++++++++++++++++++++++++++++++Updating Payment Status with body: $body");
+
+      final response = await http
+          .post(Uri.parse('$baseurl/app/app-user-purchase/add'), body: body);
+
+      debugPrint(
+          "+++++++++++++++++++++++++++++++++++++++++Update Payment Status Response: ${response.body}");
+
+      if (response.statusCode == 200) {
+        debugPrint("Payment status updated successfully");
+      } else {
+        debugPrint("Failed to update payment status: ${response.body}");
+      }
+    } catch (e) {
+      debugPrint("Error updating payment status: ${e.toString()}");
+    }
   }
 
   Widget _buildPaymentSuccessUI() {

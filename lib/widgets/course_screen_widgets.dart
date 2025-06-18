@@ -336,7 +336,7 @@ Widget preCourseCard(bool pending, BuildContext context, bool isPreCourse) {
                   : const ColorFilter.mode(Color(0xFFFE860A), BlendMode.srcIn),
             )),
         title: Text(
-          isPreCourse ? "PYQ based test" : "practice test",
+          isPreCourse ? "PYQ based test" : "Practice test",
           style: const TextStyle(
             color: Color(0xFF1A1A1A),
             fontSize: 16,
