@@ -298,6 +298,7 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
         ElevatedButton(
           onPressed: () {
             // Navigate to course or dashboard
+            Navigator.pushNamed(context, '/home_page');
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.deepPurple,
@@ -397,6 +398,7 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
           ElevatedButton(
             onPressed: () {
               // Navigate to course or dashboard
+              Navigator.pushNamed(context, '/home_page');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.deepPurple,
