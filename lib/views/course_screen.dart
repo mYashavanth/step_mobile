@@ -5,6 +5,7 @@ import 'package:ghastep/widgets/common_widgets.dart';
 import 'package:ghastep/widgets/course_screen_widgets.dart';
 import 'package:ghastep/widgets/homepage_widgets.dart';
 import 'package:ghastep/views/urlconfig.dart';
+import 'package:ghastep/widgets/pyment_validation.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -25,6 +26,11 @@ class _CourseScreenState extends State<CourseScreen>
   String courseStepDetailId = '';
   List<dynamic> videoData = []; // To store video data from API
 
+  final paymentValidator = PaymentValidation();
+  SubscriptionStatus paymentStatus = SubscriptionStatus.valid(
+      message: 'Subscription active', validTill: 'N/A');
+  var totalNumberOfSteps = 60; // Track total number of steps
+
   List<int> stepTabSelectedIndex = [0];
   List<Map> selectStepList = [
     {"name": "Step 1", "id": 1},
@@ -41,6 +47,7 @@ class _CourseScreenState extends State<CourseScreen>
     super.initState();
     _loadSelectedStep();
     fetchCourseStepDetails();
+    _getSubscriptionStatus();
   }
 
   @override
@@ -51,6 +58,14 @@ class _CourseScreenState extends State<CourseScreen>
       // fetchVideoData();
       fetchCourseStepDetails();
     }
+  }
+
+  Future<void> _getSubscriptionStatus() async {
+    final status = await paymentValidator.validateSubscription();
+    setState(() {
+      paymentStatus = status;
+    });
+    print("Subscription Status: $paymentStatus");
   }
 
   Future<void> _loadSelectedStep() async {
@@ -77,28 +92,33 @@ class _CourseScreenState extends State<CourseScreen>
         ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     courseId = args['courseId'].toString(); // Update class variable
     subjectId = args['subjectId'].toString(); // Update class variable
-    print("_____________________$courseId, $subjectId");
+    print("_____________________$courseId, $subjectId, $selectedStepId");
     try {
       final url = Uri.parse(
           '$baseurl/app/get-course-step-details-details/$token/$courseId/$subjectId/$selectedStepId');
+      print("Fetching course step details from: $url");
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         print("Course Step Details API Response: ${response.body}");
-        if (data.isNotEmpty) {
-          final courseStepDetailsData = data[0];
+        if (data['errFlage'] == 0 && data['stepDetails'] != null) {
+          final courseStepDetailsData = data['stepDetails'][0];
           final courseStepId = courseStepDetailsData['id'].toString();
           courseStepDetailId = courseStepId;
+          print("Course Step Detail ID: $courseStepDetailId");
+          print('course stepDetailsData: $courseStepDetailsData');
 
           await storage.write(key: "courseStepDetailId", value: courseStepId);
 
           setState(() {
             courseStepDetails = courseStepDetailsData;
+            totalNumberOfSteps = data['totalStepCount'] ?? 60;
           });
 
           // Fetch video data after getting courseStepDetailId
           fetchVideoData();
         } else {
+          print('---------------------------------------------');
           setState(() {
             courseStepDetails = {};
           });
@@ -294,7 +314,7 @@ class _CourseScreenState extends State<CourseScreen>
                             //       });
                             //     });
                           },
-                          child: Row(
+                          child: const Row(
                             children: [
                               Text(
                                 // "STEP $selectedStepId",
@@ -307,7 +327,7 @@ class _CourseScreenState extends State<CourseScreen>
                                   height: 1.71,
                                 ),
                               ),
-                              const Icon(
+                              Icon(
                                 Icons.keyboard_arrow_down_rounded,
                                 color: Color(0xFF247E80),
                               ),
@@ -393,6 +413,7 @@ class _CourseScreenState extends State<CourseScreen>
             Padding(
               padding: const EdgeInsets.all(12),
               child: buildTabBarCourse(
+                context,
                 _tabController,
                 stepTabSelectedIndex,
                 setState,
@@ -416,6 +437,8 @@ class _CourseScreenState extends State<CourseScreen>
                 },
                 courseId, // e.g., 3
                 subjectId, // e.g., 3
+                paymentStatus,
+                totalNumberOfSteps,
               ),
             ),
           ],

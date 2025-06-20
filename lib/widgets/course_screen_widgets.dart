@@ -4,6 +4,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:ghastep/services/iap_payment_screen.dart';
+import 'package:ghastep/services/phonepe_payment_screen.dart';
+import 'package:ghastep/widgets/pyment_validation.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
@@ -14,6 +17,7 @@ import 'package:http/http.dart' as http; // Add this import
 import 'package:ghastep/widgets/full_screen_video_player.dart';
 
 Widget buildTabBarCourse(
+  BuildContext context,
   TabController tabController,
   List<int> stepTabSelectedIndex,
   StateSetter setState,
@@ -23,6 +27,8 @@ Widget buildTabBarCourse(
   Function(int) onStepChanged,
   String courseId,
   String subjectId,
+  SubscriptionStatus paymentStatus,
+  int totalNumberOfSteps,
 ) {
   print("videoData in widget page: $videoData");
   print("course and subject ids: $courseId, $subjectId");
@@ -33,6 +39,16 @@ Widget buildTabBarCourse(
       : videoData
           .where((video) => video['step_no'] == stepTabSelectedIndex[0] + 1)
           .toList();
+  List<String> stepTabCourse = !paymentStatus.isValid
+      ? ['Step 1', "Step 2", "Notes", "Subject test"]
+      : List.generate(
+          totalNumberOfSteps + 2,
+          (index) => index < totalNumberOfSteps
+              ? 'Step ${index + 1}'
+              : index == totalNumberOfSteps
+                  ? 'Notes'
+                  : 'Subject Test',
+        );
   return Column(
     mainAxisSize: MainAxisSize.min,
     children: [
@@ -42,82 +58,222 @@ Widget buildTabBarCourse(
         chooseStepList,
         selectedStepId,
         onStepChanged,
+        stepTabCourse,
       ),
       Container(
         padding: const EdgeInsets.only(left: 12, right: 12),
-        child: Column(
-          children: [
-            Visibility(
-              visible: stepTabSelectedIndex[0] == 0,
-              child: StepContent(videos: filteredVideos),
-            ),
-            Visibility(
-              visible: stepTabSelectedIndex[0] == 1,
-              child: StepContent(videos: filteredVideos),
-            ),
-            Visibility(
-              visible: stepTabSelectedIndex[0] == 2,
-              child: const SizedBox(
-                height: 200,
-                child: Center(
-                  child: Text("Step 3 Content"),
-                ),
-              ),
-            ),
-            Visibility(
-              visible: stepTabSelectedIndex[0] == 3,
-              child: Column(
+        child: !paymentStatus.isValid
+            ? Column(
                 children: [
-                  NotesListWidget(courseId: courseId, subjectId: subjectId),
-                  const SizedBox(height: 28),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(24),
-                    onTap: () {},
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: ShapeDecoration(
-                        shape: RoundedRectangleBorder(
-                          side: const BorderSide(
-                            width: 1,
-                            color: Color(0xFF247E80),
-                          ),
-                          borderRadius: BorderRadius.circular(24),
+                  Visibility(
+                    visible: stepTabSelectedIndex[0] == 0,
+                    child: StepContent(videos: filteredVideos),
+                  ),
+                  Visibility(
+                    visible: stepTabSelectedIndex[0] == 1,
+                    child: SizedBox(
+                      height: 200,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text("Please subscribe to our paid plan"),
+                            const SizedBox(height: 20),
+                            InkWell(
+                              borderRadius: BorderRadius.circular(24),
+                              onTap: () {
+                                // if (Theme.of(context).platform ==
+                                //     TargetPlatform.android) {
+                                //   Navigator.push(
+                                //     context,
+                                //     MaterialPageRoute(
+                                //       builder: (context) =>
+                                //           const PhonePePaymentScreen(),
+                                //     ),
+                                //   );
+                                // } else if (Theme.of(context).platform ==
+                                //     TargetPlatform.iOS) {
+                                //   Navigator.push(
+                                //     context,
+                                //     MaterialPageRoute(
+                                //       builder: (context) => const IAPPage(),
+                                //     ),
+                                //   );
+                                // }
+                                Navigator.pushNamed(context, "/subscribe");
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                // Adjust the width to 50% of the screen width
+                                width: MediaQuery.of(context).size.width * 0.5,
+                                decoration: ShapeDecoration(
+                                  shape: RoundedRectangleBorder(
+                                    side: const BorderSide(
+                                      width: 1,
+                                      color: Color(0xFF247E80),
+                                    ),
+                                    borderRadius: BorderRadius.circular(24),
+                                  ),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.lock,
+                                      color: Color(0xFF247E80),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Subscribe Now',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Color(0xFF247E80),
+                                        fontSize: 16,
+                                        fontFamily: 'SF Pro Display',
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.50,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.lock,
-                            color: Color(0xFF247E80),
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Enroll for ₹1000 to unlock',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Color(0xFF247E80),
-                              fontSize: 16,
-                              fontFamily: 'SF Pro Display',
-                              fontWeight: FontWeight.w500,
-                              height: 1.50,
+                    ),
+                  ),
+                  Visibility(
+                    visible: stepTabSelectedIndex[0] == 2,
+                    child: Column(
+                      children: [
+                        NotesListWidget(
+                            courseId: courseId, subjectId: subjectId),
+                        const SizedBox(height: 28),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(24),
+                          onTap: () {},
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: ShapeDecoration(
+                              shape: RoundedRectangleBorder(
+                                side: const BorderSide(
+                                  width: 1,
+                                  color: Color(0xFF247E80),
+                                ),
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.lock,
+                                  color: Color(0xFF247E80),
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Enroll for ₹1000 to unlock',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Color(0xFF247E80),
+                                    fontSize: 16,
+                                    fontFamily: 'SF Pro Display',
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.50,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Visibility(
+                    visible: stepTabSelectedIndex[0] == 3,
+                    child: const SizedBox(
+                      height: 200,
+                      child: Center(
+                        child: Text("Subject Test Content"),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Column(
+                children: [
+                  ...List.generate(
+                    totalNumberOfSteps,
+                    (i) => Visibility(
+                      visible: stepTabSelectedIndex[0] == i,
+                      child: StepContent(videos: filteredVideos),
+                    ),
+                  ),
+                  Visibility(
+                    visible: stepTabSelectedIndex[0] == totalNumberOfSteps,
+                    child: Column(
+                      children: [
+                        NotesListWidget(
+                            courseId: courseId, subjectId: subjectId),
+                        const SizedBox(height: 28),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(24),
+                          onTap: () {},
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: ShapeDecoration(
+                              shape: RoundedRectangleBorder(
+                                side: const BorderSide(
+                                  width: 1,
+                                  color: Color(0xFF247E80),
+                                ),
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                            ),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.lock,
+                                  color: Color(0xFF247E80),
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Enroll for ₹1000 to unlock',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Color(0xFF247E80),
+                                    fontSize: 16,
+                                    fontFamily: 'SF Pro Display',
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.50,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Visibility(
+                    visible: stepTabSelectedIndex[0] == totalNumberOfSteps + 1,
+                    child: const SizedBox(
+                      height: 200,
+                      child: Center(
+                        child: Text("Subject Test Content"),
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
       ),
     ],
   );
 }
 
-List stepTabCourse = ['Step 1', "Step 2", "Step 3", "Notes", "Subject test"];
+// List stepTabCourse = ['Step 1', "Step 2", "Step 3", "Notes", "Subject test"];
 
 Widget buildStepTabButton(
   StateSetter setState,
@@ -125,71 +281,85 @@ Widget buildStepTabButton(
   List<int> chooseStepList,
   int selectedStepId,
   Function(int) onStepChanged,
+  List<String> stepTabCourse,
 ) {
   final storage = FlutterSecureStorage();
-  return Row(
-    children: List.generate(5, (i) {
-      return GestureDetector(
-        onTap: () {
-          if (i == 1 || i == 2 || i == 4) {
-            // If Step 2 or Step 3 is tapped, show a message
-            print("Step ${i + 1} tab selected");
-          } else {
+  return SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      children: List.generate(stepTabCourse.length, (i) {
+        return GestureDetector(
+          onTap: () {
             setState(() {
-              stepTabSelectedIndex[0] = i; // Update selected tab index
-              chooseStepList[0] = i + 1; // Update chosen step
+              stepTabSelectedIndex[0] = i;
+              chooseStepList[0] = i + 1;
             });
-          }
-          storage.write(
-            key: "selectedStepNo",
-            value: (i + 1).toString(), // Store the new selection
-          );
-          if (i == 0) {
-            // Step 1, Step 2, Step 3 (indices 0, 1, 2)
-            onStepChanged(i + 1); // Trigger step-related logic
-          } else if (i == 1) {
-            // Step 2 tab (index 1)
-            print("Step 2 tab selected");
-          } else if (i == 2) {
-            // Step 3 tab (index 2)
-            print("Step 3 tab selected");
-          } else if (i == 3) {
-            // Notes tab (index 3)
-            print(
-                "Notes tab selected,"); // Optional: Add notes-specific logic here
-          } else if (i == 4) {
-            // Subject Test tab (index 4)
-            print(
-                "Subject Test tab selected"); // Optional: Add test-specific logic here
-          }
-        },
-        child: Container(
-          margin: EdgeInsets.only(right: 12),
-          padding: const EdgeInsets.only(bottom: 4),
-          decoration: BoxDecoration(
-            border: stepTabSelectedIndex[0] == i
-                ? const Border(
-                    bottom: BorderSide(width: 2, color: Color(0xFF1A1A1A)),
-                  )
-                : null,
-          ),
-          child: Text(
-            stepTabCourse[i],
-            style: TextStyle(
-              color: stepTabSelectedIndex[0] == i
-                  ? const Color(0xFF1A1A1A)
-                  : const Color(0xFF737373),
-              fontSize: 16,
-              fontFamily: 'SF Pro Display',
-              fontWeight: stepTabSelectedIndex[0] == i
-                  ? FontWeight.w500
-                  : FontWeight.w400,
-              height: 1.50,
+            storage.write(
+              key: "selectedStepNo",
+              value: (i + 1).toString(),
+            );
+            onStepChanged(i + 1);
+
+            // if (i == 1 || i == 2 || i == 4) {
+            //   // If Step 2 or Step 3 is tapped, show a message
+            //   print("Step ${i + 1} tab selected");
+            // } else {
+            //   setState(() {
+            //     stepTabSelectedIndex[0] = i; // Update selected tab index
+            //     chooseStepList[0] = i + 1; // Update chosen step
+            //   });
+            //   storage.write(
+            //     key: "selectedStepNo",
+            //     value: (i + 1).toString(), // Store the new selection
+            //   );
+            // }
+            // if (i == 0) {
+            //   // Step 1, Step 2, Step 3 (indices 0, 1, 2)
+            //   onStepChanged(i + 1); // Trigger step-related logic
+            // } else if (i == 1) {
+            //   // Step 2 tab (index 1)
+            //   print("Step 2 tab selected");
+            // } else if (i == 2) {
+            //   // Step 3 tab (index 2)
+            //   print("Step 3 tab selected");
+            // } else if (i == 3) {
+            //   // Notes tab (index 3)
+            //   print(
+            //       "Notes tab selected,"); // Optional: Add notes-specific logic here
+            // } else if (i == 4) {
+            //   // Subject Test tab (index 4)
+            //   print(
+            //       "Subject Test tab selected"); // Optional: Add test-specific logic here
+            // }
+          },
+          child: Container(
+            margin: EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(bottom: 4),
+            decoration: BoxDecoration(
+              border: stepTabSelectedIndex[0] == i
+                  ? const Border(
+                      bottom: BorderSide(width: 2, color: Color(0xFF1A1A1A)),
+                    )
+                  : null,
+            ),
+            child: Text(
+              stepTabCourse[i],
+              style: TextStyle(
+                color: stepTabSelectedIndex[0] == i
+                    ? const Color(0xFF1A1A1A)
+                    : const Color(0xFF737373),
+                fontSize: 16,
+                fontFamily: 'SF Pro Display',
+                fontWeight: stepTabSelectedIndex[0] == i
+                    ? FontWeight.w500
+                    : FontWeight.w400,
+                height: 1.50,
+              ),
             ),
           ),
-        ),
-      );
-    }),
+        );
+      }),
+    ),
   );
 }
 
