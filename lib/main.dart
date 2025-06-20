@@ -13,6 +13,7 @@ import 'package:ghastep/views/mobile_login.dart';
 import 'package:ghastep/views/notes.dart';
 import 'package:ghastep/views/notes_individual.dart';
 import 'package:ghastep/views/otp_screen.dart';
+import 'package:ghastep/views/payment_logs.dart';
 import 'package:ghastep/views/privacy_policy.dart';
 import 'package:ghastep/views/profile.dart';
 import 'package:ghastep/views/profile_detail.dart';
@@ -157,6 +158,7 @@ class _MyAppState extends State<MyApp> {
         '/all_subjects': (context) => const AllSubjectsScreen(),
         '/terms_and_conditions': (context) => const TermsAndConditionsPage(),
         '/privacy_policy': (context) => const PrivacyPolicyPage(),
+        '/payment_logs': (context) => const PaymentLogsPage(),
       },
       initialRoute: '/splash',
     );

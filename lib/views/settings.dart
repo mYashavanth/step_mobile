@@ -149,6 +149,11 @@ class _SettingsState extends State<Settings> {
                     ),
                   ),
                   buildSettingsRow(
+                    icon: Icons.payment_outlined,
+                    title: "Payment History",
+                    route: "/payment_logs",
+                  ),
+                  buildSettingsRow(
                     icon: Icons.logout,
                     title: "Sign out",
                     route: "log_out",

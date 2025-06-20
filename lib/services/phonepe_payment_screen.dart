@@ -257,7 +257,14 @@ class _PhonePePaymentScreenState extends State<PhonePePaymentScreen> {
           "+++++++++++++++++++++++++++++++++++++++++Update Payment Status Response: ${response.body}");
 
       if (response.statusCode == 200) {
-        debugPrint("Payment status updated successfully");
+        final responseData = json.decode(response.body);
+        if (responseData['errFlag'] == '0') {
+          debugPrint("Payment status updated successfully");
+          // Optionally, you can navigate to a success screen or show a success message
+        } else {
+          debugPrint(
+              "Failed to update payment status: ${responseData['message']}");
+        }
       } else {
         debugPrint("Failed to update payment status: ${response.body}");
       }
