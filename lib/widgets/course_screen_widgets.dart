@@ -16,6 +16,59 @@ import 'package:ghastep/views/urlconfig.dart';
 import 'package:http/http.dart' as http; // Add this import
 import 'package:ghastep/widgets/full_screen_video_player.dart';
 
+Widget buildSubjectTestCard(
+    BuildContext context, String courseId, String subjectId) {
+  return InkWell(
+    onTap: () {
+      // This will navigate to your new screen for subject exams.
+      Navigator.pushNamed(context, "/before_enter_exam");
+    },
+    child: Container(
+      decoration: ShapeDecoration(
+        color: const Color(0x1AFE860A),
+        shape: RoundedRectangleBorder(
+          side: const BorderSide(width: 1, color: Color(0xFFFE860A)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      child: ListTile(
+        leading: Container(
+            width: 40,
+            height: 40,
+            padding: const EdgeInsets.all(10),
+            decoration: ShapeDecoration(
+              color: const Color(0x29FE840A),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(50),
+              ),
+            ),
+            child: SvgPicture.asset(
+              "assets/icons/list_icon.svg", // Or any other relevant icon
+            )),
+        title: const Text(
+          'Subject Test',
+          style: TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontSize: 16,
+            fontFamily: 'SF Pro Display',
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        subtitle: const Text(
+          'Test your knowledge on the subject',
+          style: TextStyle(
+            color: Color(0xFF737373),
+            fontSize: 12,
+            fontFamily: 'SF Pro Display',
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      ),
+    ),
+  );
+}
+
 Widget buildTabBarCourse(
   BuildContext context,
   TabController tabController,
@@ -190,15 +243,14 @@ Widget buildTabBarCourse(
                       ],
                     ),
                   ),
-                  Visibility(
-                    visible: stepTabSelectedIndex[0] == 3,
-                    child: const SizedBox(
-                      height: 200,
-                      child: Center(
-                        child: Text("Subject Test Content"),
-                      ),
-                    ),
-                  ),
+Visibility(
+  visible: stepTabSelectedIndex[0] == 3,
+  child: ExamContent(
+    key: ValueKey('exam_content_${subjectId}_tab_${stepTabSelectedIndex[0]}'), // Unique key
+    videos: filteredVideos,
+    subjectId: subjectId,
+  ),
+),
                 ],
               )
             : Column(
@@ -561,6 +613,106 @@ Widget preCourseCard(bool pending, BuildContext context, bool isPreCourse) {
   );
 }
 
+Widget examCard(bool pending, BuildContext context, bool isPreCourse, String subjectId) {
+  return InkWell(
+    borderRadius: BorderRadius.circular(8),
+    onTap: () async {
+      final storage = FlutterSecureStorage();
+      await storage.write(key: "isPreCourse", value: isPreCourse.toString());
+      Navigator.pushNamed(
+        context,
+        "/before_enter_exam",
+        arguments: {'courseStepDetailId': subjectId},
+      );
+    },
+    child: Container(
+      decoration: ShapeDecoration(
+        color: isPreCourse ? const Color(0x1A31B5B9) : const Color(0x1AFE860A),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(
+              width: 1,
+              color: isPreCourse
+                  ? const Color(0xFF31B5B9)
+                  : const Color(0xFFFE860A)),
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      child: ListTile(
+        leading: Container(
+            width: 40,
+            height: 40,
+            // margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.all(10),
+            decoration: ShapeDecoration(
+              color: isPreCourse
+                  ? const Color(0xFFC7F3F4)
+                  : const Color(0x29FE840A),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(50),
+              ),
+            ),
+            child: SvgPicture.asset(
+              "assets/icons/list_icon.svg",
+              colorFilter: isPreCourse
+                  ? const ColorFilter.mode(Color(0xFF31B5B9), BlendMode.srcIn)
+                  : const ColorFilter.mode(Color(0xFFFE860A), BlendMode.srcIn),
+            )),
+        title: const Text(
+          "Subject Exam",
+          style: TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontSize: 16,
+            fontFamily: 'SF Pro Display',
+            fontWeight: FontWeight.w400,
+            height: 1.50,
+          ),
+        ),
+        subtitle: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '1h 30m • 35 MCQS',
+              style: TextStyle(
+                color: Color(0xFF737373),
+                fontSize: 12,
+                fontFamily: 'SF Pro Display',
+                fontWeight: FontWeight.w400,
+                height: 1.67,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              width: 75,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: ShapeDecoration(
+                color:
+                    pending ? const Color(0xFFFF9500) : const Color(0xFF34C759),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  pending ? 'Pending' : "Completed",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontFamily: 'SF Pro Display',
+                    fontWeight: FontWeight.w400,
+                    height: 1.67,
+                  ),
+                ),
+              ),
+            )
+          ],
+        ),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      ),
+    ),
+  );
+}
+
 Widget collapseStepClassCard(
   int num,
   BuildContext context,
@@ -784,6 +936,81 @@ class _StepContentState extends State<StepContent> {
           ),
         const SizedBox(height: 20),
         preCourseCard(true, context, false),
+      ],
+    );
+  }
+}
+
+class ExamContent extends StatefulWidget {
+  final List<dynamic> videos;
+  final String subjectId;
+  const ExamContent({super.key, required this.videos, required this.subjectId});
+
+  @override
+  State<ExamContent> createState() => _ExamContentState();
+}
+
+class _ExamContentState extends State<ExamContent> {
+  late List<bool> showCardBoolList;
+
+  @override
+  void initState() {
+    super.initState();
+    showCardBoolList = List<bool>.filled(widget.videos.length, false);
+  }
+
+  @override
+  void didUpdateWidget(ExamContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.videos.length != showCardBoolList.length) {
+      showCardBoolList = List<bool>.filled(widget.videos.length, false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 20),
+        examCard(true, context, true, widget.subjectId),
+        const SizedBox(height: 20),
+        if (widget.videos.isEmpty)
+          const SizedBox()
+        // const Center(
+        //   child: Padding(
+        //     padding: EdgeInsets.symmetric(vertical: 20),
+        //     child: Text(
+        //       "No videos available for this step",
+        //       style: TextStyle(
+        //         color: Color(0xFF737373),
+        //         fontSize: 16,
+        //         fontFamily: 'SF Pro Display',
+        //         fontWeight: FontWeight.w400,
+        //       ),
+        //     ),
+        //   ),
+        // )
+        else
+          Column(
+            children: List.generate(widget.videos.length, (i) {
+              final video = widget.videos[i];
+              return collapseStepClassCard(
+                i + 1,
+                context,
+                showCardBoolList,
+                setState,
+                videoTitle: video['video_title'] ?? 'No title',
+                videoDescription:
+                    video['video_description'] ?? 'No description',
+                videoDuration: '${video['video_duration_in_mins'] ?? 0} mins',
+                isLocked: false,
+                videoUrl: video['video_link'] ?? '',
+                videoId: video['id'] ?? 0,
+              );
+            }),
+          ),
       ],
     );
   }

@@ -55,6 +55,7 @@ dependencies:
   crypto: ^3.0.6
   in_app_purchase: ^3.2.3
   in_app_purchase_storekit: ^0.4.2
+  flutter_html: ^3.0.0
 
 dev_dependencies:
   flutter_test:
