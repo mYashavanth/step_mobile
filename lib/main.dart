@@ -38,6 +38,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 // import 'package:flutter_microsoft_clarity/flutter_microsoft_clarity.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
+import 'package:ghastep/views/before_enter_exam_screen.dart';
+import 'package:ghastep/views/exam_result_screen.dart';
+import 'package:ghastep/views/exam_screen.dart';
+import 'package:ghastep/views/exam_solutions_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -151,6 +155,10 @@ class _MyAppState extends State<MyApp> {
         '/terms_and_conditions': (context) => const TermsAndConditionsPage(),
         '/privacy_policy': (context) => const PrivacyPolicyPage(),
         '/payment_logs': (context) => const PaymentLogsPage(),
+        '/before_enter_exam': (context) => const BeforeEnterExamScreen(),
+        '/exam_screen': (context) => const ExamScreen(),
+        '/exam_result_screen': (context) => const ExamResultScreen(),
+        '/view_exam_solutions_screen': (context) => const ViewExamSolutionScreen(),
       },
       initialRoute: '/splash',
     );
