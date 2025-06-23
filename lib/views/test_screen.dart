@@ -486,12 +486,7 @@ class _TestScreenState extends State<TestScreen> {
           });
 
           // Fetch and store the result
-          await _fetchTestResults();
-
-          // Navigate to the result screen
-          if (context.mounted) {
-            Navigator.pushReplacementNamed(context, "/result_test_screen");
-          }
+          _fetchTestResults();
         } else {
           print("Error ending test: ${data['message']}");
           showCustomSnackBar(
@@ -518,7 +513,7 @@ class _TestScreenState extends State<TestScreen> {
     }
   }
 
-  Future<Map<String, dynamic>?> _fetchTestResults() async {
+  Future<void> _fetchTestResults() async {
     try {
       String? token = await storage.read(key: "token");
       bool? isPreCourseFlag = await storage.read(key: "isPreCourse") == "true";
@@ -529,7 +524,7 @@ class _TestScreenState extends State<TestScreen> {
 
       if (token == null || testTransactionId == null) {
         print("Missing required data to fetch test results.");
-        return null;
+        return;
       }
 
       String apiUrl = isPreCourseFlag
@@ -540,19 +535,20 @@ class _TestScreenState extends State<TestScreen> {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> resultData = jsonDecode(response.body);
-
-        // Store the results in secure storage
-        await storage.write(key: "test_results", value: jsonEncode(resultData));
+        print("Test results fetched successfully: $resultData");
+        if (context.mounted) {
+          Navigator.pushReplacementNamed(context, "/result_test_screen",
+              arguments: {
+                'resultData': resultData,
+              });
+        }
         print("Test results fetched and stored successfully.");
-        return resultData;
       } else {
         print(
             "Failed to fetch test results. Status code: ${response.statusCode}");
-        return null;
       }
     } catch (e) {
       print("Error fetching test results: $e");
-      return null;
     }
   }
 
