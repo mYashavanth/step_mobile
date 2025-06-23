@@ -279,7 +279,9 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${isPreCourse ? "PRE COURSE TEST" : "POST COURSE TEST"} • ANATOMY - STEP ${testData['step_no']}',
+                        isPreCourse
+                            ? "PRE COURSE TEST • ${testData["pre_course_test_title"]}"
+                            : "POST COURSE TEST • ${testData["post_course_test_title"]}",
                         style: const TextStyle(
                           color: Color(0xFF247E80),
                           fontSize: 12,

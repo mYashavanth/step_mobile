@@ -34,8 +34,8 @@ import 'package:ghastep/views/urlconfig.dart';
 import 'package:ghastep/views/dry.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
+// import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_analytics/firebase_analytics.dart';
 // import 'package:flutter_microsoft_clarity/flutter_microsoft_clarity.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:ghastep/views/before_enter_exam_screen.dart';
@@ -47,12 +47,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   InAppPurchaseStoreKitPlatform.registerPlatform();
   // FlutterMicrosoftClarity().init(projectId: 'rly2rlgrjp');
-  try {
-    await Firebase.initializeApp();
-    runApp(const MyApp());
-  } catch (e) {
-    print('Firebase initialization error: $e');
-  }
+  // try {
+  //   await Firebase.initializeApp();
+  runApp(const MyApp());
+  // } catch (e) {
+  //   print('Firebase initialization error: $e');
+  // }
 }
 
 class MyApp extends StatefulWidget {
@@ -65,7 +65,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   // String _platformVersion = 'Unknown';
   // final _flutterMicrosoftClarityPlugin = FlutterMicrosoftClarity();
-  final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+  // final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
   // @override
   // void initState() {
@@ -158,7 +158,8 @@ class _MyAppState extends State<MyApp> {
         '/before_enter_exam': (context) => const BeforeEnterExamScreen(),
         '/exam_screen': (context) => const ExamScreen(),
         '/exam_result_screen': (context) => const ExamResultScreen(),
-        '/view_exam_solutions_screen': (context) => const ViewExamSolutionScreen(),
+        '/view_exam_solutions_screen': (context) =>
+            const ViewExamSolutionScreen(),
       },
       initialRoute: '/splash',
     );

@@ -9,6 +9,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:ghastep/widgets/common_widgets.dart';
 import 'package:ghastep/views/dry.dart';
 import 'dart:ui';
+import 'dart:math' as math;
 
 String title = "Exam title name should go here";
 
@@ -1372,17 +1373,28 @@ List<InlineSpan> _buildEditorJsContent(
 
       switch (type) {
         case 'paragraph':
-          if (data['text'] != null && data['text'].toString().isNotEmpty) {
-            // Handle all variations of line breaks
-            String paragraphText = data['text']
-                .replaceAll('<br>', '\n')
-                .replaceAll('<br/>', '\n')
-                .replaceAll('<br />', '\n');
+          if (data['text'] != null) {
+            String paragraphText = data['text'].toString();
 
-            // Process bold tags and split text by newlines
-            spans.addAll(_processTextWithFormatting(paragraphText));
-            // Add spacing after paragraph
-            spans.add(const TextSpan(text: '\n\n'));
+            // Check if the text is empty or only contains whitespace/HTML line breaks
+            bool isEmptyText = paragraphText.trim().isEmpty ||
+                paragraphText
+                    .replaceAll(RegExp(r'<br\s*/?>'), '')
+                    .trim()
+                    .isEmpty;
+
+            if (!isEmptyText) {
+              // Handle all variations of line breaks
+              paragraphText = paragraphText
+                  .replaceAll('<br>', '\n')
+                  .replaceAll('<br/>', '\n')
+                  .replaceAll('<br />', '\n');
+
+              // Process bold tags and split text by newlines
+              spans.addAll(_processTextWithFormatting(paragraphText));
+              // Add spacing after paragraph
+              spans.add(const TextSpan(text: '\n\n'));
+            }
           }
           break;
 
@@ -1544,56 +1556,29 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
 
   if (content.isEmpty) return const SizedBox();
 
-  List<Widget> _splitTextAndImages(String text) {
-    final List<Widget> widgets = [];
-    final parts = text.split(RegExp(r'(\s+)'));
-    for (var part in parts) {
-      if (part.toLowerCase().endsWith('.png') ||
-          part.toLowerCase().endsWith('.jpg') ||
-          part.toLowerCase().endsWith('.jpeg') ||
-          part.toLowerCase().endsWith('.gif')) {
-        widgets.add(
-          Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 4),
-            child: GestureDetector(
-              onTap: () => _showFullScreenImage(context, part),
-              child: Image.network(
-                part,
-                width: 150,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.broken_image, size: 40),
-              ),
-            ),
-          ),
-        );
-      } else if (part.trim().isNotEmpty) {
-        widgets.add(Text(
-          part,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF1A1A1A)),
-        ));
-      }
-    }
-    return widgets;
-  }
-
-  List<Widget> _processTableCellContent(String text) {
-    final List<Widget> widgets = [];
+  Widget _buildTextWithFormatting(String text) {
+    final decodedText = _decodeHtmlEntities(text);
+    final List<InlineSpan> spans = [];
     int currentPos = 0;
     final boldPattern = RegExp(r'<b>(.*?)<\/b>');
-    final matches = boldPattern.allMatches(text);
+    final matches = boldPattern.allMatches(decodedText);
 
     if (matches.isEmpty) {
-      return _splitTextAndImages(text);
+      return Text(
+        decodedText,
+        style: const TextStyle(fontSize: 14, color: Color(0xFF1A1A1A)),
+      );
     } else {
       for (final match in matches) {
         if (match.start > currentPos) {
-          widgets.addAll(
-              _splitTextAndImages(text.substring(currentPos, match.start)));
+          spans.add(TextSpan(
+            text: decodedText.substring(currentPos, match.start),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF1A1A1A)),
+          ));
         }
 
-        final boldText = match.group(1)!;
-        widgets.add(Text(
-          boldText,
+        spans.add(TextSpan(
+          text: match.group(1),
           style: const TextStyle(
             fontSize: 14,
             color: Color(0xFF1A1A1A),
@@ -1604,108 +1589,126 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
         currentPos = match.end;
       }
 
-      if (currentPos < text.length) {
-        widgets.addAll(_splitTextAndImages(text.substring(currentPos)));
+      if (currentPos < decodedText.length) {
+        spans.add(TextSpan(
+          text: decodedText.substring(currentPos),
+          style: const TextStyle(fontSize: 14, color: Color(0xFF1A1A1A)),
+        ));
       }
-    }
 
-    return widgets;
+      return RichText(
+        text: TextSpan(children: spans),
+      );
+    }
   }
 
   Widget buildTableCell(String cellText) {
     final decodedText = _decodeHtmlEntities(cellText);
-    final List<Widget> widgets = [];
-    String remaining = decodedText;
 
-    while (true) {
-      int anchorStart = remaining.indexOf('<a');
-      if (anchorStart == -1) break;
+    if (decodedText.toLowerCase().endsWith('.png') ||
+        decodedText.toLowerCase().endsWith('.jpg') ||
+        decodedText.toLowerCase().endsWith('.jpeg') ||
+        decodedText.toLowerCase().endsWith('.gif')) {
+      return GestureDetector(
+        onTap: () => _showFullScreenImage(context, decodedText),
+        child: Image.network(
+          decodedText,
+          width: 150,
+          errorBuilder: (context, error, stackTrace) =>
+              const Icon(Icons.broken_image, size: 40),
+        ),
+      );
+    }
 
-      if (anchorStart > 0) {
-        widgets.addAll(
-            _processTableCellContent(remaining.substring(0, anchorStart)));
-      }
+    final anchorPattern =
+        RegExp(r'<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>');
+    final anchorMatch = anchorPattern.firstMatch(decodedText);
 
-      int hrefStart = remaining.indexOf('href="', anchorStart);
-      if (hrefStart == -1) break;
-      hrefStart += 6;
-      int hrefEnd = remaining.indexOf('"', hrefStart);
-      if (hrefEnd == -1) break;
-      String url = remaining.substring(hrefStart, hrefEnd);
-
-      int tagClose = remaining.indexOf('>', hrefEnd);
-      int anchorEnd = remaining.indexOf('</a>', tagClose);
-      if (tagClose == -1 || anchorEnd == -1) break;
-      String linkText = remaining.substring(tagClose + 1, anchorEnd);
+    if (anchorMatch != null) {
+      final url = anchorMatch.group(1)!;
+      final linkText =
+          anchorMatch.group(2)!.isNotEmpty ? anchorMatch.group(2)! : url;
 
       if (url.toLowerCase().endsWith('.png') ||
           url.toLowerCase().endsWith('.jpg') ||
           url.toLowerCase().endsWith('.jpeg') ||
           url.toLowerCase().endsWith('.gif')) {
-        widgets.add(
-          Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 4),
-            child: GestureDetector(
-              onTap: () => _showFullScreenImage(context, url),
-              child: Image.network(
-                url,
-                width: 150,
-                errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.broken_image, size: 40),
-              ),
-            ),
+        return GestureDetector(
+          onTap: () => _showFullScreenImage(context, url),
+          child: Image.network(
+            url,
+            width: 150,
+            errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.broken_image, size: 40),
           ),
         );
       } else {
-        widgets.add(
-          InkWell(
-            onTap: () => _showFullScreenImage(context, url),
-            child: Text(
-              linkText.isNotEmpty ? linkText : url,
-              style: const TextStyle(
-                color: Colors.blue,
-                decoration: TextDecoration.underline,
-                fontSize: 14,
-              ),
+        return InkWell(
+          onTap: () => _showFullScreenImage(context, url),
+          child: Text(
+            linkText,
+            style: const TextStyle(
+              color: Colors.blue,
+              decoration: TextDecoration.underline,
+              fontSize: 14,
             ),
           ),
         );
       }
-
-      remaining = remaining.substring(anchorEnd + 4);
     }
 
-    if (remaining.isNotEmpty) {
-      widgets.addAll(_processTableCellContent(remaining));
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: widgets,
-    );
+    return _buildTextWithFormatting(decodedText);
   }
 
   final screenWidth = MediaQuery.of(context).size.width;
   final columnCount = content.isNotEmpty ? content[0].length : 0;
-  final columnWidth = (screenWidth - 32) / columnCount;
+  final maxColumnWidth = screenWidth * 0.6; // 60% of screen width
+  final minColumnWidth = 120.0; // Minimum width for columns
+
+  // Calculate the total content width needed
+  double totalContentWidth = 0;
+  final columnWidths = <int, double>{};
+
+  // First pass: Calculate natural column widths
+  for (int col = 0; col < columnCount; col++) {
+    double maxWidth = minColumnWidth;
+    for (int row = 0; row < content.length; row++) {
+      final cellText = content[row][col];
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text:
+              _decodeHtmlEntities(cellText.replaceAll(RegExp(r'<[^>]*>'), '')),
+          style: const TextStyle(fontSize: 14),
+        ),
+        maxLines: 1,
+        textDirection: TextDirection.ltr,
+      )..layout();
+      maxWidth = math.max(maxWidth, textPainter.width + 16); // Add padding
+    }
+    columnWidths[col] = math.min(maxWidth, maxColumnWidth);
+    totalContentWidth += columnWidths[col]!;
+  }
 
   return ConstrainedBox(
     constraints: BoxConstraints(
       maxWidth: screenWidth,
-      minWidth: stretched ? screenWidth : 0,
+      minWidth:
+          stretched ? screenWidth : math.min(totalContentWidth, screenWidth),
     ),
     child: SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Container(
         constraints: BoxConstraints(
-          minWidth: stretched ? screenWidth : columnCount * columnWidth,
+          minWidth: stretched ? screenWidth : totalContentWidth,
         ),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade300),
           borderRadius: BorderRadius.circular(4),
         ),
         child: Table(
-          defaultColumnWidth: const FixedColumnWidth(120),
+          columnWidths: columnWidths
+              .map((index, width) => MapEntry(index, FixedColumnWidth(width))),
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
           border: TableBorder(
             horizontalInside: BorderSide(color: Colors.grey.shade300),
             verticalInside: BorderSide(color: Colors.grey.shade300),
@@ -1726,6 +1729,8 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
+                      maxLines: 5,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   );
                 }).toList(),
