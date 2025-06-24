@@ -17,15 +17,15 @@ class _ResultScreenTestState extends State<ResultScreenTest> {
   bool _isLoading = true;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
     if (_isLoading) {
       _loadResultData();
     }
   }
 
   Future<void> _loadResultData() async {
-    print("Loading result data...");
+    print("Loading result data...++++++++++++++++++++++++++++++++++++++++++");
     try {
       // Wait for the next frame to ensure context is available
       await Future.delayed(Duration.zero);

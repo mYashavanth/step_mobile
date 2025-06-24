@@ -40,8 +40,12 @@ class _TestScreenState extends State<TestScreen> {
 
   @override
   void dispose() {
-    countdownTimer?.cancel(); // Cancel the timer when the widget is disposed
-    super.dispose();
+    // countdownTimer?.cancel(); // Cancel the timer when the widget is disposed
+    // super.dispose();
+     countdownTimer?.cancel();
+  sharedRemainingTime = null;
+  _pageController.dispose();
+  super.dispose();
   }
 
   Future<void> _initializeTimer() async {
@@ -87,17 +91,6 @@ class _TestScreenState extends State<TestScreen> {
     await _endTest();
     print(
         "+++++++++++++++++++++++++++++++++Timer ended++++++++++++++++++++++++++++++");
-    // try {
-    //   // End the test and fetch the result
-    //   await _endTest();
-    // } catch (e) {
-    //   print("Error handling timer end: $e");
-    //   showCustomSnackBar(
-    //     context: context,
-    //     message: "An error occurred while ending the test.",
-    //     isSuccess: false,
-    //   );
-    // }
   }
 
   String _formatDuration(Duration duration) {
@@ -280,15 +273,14 @@ class _TestScreenState extends State<TestScreen> {
       print(
           "url printing for update answere api +++++++++++ $isPreCourse +++++++++++++++++ $apiUrl");
 
-      print(response.body);
+      // print( "response printing in save response for save and updateing ++++++++++++++++++++++++++++ $response.body");
       print(
           "data printing in save response for save and updateing ++++++++++++++++++++++++++++ ^");
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
         print(data);
-        print(
-            "data printing in save response for save and updateing ++++++++++++++++++++++++++++ ^");
+       
         if (data['errFlag'] == 0) {
           print("Response saved successfully for question $questionId");
         } else {
@@ -454,6 +446,7 @@ class _TestScreenState extends State<TestScreen> {
   List<int> selectedReviewoption = [0];
 
   Future<void> _endTest() async {
+      countdownTimer?.cancel();
     try {
       String? token = await storage.read(key: "token");
       String? testTransactionId = isPreCourse
