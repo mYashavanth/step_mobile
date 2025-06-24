@@ -1,6 +1,12 @@
 import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
+import 'package:ghastep/services/iap_payment_screen.dart';
+import 'package:ghastep/services/phonepe_payment_screen.dart';
 import "package:ghastep/widgets/homepage_widgets.dart";
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:ghastep/views/urlconfig.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SubscribePage extends StatefulWidget {
   const SubscribePage({super.key});
@@ -17,6 +23,66 @@ class _SubscribePage extends State<SubscribePage> {
     {"name": "FMGE ( December - 2025 )", "id": 2},
   ];
   List<int> selectedCourse = [1];
+  // List courses = [];
+  Map coursePricing = {};
+  bool isLoading = false;
+  final storage = const FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    fetchCoursePricing();
+  }
+
+  Future<void> fetchCoursePricing() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      String token = await storage.read(key: 'token') ?? '';
+      String selectedCourseId =
+          await storage.read(key: 'selectedCourseId') ?? '1';
+      final response = await http.get(
+        Uri.parse(
+            '$baseurl/app/get-app-course-pricing/$selectedCourseId/$token'),
+      );
+      print(
+          "url: ${'$baseurl/app/get-app-course-pricing/$selectedCourseId/$token'}");
+      print("response: ${response.body}");
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        if (data["errFlag"] == 1) {
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(content: Text('Error: ${data["message"]}')),
+          // );
+          print("Error fetching course pricing: ${data["message"]}");
+          setState(() {
+            coursePricing = {};
+          });
+        } else {
+          print("Course pricing fetched successfully: $data");
+          setState(() {
+            coursePricing = data;
+          });
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Error fetching course pricing: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,7 +110,9 @@ class _SubscribePage extends State<SubscribePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         InkWell(
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
                             child: const Icon(Icons.arrow_back_ios_new)),
                         const SizedBox(
                           height: 12,
@@ -77,8 +145,24 @@ class _SubscribePage extends State<SubscribePage> {
                 ),
               ),
             ),
-            buildSubscribeNeetcard(),
-            buildSubscribeFmgecard(),
+            coursePricing.isEmpty
+                ? const Center(
+                    child: Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12.0, vertical: 24),
+                      child: Text(
+                        "No course available",
+                        style: TextStyle(
+                          color: Color(0xFF247E80),
+                          fontSize: 16,
+                          fontFamily: 'SF Pro Display',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  )
+                : buildSubscribeNeetcard(coursePricing: coursePricing),
+            // buildSubscribeFmgecard(),
           ],
         ),
       ),
@@ -232,7 +316,8 @@ class _SubscribePage extends State<SubscribePage> {
   }
 }
 
-Widget buildSubscribeNeetcard() {
+Widget buildSubscribeNeetcard({required Map coursePricing}) {
+  print("coursePricing: $coursePricing");
   return Container(
     margin: const EdgeInsets.all(12),
     // height: 204,
@@ -255,14 +340,14 @@ Widget buildSubscribeNeetcard() {
             // mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
                       Text(
-                        'NEET-PG (2025)',
-                        style: TextStyle(
+                        coursePricing['course_name'],
+                        style: const TextStyle(
                           color: Color(0xFF003E40),
                           fontSize: 20,
                           fontFamily: 'SF Pro Display',
@@ -272,49 +357,99 @@ Widget buildSubscribeNeetcard() {
                       ),
                     ],
                   ),
-                  Text(
-                    '@ ₹1000/year',
-                    style: TextStyle(
-                      color: Color(0xCC003F40),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w500,
-                      height: 1.57,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        '₹${coursePricing['actual_price_inr']}/year',
+                        style: const TextStyle(
+                          color: Color(0xCC003F40),
+                          fontSize: 14,
+                          fontFamily: 'SF Pro Display',
+                          fontWeight: FontWeight.w500,
+                          height: 1.57,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '@ ₹${coursePricing['selling_price_inr']}/year',
+                        style: const TextStyle(
+                          color: Color(0xFF003E40),
+                          fontSize: 14,
+                          fontFamily: 'SF Pro Display',
+                          fontWeight: FontWeight.w700,
+                          height: 1.57,
+                        ),
+                      ),
+                    ],
                   )
                 ],
               ),
               const Spacer(),
-              Container(
-                // height: 33,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: ShapeDecoration(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(width: 1, color: Color(0xFF289799)),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  shadows: const [
-                    BoxShadow(
-                      color: Color(0x19000000),
-                      blurRadius: 25,
-                      offset: Offset(0, 4),
-                      spreadRadius: 0,
-                    )
-                  ],
-                ),
-                child: const Center(
-                  child: Text(
-                    'Get course',
-                    style: TextStyle(
-                      color: Color(0xFF247E80),
-                      fontSize: 14,
-                      fontFamily: 'SF Pro Display',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
+              Builder(
+                builder: (context) {
+                  if (Theme.of(context).platform == TargetPlatform.android) {
+                    return ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PhonePePaymentScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF247E80),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          side: const BorderSide(
+                              width: 1, color: Color(0xFF289799)),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          fontFamily: 'SF Pro Display',
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      child: const Text('Buy Now'),
+                    );
+                  } else if (Theme.of(context).platform == TargetPlatform.iOS) {
+                    return ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const IAPPage(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF247E80),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          side: const BorderSide(
+                              width: 1, color: Color(0xFF289799)),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          fontFamily: 'SF Pro Display',
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      child: const Text('Buy Now'),
+                    );
+                  } else {
+                    return Container(); // fallback for other platforms
+                  }
+                },
               ),
             ],
           ),
@@ -330,10 +465,11 @@ Widget buildSubscribeNeetcard() {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    buildRow("Structured courses & PDF’s for NEET", true),
-                    buildRow("Daily video lessons", true),
-                    buildRow("Daily tests and weekly exams", true),
-                    buildRow("Content curated & prepared by doctors", true),
+                    for (final desc
+                        in (coursePricing['price_description'] as String)
+                            .split(',')
+                            .map((e) => e.trim()))
+                      buildRow(desc, true),
                   ],
                 ),
               ),

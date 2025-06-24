@@ -13,28 +13,44 @@ class ResultScreenTest extends StatefulWidget {
 
 class _ResultScreenTestState extends State<ResultScreenTest> {
   final storage = const FlutterSecureStorage();
-  Map<String, dynamic>? resultData; // To store the result data
+  Map<String, dynamic>? resultData;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadResultData(); // Load result data from storage
+    if (_isLoading) {
+      _loadResultData();
+    }
   }
 
   Future<void> _loadResultData() async {
+    print("Loading result data...++++++++++++++++++++++++++++++++++++++++++");
     try {
-      // Retrieve the result data from storage
-      String? resultJson = await storage.read(key: "test_results");
+      // Wait for the next frame to ensure context is available
+      await Future.delayed(Duration.zero);
 
-      if (resultJson != null) {
-        setState(() {
-          resultData = jsonDecode(resultJson); // Parse the JSON data
-        });
-      } else {
-        print("No result data found in storage.");
+      final args = ModalRoute.of(context)?.settings.arguments;
+      print("Arguments received: $args");
+
+      if (args != null && args is Map<String, dynamic>) {
+        if (args['resultData'] != null) {
+          setState(() {
+            resultData = args['resultData'] as Map<String, dynamic>;
+            _isLoading = false;
+          });
+          return;
+        }
       }
+      print("No valid result data found in arguments.");
+      setState(() {
+        _isLoading = false;
+      });
     } catch (e) {
       print("Error loading result data: $e");
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -44,8 +60,9 @@ class _ResultScreenTestState extends State<ResultScreenTest> {
       canPop: false,
       onPopInvoked: (bool didPop) async {
         if (didPop) return;
-        // Perform any action when the back button is pressed
-        Navigator.pushReplacementNamed(context, '/home_page');
+        // Remove all previous pages and navigate to home_page
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil('/home_page', (route) => false);
       },
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -54,7 +71,8 @@ class _ResultScreenTestState extends State<ResultScreenTest> {
           backgroundColor: Colors.white,
           leading: IconButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.of(context)
+                  .pushNamedAndRemoveUntil('/home_page', (route) => false);
             },
             icon: const Icon(Icons.arrow_back_ios_new_outlined),
           ),

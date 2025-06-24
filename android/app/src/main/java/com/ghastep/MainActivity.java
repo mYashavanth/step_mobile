@@ -2,9 +2,9 @@ package com.ghastep;
 
 import android.os.Bundle;
 import android.view.WindowManager;
-import io.flutter.embedding.android.FlutterActivity;
+import io.flutter.embedding.android.FlutterFragmentActivity;
 
-public class MainActivity extends FlutterActivity {
+public class MainActivity extends FlutterFragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

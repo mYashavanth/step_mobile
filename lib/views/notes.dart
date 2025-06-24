@@ -120,30 +120,22 @@ Widget bannerNotes(BuildContext context) {
                   ),
                 ),
                 SizedBox(height: verticalSpacing),
-                SizedBox(
-                  width: screenWidth * 0.6,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Handle button press
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFE860A),
-                      padding: EdgeInsets.symmetric(
-                        vertical: verticalSpacing * 0.8,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(borderRadius),
-                      ),
-                    ),
-                    child: const Text(
-                      'Enroll Now @ ₹1000',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w500,
-                        height: 1.50,
-                      ),
+                ElevatedButton(
+                  onPressed: () {
+                    // Handle button press
+                    Navigator.pushNamed(context, "/subscribe");
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFE860A),
+                  ),
+                  child: const Text(
+                    'Enroll Now',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w500,
+                      height: 1.50,
                     ),
                   ),
                 ),

@@ -170,6 +170,11 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
 
           // Navigate to the test screen and pass the transaction ID
           Navigator.pushNamed(context, "/test_screen");
+        } else if (data['errFlag'] == 1) {
+          // {errFlag: 1, message: Cannot Start Again, Pre Course Test Already Started, pre_course_test_transaction_id: 189}
+          _endTest(isPreCourse
+              ? data['pre_course_test_transaction_id']
+              : data['post_course_test_transaction_id']);
         } else {
           print("Error starting test: $data");
           showCustomSnackBar(
@@ -200,6 +205,56 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
     }
   }
 
+  Future<void> _endTest(testTransactionId) async {
+    try {
+      String? token = await storage.read(key: "token");
+
+      if (token == null || testTransactionId == null) {
+        print("Missing required data to end the test.");
+        return;
+      }
+
+      // Determine the API endpoint based on isPreCourse flag
+      String apiUrl = isPreCourse
+          ? "$baseurl/app/end-pre-course-test/$token/$testTransactionId"
+          : "$baseurl/app/end-post-course-test/$token/$testTransactionId";
+
+      print("API URL: $apiUrl");
+
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['errFlag'] == 0) {
+          print("Test ended successfully: $data");
+          _startTest();
+        } else {
+          print("Error ending test: ${data['message']}");
+          showCustomSnackBar(
+            context: context,
+            message: data['message'],
+            isSuccess: false,
+          );
+        }
+      } else {
+        print("Failed to end test. Status code: ${response.statusCode}");
+        showCustomSnackBar(
+          context: context,
+          message: "Please try again.",
+          isSuccess: false,
+        );
+      }
+    } catch (e) {
+      print("Error ending test: $e");
+      showCustomSnackBar(
+        context: context,
+        message: "An error occurred: $e",
+        isSuccess: false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -224,7 +279,9 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${isPreCourse ? "PRE COURSE TEST" : "POST COURSE TEST"} • ANATOMY - STEP ${testData['step_no']}',
+                        isPreCourse
+                            ? "PRE COURSE TEST • ${testData["pre_course_test_title"]}"
+                            : "POST COURSE TEST • ${testData["post_course_test_title"]}",
                         style: const TextStyle(
                           color: Color(0xFF247E80),
                           fontSize: 12,
