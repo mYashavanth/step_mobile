@@ -410,7 +410,8 @@ class _TestScreenState extends State<TestScreen> {
     setState(() {
       selectedOptions[questionIndex] = optionIndex;
     });
-
+    print(
+        "Selected option for question $questionIndex: $optionIndex"); // Debugging line
     // Save the response to API
     _saveResponse(questionIndex, optionIndex);
   }
