@@ -504,8 +504,8 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                       const SizedBox(
                         height: 12,
                       ),
-                      listViewWithDot(
-                          "Tie-breaking criteria include the number of correct responses and candidate age."),
+                      // listViewWithDot(
+                      //     "Tie-breaking criteria include the number of correct responses and candidate age."),
                       const SizedBox(
                         height: 20,
                       ),

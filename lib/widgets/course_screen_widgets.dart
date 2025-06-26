@@ -16,6 +16,10 @@ import 'package:ghastep/views/urlconfig.dart';
 import 'package:http/http.dart' as http; // Add this import
 import 'package:ghastep/widgets/full_screen_video_player.dart';
 
+import 'dart:typed_data';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+
 Widget buildSubjectTestCard(
     BuildContext context, String courseId, String subjectId) {
   return InkWell(
@@ -198,59 +202,27 @@ Widget buildTabBarCourse(
                   ),
                   Visibility(
                     visible: stepTabSelectedIndex[0] == 2,
-                    child: Column(
-                      children: [
-                        NotesListWidget(
-                            courseId: courseId, subjectId: subjectId),
-                        const SizedBox(height: 28),
-                        InkWell(
-                          borderRadius: BorderRadius.circular(24),
-                          onTap: () {},
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: ShapeDecoration(
-                              shape: RoundedRectangleBorder(
-                                side: const BorderSide(
-                                  width: 1,
-                                  color: Color(0xFF247E80),
-                                ),
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.lock,
-                                  color: Color(0xFF247E80),
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Enroll for ₹1000 to unlock',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Color(0xFF247E80),
-                                    fontSize: 16,
-                                    fontFamily: 'SF Pro Display',
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.50,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 0, vertical: 12),
+                      child: Column(
+                        children: [
+                          NotesListWidget(
+                              courseId: courseId, subjectId: subjectId),
+                          const SizedBox(height: 28),
+                        ],
+                      ),
                     ),
                   ),
-Visibility(
-  visible: stepTabSelectedIndex[0] == 3,
-  child: ExamContent(
-    key: ValueKey('exam_content_${subjectId}_tab_${stepTabSelectedIndex[0]}'), // Unique key
-    videos: filteredVideos,
-    subjectId: subjectId,
-  ),
-),
+                  Visibility(
+                    visible: stepTabSelectedIndex[0] == 3,
+                    child: ExamContent(
+                      key: ValueKey(
+                          'exam_content_${subjectId}_tab_${stepTabSelectedIndex[0]}'), // Unique key
+                      videos: filteredVideos,
+                      subjectId: subjectId,
+                    ),
+                  ),
                 ],
               )
             : Column(
@@ -264,49 +236,16 @@ Visibility(
                   ),
                   Visibility(
                     visible: stepTabSelectedIndex[0] == totalNumberOfSteps,
-                    child: Column(
-                      children: [
-                        NotesListWidget(
-                            courseId: courseId, subjectId: subjectId),
-                        const SizedBox(height: 28),
-                        InkWell(
-                          borderRadius: BorderRadius.circular(24),
-                          onTap: () {},
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: ShapeDecoration(
-                              shape: RoundedRectangleBorder(
-                                side: const BorderSide(
-                                  width: 1,
-                                  color: Color(0xFF247E80),
-                                ),
-                                borderRadius: BorderRadius.circular(24),
-                              ),
-                            ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.lock,
-                                  color: Color(0xFF247E80),
-                                ),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Enroll for ₹1000 to unlock',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Color(0xFF247E80),
-                                    fontSize: 16,
-                                    fontFamily: 'SF Pro Display',
-                                    fontWeight: FontWeight.w500,
-                                    height: 1.50,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 0, vertical: 12),
+                      child: Column(
+                        children: [
+                          NotesListWidget(
+                              courseId: courseId, subjectId: subjectId),
+                          const SizedBox(height: 28),
+                        ],
+                      ),
                     ),
                   ),
                   Visibility(
@@ -613,7 +552,8 @@ Widget preCourseCard(bool pending, BuildContext context, bool isPreCourse) {
   );
 }
 
-Widget examCard(bool pending, BuildContext context, bool isPreCourse, String subjectId) {
+Widget examCard(
+    bool pending, BuildContext context, bool isPreCourse, String subjectId) {
   return InkWell(
     borderRadius: BorderRadius.circular(8),
     onTap: () async {
@@ -1040,13 +980,24 @@ class NoteItem extends StatefulWidget {
 
 class _NoteItemState extends State<NoteItem> {
   bool isDownloading = false;
-  bool isDownloaded = false;
-  String? localFilePath;
+  bool isReadyToView = false;
+  Uint8List? pdfBytes;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.locked) {
+      downloadNote();
+    }
+  }
 
   Future<void> downloadNote() async {
+    if (isReadyToView) return; // Already downloaded
+
     setState(() {
       isDownloading = true;
     });
+
     try {
       final storage = FlutterSecureStorage();
       String? token = await storage.read(key: "token");
@@ -1057,23 +1008,22 @@ class _NoteItemState extends State<NoteItem> {
         });
         return;
       }
+
       String apiUrl =
           "$baseurl/mobile/notes/get-download-url/${widget.noteId}/$token";
       final response = await http.get(Uri.parse(apiUrl));
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['errFlag'] == 0) {
           String downloadUrl = data['downloadUrl'];
           final fileResponse = await http.get(Uri.parse(downloadUrl));
+
           if (fileResponse.statusCode == 200) {
-            final directory = await getTemporaryDirectory();
-            final filePath = '${directory.path}/${widget.documentUrl}';
-            final file = File(filePath);
-            await file.writeAsBytes(fileResponse.bodyBytes);
             setState(() {
-              isDownloaded = true;
+              pdfBytes = fileResponse.bodyBytes;
+              isReadyToView = true;
               isDownloading = false;
-              localFilePath = filePath;
             });
           } else {
             print("Failed to download file: ${fileResponse.statusCode}");
@@ -1101,70 +1051,114 @@ class _NoteItemState extends State<NoteItem> {
     }
   }
 
-  Future<void> openNote() async {
-    if (localFilePath != null) {
-      await OpenFile.open(localFilePath!);
+  void openNote() {
+    if (isReadyToView && pdfBytes != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => Scaffold(
+            appBar: AppBar(
+              title: Text(widget.docName),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            body: SfPdfViewer.memory(
+              pdfBytes!,
+              enableDocumentLinkAnnotation: false,
+              canShowScrollHead: false,
+              canShowScrollStatus: false,
+              enableTextSelection: false,
+            ),
+          ),
+        ),
+      );
+    } else if (!isDownloading) {
+      downloadNote(); // Try to download if not ready and not already downloading
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.all(8),
-      decoration: ShapeDecoration(
-        color: const Color(0xFFF9FAFB),
-        shape: RoundedRectangleBorder(
-          side: const BorderSide(width: 1, color: Color(0xFFDDDDDD)),
-          borderRadius: BorderRadius.circular(8),
+    return InkWell(
+      onTap: widget.locked ? null : openNote,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.all(8),
+        decoration: ShapeDecoration(
+          color: const Color(0xFFF9FAFB),
+          shape: RoundedRectangleBorder(
+            side: const BorderSide(width: 1, color: Color(0xFFDDDDDD)),
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 40,
-          height: 40,
-          padding: const EdgeInsets.all(10),
-          decoration: ShapeDecoration(
-            color: const Color(0xFFEAEAEA),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(50),
+        child: Row(
+          children: [
+            // Leading icon
+            Container(
+              width: 40,
+              height: 40,
+              padding: const EdgeInsets.all(10),
+              decoration: ShapeDecoration(
+                color: const Color(0xFFEAEAEA),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(50),
+                ),
+              ),
+              child: SvgPicture.asset("assets/icons/${widget.icon}"),
             ),
-          ),
-          child: SvgPicture.asset("assets/icons/${widget.icon}"),
+            const SizedBox(width: 12),
+            // Title and subtitle
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.docName,
+                    style: const TextStyle(
+                      color: Color(0xFF1A1A1A),
+                      fontSize: 16,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w400,
+                      height: 1.50,
+                    ),
+                  ),
+                  Text(
+                    '${widget.page} pages',
+                    style: const TextStyle(
+                      color: Color(0xFF737373),
+                      fontSize: 12,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w400,
+                      height: 1.67,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Trailing icon
+            if (widget.locked)
+              const Icon(Icons.lock, color: Color(0xFF1A1A1A), size: 24)
+            else if (isDownloading)
+              const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else if (isReadyToView)
+              const Icon(Icons.visibility, color: Color(0xFF1A1A1A), size: 24)
+            else
+              IconButton(
+                icon: const Icon(Icons.download),
+                onPressed: downloadNote,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+          ],
         ),
-        title: Text(
-          widget.docName,
-          style: const TextStyle(
-            color: Color(0xFF1A1A1A),
-            fontSize: 16,
-            fontFamily: 'SF Pro Display',
-            fontWeight: FontWeight.w400,
-            height: 1.50,
-          ),
-        ),
-        subtitle: Text(
-          '${widget.page} pages',
-          style: const TextStyle(
-            color: Color(0xFF737373),
-            fontSize: 12,
-            fontFamily: 'SF Pro Display',
-            fontWeight: FontWeight.w400,
-            height: 1.67,
-          ),
-        ),
-        trailing: widget.locked
-            ? const Icon(Icons.lock, color: Color(0xFF1A1A1A), size: 24)
-            : isDownloading
-                ? const CircularProgressIndicator()
-                : isDownloaded
-                    ? IconButton(
-                        icon: const Icon(Icons.visibility),
-                        onPressed: openNote,
-                      )
-                    : IconButton(
-                        icon: const Icon(Icons.download),
-                        onPressed: downloadNote,
-                      ),
       ),
     );
   }
