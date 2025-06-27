@@ -272,67 +272,42 @@ void _showFullScreenImage(BuildContext context, String imageUrl) {
 
 // Updated option rendering widget with explicit logic
 Widget examSolAnswerCard(
-    bool selected, bool correct, String optionText, int index) {
+    bool isSelected, bool isCorrect, String optionText, int index, BuildContext context) {
   String optionPrefix = String.fromCharCode(97 + index); // a, b, c...
 
-  Color cardColor = Colors.white;
-  Color borderColor = const Color(0xFFDDDDDD);
-  Color prefixColor = Colors.white;
-  Color prefixTextColor = Colors.black;
+  // Determine colors based on selection state
+  Color cardColor = isSelected ? const Color(0x1A31B5B9) : Colors.white;
+  Color borderColor = isSelected ? const Color(0xFF31B5B9) : const Color(0xFFDDDDDD);
+  Color prefixColor = isSelected ? const Color(0xFF31B5B9) : const Color(0xFF737373);
+  Color prefixTextColor = Colors.white;
+
   Widget? statusLabel;
 
-  // Case 1: The user selected the correct answer.
-  if (selected && correct) {
-    cardColor = const Color(0x1A34C759); // Light green
-    borderColor = const Color(0xFF34C759); // Green
-    prefixColor = const Color(0xFF34C759);
-    prefixTextColor = Colors.white;
+  // Determine status labels based on correctness
+  if (isCorrect) {
     statusLabel = const Text(
-      'CORRECT',
+      'CORRECT ANSWER',
       style: TextStyle(
-        color: Color(0xFF34C759),
+        color: Color(0xFF34C759), // Green
+        fontSize: 14,
+        fontFamily: 'SF Pro Display',
+        fontWeight: FontWeight.w500,
+      ),
+    );
+  } else if (isSelected && !isCorrect) {
+    statusLabel = const Text(
+      'INCORRECT ANSWER',
+      style: TextStyle(
+        color: Color(0xFFFF3B30), // Red
         fontSize: 14,
         fontFamily: 'SF Pro Display',
         fontWeight: FontWeight.w500,
       ),
     );
   }
-  // Case 2: The user selected an incorrect answer.
-  else if (selected && !correct) {
-    cardColor = const Color(0x1AFF3B30); // Light red
-    borderColor = const Color(0xFFFF3B30); // Red
-    prefixColor = const Color(0xFFFF3B30);
-    prefixTextColor = Colors.white;
-    statusLabel = const Text(
-      'INCORRECT',
-      style: TextStyle(
-        color: Color(0xFFFF3B30),
-        fontSize: 14,
-        fontFamily: 'SF Pro Display',
-        fontWeight: FontWeight.w500,
-      ),
-    );
-  }
-  // Case 3: This is the correct answer, but the user didn't select it.
-  else if (!selected && correct) {
-    cardColor = const Color(0x1A34C759); // Light green
-    borderColor = const Color(0xFF34C759); // Green
-    prefixColor = const Color(0xFF34C759);
-    prefixTextColor = Colors.white;
-    statusLabel = const Text(
-      'Correct Answer',
-      style: TextStyle(
-        color: Color(0xFF34C759),
-        fontSize: 14,
-        fontFamily: 'SF Pro Display',
-        fontWeight: FontWeight.w500,
-      ),
-    );
-  }
-  // Case 4: An unselected, incorrect option (uses default styling).
 
   return Container(
-    padding: const EdgeInsets.all(8),
+    padding: const EdgeInsets.all(12),
     margin: const EdgeInsets.only(top: 6, bottom: 6),
     decoration: ShapeDecoration(
       color: cardColor,
@@ -340,40 +315,24 @@ Widget examSolAnswerCard(
         side: BorderSide(width: 1, color: borderColor),
         borderRadius: BorderRadius.circular(8),
       ),
-      shadows: const [
-        BoxShadow(
-          color: Color(0x0C000000),
-          blurRadius: 20,
-          offset: Offset(0, 4),
-          spreadRadius: 0,
-        )
-      ],
     ),
     child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          height: 40,
-          width: 40,
+          width: 24,
+          height: 24,
           decoration: ShapeDecoration(
             color: prefixColor,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(50),
-              side: BorderSide(
-                  width: 1,
-                  color: (correct || selected)
-                      ? Colors.transparent
-                      : const Color(0xFFDDDDDD)),
-            ),
+            shape: const OvalBorder(),
           ),
           child: Center(
             child: Text(
-              "$optionPrefix.",
+              optionPrefix.toUpperCase(),
               style: TextStyle(
                 color: prefixTextColor,
-                fontSize: 16,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w400,
-                height: 1.50,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -383,21 +342,22 @@ Widget examSolAnswerCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                optionText,
-                style: const TextStyle(
-                  color: Color(0xFF1A1A1A),
-                  fontSize: 16,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w400,
-                  height: 1.50,
+              RichText(
+                text: TextSpan(
+                  children: _buildQuestionContent(optionText, context),
+                  style: const TextStyle(
+                    color: Color(0xFF1A1A1A),
+                    fontSize: 16,
+                    fontFamily: 'SF Pro Display',
+                    fontWeight: FontWeight.w400,
+                    height: 1.50,
+                  ),
                 ),
               ),
-              if (statusLabel != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 2.0),
-                  child: statusLabel,
-                ),
+              if (statusLabel != null) ...[
+                const SizedBox(height: 8),
+                statusLabel,
+              ],
             ],
           ),
         ),
@@ -409,10 +369,10 @@ Widget examSolAnswerCard(
 Widget buildExamQuestionAnsSol(Map<String, dynamic> data, BuildContext context) {
   final options = (data['options'] as List?)?.cast<Map<String, dynamic>>() ?? [];
   
-  // Convert IDs to strings to ensure type-safe comparison.
-  final userSelectedOptionId = data['user_selected_option_id']?.toString();
+  // Using the correct key from the logs: 'selected_exam_option_id'
+  final userSelectedOptionId = data['selected_exam_option_id']?.toString();
   final correctOptionId = data['correct_option_id']?.toString();
-print("Question ${data['question_no']}: userSelectedOptionId=$userSelectedOptionId, correctOptionId=$correctOptionId, options=${options.map((o) => o['exam_option_id'])}");
+
   return Container(
     color: Colors.white,
     margin: const EdgeInsets.only(bottom: 12),
@@ -420,84 +380,51 @@ print("Question ${data['question_no']}: userSelectedOptionId=$userSelectedOption
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Question ${data["question_no"]}',
-          style: const TextStyle(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Question ${data['question_no']}',
+              style: const TextStyle(
+                color: Color(0xFF1A1A1A),
+                fontSize: 16,
+                fontFamily: 'SF Pro Display',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        RichText(
+          text: TextSpan(
+            children: _buildQuestionContent(data['question'], context),
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...List.generate(options.length, (i) {
+          final option = options[i];
+          final optionId = option['exam_option_id']?.toString();
+          final bool isSelected = userSelectedOptionId == optionId;
+          final bool isCorrect = correctOptionId == optionId;
+          return examSolAnswerCard(
+              isSelected, isCorrect, option['option_text'], i, context);
+        }),
+        const SizedBox(height: 12),
+        const Text(
+          'Solution',
+          style: TextStyle(
             color: Color(0xFF1A1A1A),
             fontSize: 16,
             fontFamily: 'SF Pro Display',
-            fontWeight: FontWeight.w500,
-            height: 1.50,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 8),
-        if (data["marks_for_question"] != null)
-          Text(
-            '${data["marks_for_question"]} MARKS',
-            style: TextStyle(
-              color: int.parse(data["marks_for_question"].toString()) <= 0
-                  ? const Color(0xFFFF3B30)
-                  : const Color(0xFF34C759),
-              fontSize: 14,
-              fontFamily: 'SF Pro Display',
-              fontWeight: FontWeight.w400,
-              height: 1.57,
-            ),
-          ),
         const SizedBox(height: 8),
         RichText(
           text: TextSpan(
-            children: _buildQuestionContent(data['question'] ?? '', context),
+            children: _buildQuestionContent(data['solution_text'], context),
           ),
         ),
-        const SizedBox(height: 8),
-        ...List.generate(options.length, (i) {
-          final option = options[i];
-          // Also convert the option's ID to a string for a safe comparison.
-          final optionId = option['exam_option_id']?.toString();
-
-          // Perform a null-safe and type-safe comparison.
-          final isSelected = userSelectedOptionId != null && optionId == userSelectedOptionId;
-          final isCorrect = correctOptionId != null && optionId == correctOptionId;
-          
-          return examSolAnswerCard(isSelected, isCorrect, option['option_text'] ?? '', i);
-        }),
-        if (data['solution_text'] != null &&
-            data['solution_text'].toString().isNotEmpty)
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.only(top: 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEBFFF6),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: const Color(0xFF34C759),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Solution',
-                  style: TextStyle(
-                    color: Color(0xFF34C759),
-                    fontSize: 16,
-                    fontFamily: 'SF Pro Display',
-                    fontWeight: FontWeight.w700,
-                    height: 1.50,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                RichText(
-                  text: TextSpan(
-                    children: _buildQuestionContent(data['solution_text'] ?? '', context),
-                  ),
-                ),
-              ],
-            ),
-          ),
       ],
     ),
   );

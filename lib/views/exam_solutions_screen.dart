@@ -20,10 +20,24 @@ class _ViewExamSolutionScreenState extends State<ViewExamSolutionScreen> {
     if (args != null && args.containsKey('solutionData')) {
       final rawSolutionData = args['solutionData'] as List<dynamic>;
 
+      // --- DEBUGGING: Print the raw data to the console ---
+      // This will help us see the structure of the data and why the filter is failing.
+      // Please check your debug console for this output.
+      debugPrint('--- Raw Solution Data for Exam ---');
+      for (var item in rawSolutionData) {
+        debugPrint(item.toString());
+      }
+      debugPrint('----------------------------------');
+
+      // Using the correct key 'selected_exam_option_id' to filter for answered questions.
+      final answeredSolutions = rawSolutionData.where((item) {
+        return item is Map<String, dynamic> && item['selected_exam_option_id'] != null;
+      }).toList();
+
       // De-duplicate the list based on 'exam_question_id' to prevent repeats
       final uniqueSolutions = <Map<String, dynamic>>[];
       final seenIds = <dynamic>{}; // Use a Set for efficient lookup
-      for (var item in rawSolutionData) {
+      for (var item in answeredSolutions) { // Now using the filtered list of answered questions
         final questionId = item['exam_question_id'];
         if (questionId != null && seenIds.add(questionId)) {
           uniqueSolutions.add(item as Map<String, dynamic>);

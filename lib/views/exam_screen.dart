@@ -139,27 +139,23 @@ class _ExamScreenState extends State<ExamScreen> {
   Future<void> _fetchQuestion(int questionNo) async {
     if (questionNo > totalQuestions || examId == null) {
       print("Cannot fetch question: questionNo $questionNo > totalQuestions $totalQuestions or examId is null");
-      if (questionNo > totalQuestions && totalQuestions > 0) {
-          setState(() {
-              isLoading = false;
-              // Potentially show a message or allow submission if all questions are loaded
-          });
-      }
       return;
     }
 
     // Check if question already fetched
     if (questions.any((q) => q['question_no'] == questionNo)) {
         print("Question $questionNo already fetched.");
-        setState(() { isLoading = false; });
         return;
     }
 
-
-    setState(() {
-      isLoading = true;
-      errorMessage = null;
-    });
+    // Only set isLoading for the very first fetch. For subsequent fetches,
+    // the PageView remains visible, showing a loader for the specific page.
+    if (questions.isEmpty) {
+      setState(() {
+        isLoading = true;
+        errorMessage = null;
+      });
+    }
 
     try {
       String? token = await storage.read(key: "token");
@@ -217,6 +213,7 @@ class _ExamScreenState extends State<ExamScreen> {
 
 
           setState(() {
+            // This ensures the main loading indicator is turned off after the first question is loaded.
             isLoading = false;
           });
         } else {
@@ -369,18 +366,9 @@ class _ExamScreenState extends State<ExamScreen> {
     _saveResponse(questionIndexInPage, optionIndexInWidget);
   }
 
-  void nextPage() {
-    if (currentPage < totalQuestions - 1) {
-      setState(() {
-        currentPage++;
-      });
-      _pageController.nextPage(
-          duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-      if (currentPage >= questions.length) { // Fetch if not already loaded
-        _fetchQuestion(currentPage + 1);
-      }
-    } else {
-      // Last question, offer to submit
+  void nextPage() async {
+    // If on the last question, show the submit confirmation dialog.
+    if (currentPage == totalQuestions - 1) {
       final attemptedQuestions = selectedOptions.where((o) => o != null).length;
       submitExamDialog(
         context,
@@ -388,17 +376,29 @@ class _ExamScreenState extends State<ExamScreen> {
         totalQuestions,
         attemptedQuestions,
       );
+      return;
+    }
+
+    // If not on the last question, proceed to the next one.
+    if (currentPage < totalQuestions - 1) {
+      // Pre-fetch the next question's data before animating.
+      await _fetchQuestion(currentPage + 2);
+
+      if (mounted) {
+        // Animate to the next page. onPageChanged will update the state.
+        _pageController.nextPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
     }
   }
 
   void previousPage() {
     if (currentPage > 0) {
-      setState(() {
-        currentPage--;
-      });
+      // Animate to the previous page. onPageChanged will update the state.
       _pageController.previousPage(
           duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-      // Questions should already be loaded if going back
     }
   }
 
@@ -605,13 +605,10 @@ class _ExamScreenState extends State<ExamScreen> {
                     itemCount: totalQuestions > 0 ? totalQuestions : 1, // Show at least 1 page for error message if no questions
                     physics: const NeverScrollableScrollPhysics(),
                     onPageChanged: (index) {
-                      // This is not strictly needed due to NeverScrollableScrollPhysics
-                      // but good for consistency if physics change.
-                      if (mounted) {
-                        setState(() {
-                          currentPage = index;
-                        });
-                      }
+                      // This callback is the single source of truth for the current page.
+                      setState(() {
+                        currentPage = index;
+                      });
                     },
                     itemBuilder: (context, index) {
                       if (totalQuestions == 0 && errorMessage != null) {
