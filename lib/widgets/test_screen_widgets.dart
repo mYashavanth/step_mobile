@@ -1498,7 +1498,18 @@ List<InlineSpan> _processTextWithFormatting(String text,
 
     if (matches.isEmpty) {
       if (line.isNotEmpty) {
-        spans.add(TextSpan(text: line, style: baseTextStyle));
+        if (line.contains('<b>') || line.contains('</b>')) {
+          // If the line contains bold tags but no matches, treat it as bold text
+          spans.add(TextSpan(
+            text: line.replaceAll(RegExp(r'<b>|<\/b>'), ''),
+            style: baseTextStyle.copyWith(fontWeight: FontWeight.bold),
+          ));
+        } else {
+          spans.add(TextSpan(
+            text: line,
+            style: baseTextStyle,
+          ));
+        }
       }
     } else {
       for (final match in matches) {
