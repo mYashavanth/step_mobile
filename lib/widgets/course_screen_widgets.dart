@@ -90,22 +90,21 @@ Widget buildTabBarCourse(
   print("videoData in widget page: $videoData");
   print("course and subject ids: $courseId, $subjectId");
   // Filter videos based on selected step
-
   final filteredVideos = videoData.isEmpty
       ? []
       : videoData
           .where((video) => video['step_no'] == stepTabSelectedIndex[0] + 1)
           .toList();
-  List<String> stepTabCourse = !paymentStatus.isValid
-      ? ['Step 1', "Step 2", "Notes", "Subject test"]
-      : List.generate(
-          totalNumberOfSteps + 2,
-          (index) => index < totalNumberOfSteps
-              ? 'Step ${index + 1}'
-              : index == totalNumberOfSteps
-                  ? 'Notes'
-                  : 'Subject Test',
-        );
+
+  List<String> stepTabCourse = List.generate(
+    totalNumberOfSteps + 2,
+    (index) => index < totalNumberOfSteps
+        ? 'Step ${index + 1}'
+        : index == totalNumberOfSteps
+            ? 'Notes'
+            : 'Subject Test',
+  );
+
   return Column(
     mainAxisSize: MainAxisSize.min,
     children: [
@@ -119,49 +118,105 @@ Widget buildTabBarCourse(
       ),
       Container(
         padding: const EdgeInsets.only(left: 12, right: 12),
-        child: !paymentStatus.isValid
-            ? Column(
-                children: [
-                  Visibility(
-                    visible: stepTabSelectedIndex[0] == 0,
-                    child: StepContent(videos: filteredVideos),
-                  ),
-                  Visibility(
-                    visible: stepTabSelectedIndex[0] == 1,
-                    child: SizedBox(
+        child: Column(
+          children: [
+            // Show all steps tabs but control access based on payment status
+            ...List.generate(
+              totalNumberOfSteps,
+              (i) => Visibility(
+                visible: stepTabSelectedIndex[0] == i,
+                child: !paymentStatus.isValid && i > 0
+                    ? SizedBox(
+                        height: 200,
+                        child: Center(
+                          child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                    "Please subscribe to access this step"),
+                                const SizedBox(height: 20),
+                                InkWell(
+                                  borderRadius: BorderRadius.circular(24),
+                                  onTap: () {
+                                    Navigator.pushNamed(context, "/subscribe");
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.5,
+                                    decoration: ShapeDecoration(
+                                      shape: RoundedRectangleBorder(
+                                        side: const BorderSide(
+                                          width: 1,
+                                          color: Color(0xFF247E80),
+                                        ),
+                                        borderRadius: BorderRadius.circular(24),
+                                      ),
+                                    ),
+                                    child: const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.lock,
+                                          color: Color(0xFF247E80),
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          'Subscribe Now',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            color: Color(0xFF247E80),
+                                            fontSize: 16,
+                                            fontFamily: 'SF Pro Display',
+                                            fontWeight: FontWeight.w500,
+                                            height: 1.50,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ]),
+                        ),
+                      )
+                    : StepContent(videos: filteredVideos),
+              ),
+            ),
+            // Notes tab
+            Visibility(
+              visible: stepTabSelectedIndex[0] == totalNumberOfSteps,
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
+                child: Column(
+                  children: [
+                    NotesListWidget(courseId: courseId, subjectId: subjectId),
+                    const SizedBox(height: 28),
+                  ],
+                ),
+              ),
+            ),
+            // Subject Test tab
+            Visibility(
+              visible: stepTabSelectedIndex[0] == totalNumberOfSteps + 1,
+              child: !paymentStatus.isValid
+                  ? SizedBox(
                       height: 200,
                       child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text("Please subscribe to our paid plan"),
+                            const Text(
+                                "Please subscribe to access subject test"),
                             const SizedBox(height: 20),
                             InkWell(
                               borderRadius: BorderRadius.circular(24),
                               onTap: () {
-                                // if (Theme.of(context).platform ==
-                                //     TargetPlatform.android) {
-                                //   Navigator.push(
-                                //     context,
-                                //     MaterialPageRoute(
-                                //       builder: (context) =>
-                                //           const PhonePePaymentScreen(),
-                                //     ),
-                                //   );
-                                // } else if (Theme.of(context).platform ==
-                                //     TargetPlatform.iOS) {
-                                //   Navigator.push(
-                                //     context,
-                                //     MaterialPageRoute(
-                                //       builder: (context) => const IAPPage(),
-                                //     ),
-                                //   );
-                                // }
                                 Navigator.pushNamed(context, "/subscribe");
                               },
                               child: Container(
                                 padding: const EdgeInsets.all(8),
-                                // Adjust the width to 50% of the screen width
                                 width: MediaQuery.of(context).size.width * 0.5,
                                 decoration: ShapeDecoration(
                                   shape: RoundedRectangleBorder(
@@ -198,67 +253,16 @@ Widget buildTabBarCourse(
                           ],
                         ),
                       ),
-                    ),
-                  ),
-                  Visibility(
-                    visible: stepTabSelectedIndex[0] == 2,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 0, vertical: 12),
-                      child: Column(
-                        children: [
-                          NotesListWidget(
-                              courseId: courseId, subjectId: subjectId),
-                          const SizedBox(height: 28),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Visibility(
-                    visible: stepTabSelectedIndex[0] == 3,
-                    child: ExamContent(
+                    )
+                  : ExamContent(
                       key: ValueKey(
-                          'exam_content_${subjectId}_tab_${stepTabSelectedIndex[0]}'), // Unique key
+                          'exam_content_${subjectId}_tab_${stepTabSelectedIndex[0]}'),
                       videos: filteredVideos,
                       subjectId: subjectId,
                     ),
-                  ),
-                ],
-              )
-            : Column(
-                children: [
-                  ...List.generate(
-                    totalNumberOfSteps,
-                    (i) => Visibility(
-                      visible: stepTabSelectedIndex[0] == i,
-                      child: StepContent(videos: filteredVideos),
-                    ),
-                  ),
-                  Visibility(
-                    visible: stepTabSelectedIndex[0] == totalNumberOfSteps,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 0, vertical: 12),
-                      child: Column(
-                        children: [
-                          NotesListWidget(
-                              courseId: courseId, subjectId: subjectId),
-                          const SizedBox(height: 28),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Visibility(
-                    visible: stepTabSelectedIndex[0] == totalNumberOfSteps + 1,
-                    child: const SizedBox(
-                      height: 200,
-                      child: Center(
-                        child: Text("Subject Test Content"),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            ),
+          ],
+        ),
       ),
     ],
   );
