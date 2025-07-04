@@ -985,18 +985,37 @@ class NoteItem extends StatefulWidget {
 class _NoteItemState extends State<NoteItem> {
   bool isDownloading = false;
   bool isReadyToView = false;
-  Uint8List? pdfBytes;
+  File? pdfFile;
+  String? filePath;
 
   @override
   void initState() {
     super.initState();
     if (!widget.locked) {
-      downloadNote();
+      _checkIfNoteExistsLocally();
+    }
+  }
+
+  Future<void> _checkIfNoteExistsLocally() async {
+    try {
+      // Get app-specific documents directory
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/notes/note_${widget.noteId}.pdf');
+
+      if (await file.exists()) {
+        setState(() {
+          pdfFile = file;
+          filePath = file.path;
+          isReadyToView = true;
+        });
+      }
+    } catch (e) {
+      print("Error checking local note: $e");
     }
   }
 
   Future<void> downloadNote() async {
-    if (isReadyToView) return; // Already downloaded
+    if (isReadyToView) return;
 
     setState(() {
       isDownloading = true;
@@ -1024,8 +1043,19 @@ class _NoteItemState extends State<NoteItem> {
           final fileResponse = await http.get(Uri.parse(downloadUrl));
 
           if (fileResponse.statusCode == 200) {
+            // Save to secure location
+            final directory = await getApplicationDocumentsDirectory();
+            final notesDir = Directory('${directory.path}/notes');
+            if (!await notesDir.exists()) {
+              await notesDir.create(recursive: true);
+            }
+
+            final file = File('${notesDir.path}/note_${widget.noteId}.pdf');
+            await file.writeAsBytes(fileResponse.bodyBytes, flush: true);
+
             setState(() {
-              pdfBytes = fileResponse.bodyBytes;
+              pdfFile = file;
+              filePath = file.path;
               isReadyToView = true;
               isDownloading = false;
             });
@@ -1056,34 +1086,70 @@ class _NoteItemState extends State<NoteItem> {
   }
 
   void openNote() {
-    if (isReadyToView && pdfBytes != null) {
+    if (isReadyToView && pdfFile != null) {
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => Scaffold(
             appBar: AppBar(
               title: Text(widget.docName),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
+            ),
+            body: Column(
+              children: [
+                // Page indicator
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  color: Colors.grey[200],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ValueListenableBuilder<int>(
+                        valueListenable: _currentPageNotifier,
+                        builder: (context, page, _) {
+                          return Text(
+                            'Page ${page + 1} of ${_totalPages ?? '?'}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: SfPdfViewer.file(
+                    pdfFile!,
+                    controller: _pdfViewerController,
+                    enableDocumentLinkAnnotation: false,
+                    canShowScrollHead: false,
+                    canShowScrollStatus: false,
+                    enableTextSelection:
+                        false, // Still preventing text selection
+                    // interactionEnabled: true, // Allow navigation
+                    onPageChanged: (PdfPageChangedDetails details) {
+                      _currentPageNotifier.value = details.newPageNumber;
+                    },
+                    onDocumentLoaded: (PdfDocumentLoadedDetails details) {
+                      _totalPages = details.document.pages.count;
+                      _currentPageNotifier.value = 0;
+                    },
+                  ),
                 ),
               ],
-            ),
-            body: SfPdfViewer.memory(
-              pdfBytes!,
-              enableDocumentLinkAnnotation: false,
-              canShowScrollHead: false,
-              canShowScrollStatus: false,
-              enableTextSelection: false,
             ),
           ),
         ),
       );
     } else if (!isDownloading) {
-      downloadNote(); // Try to download if not ready and not already downloading
+      downloadNote();
     }
   }
+
+// Add these class variables to your _NoteItemState
+  final PdfViewerController _pdfViewerController = PdfViewerController();
+  final ValueNotifier<int> _currentPageNotifier = ValueNotifier<int>(0);
+  int? _totalPages;
 
   @override
   Widget build(BuildContext context) {
@@ -1101,7 +1167,6 @@ class _NoteItemState extends State<NoteItem> {
         ),
         child: Row(
           children: [
-            // Leading icon
             Container(
               width: 40,
               height: 40,
@@ -1115,7 +1180,6 @@ class _NoteItemState extends State<NoteItem> {
               child: SvgPicture.asset("assets/icons/${widget.icon}"),
             ),
             const SizedBox(width: 12),
-            // Title and subtitle
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1143,7 +1207,6 @@ class _NoteItemState extends State<NoteItem> {
                 ],
               ),
             ),
-            // Trailing icon
             if (widget.locked)
               const Icon(Icons.lock, color: Color(0xFF1A1A1A), size: 24)
             else if (isDownloading)

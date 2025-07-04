@@ -112,7 +112,7 @@ class _CourseScreenState extends State<CourseScreen>
 
           setState(() {
             courseStepDetails = courseStepDetailsData;
-            totalNumberOfSteps = data['totalStepCount'] ?? 60;
+            totalNumberOfSteps = data['totalStepCount'] ?? 0;
           });
 
           // Fetch video data after getting courseStepDetailId
