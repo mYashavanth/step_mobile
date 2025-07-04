@@ -29,7 +29,7 @@ class _CourseScreenState extends State<CourseScreen>
   final paymentValidator = PaymentValidation();
   SubscriptionStatus paymentStatus = SubscriptionStatus.valid(
       message: 'Subscription active', validTill: 'N/A');
-  var totalNumberOfSteps = 60; // Track total number of steps
+  var totalNumberOfSteps = 0; // Track total number of steps
 
   List<int> stepTabSelectedIndex = [0];
   List<Map> selectStepList = [
@@ -70,7 +70,7 @@ class _CourseScreenState extends State<CourseScreen>
 
   Future<void> _loadSelectedStep() async {
     String? stepId = await storage.read(key: "selectedStepNo");
-    if (stepId == null) {
+    if (stepId != null && int.parse(stepId) > 1) {
       await storage.write(key: "selectedStepNo", value: "1");
       stepId = "1";
     }
@@ -427,13 +427,21 @@ class _CourseScreenState extends State<CourseScreen>
                     chooseStepList[0] = newStepId;
                     stepTabSelectedIndex[0] = newStepId - 1;
                   });
-                  storage.write(
-                    key: "selectedStepNo",
-                    value: newStepId.toString(),
-                  );
-                  // Fetch new video data for the new step
-                  // fetchVideoData();
-                  fetchCourseStepDetails();
+                  if (newStepId <= totalNumberOfSteps) {
+                    storage.write(
+                      key: "selectedStepNo",
+                      value: newStepId.toString(),
+                    );
+                    // Fetch new video data for the new step
+                    // fetchVideoData();
+                    fetchCourseStepDetails();
+                  } else {
+                    print("Selected step ID exceeds total number of steps.");
+                    storage.write(
+                      key: "selectedStepNo",
+                      value: "1",
+                    );
+                  }
                 },
                 courseId, // e.g., 3
                 subjectId, // e.g., 3

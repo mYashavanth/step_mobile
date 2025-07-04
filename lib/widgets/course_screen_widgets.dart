@@ -289,10 +289,10 @@ Widget buildStepTabButton(
               stepTabSelectedIndex[0] = i;
               chooseStepList[0] = i + 1;
             });
-            storage.write(
-              key: "selectedStepNo",
-              value: (i + 1).toString(),
-            );
+            // storage.write(
+            //   key: "selectedStepNo",
+            //   value: (i + 1).toString(),
+            // );
             onStepChanged(i + 1);
 
             // if (i == 1 || i == 2 || i == 4) {
