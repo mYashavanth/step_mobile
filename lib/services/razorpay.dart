@@ -5,8 +5,6 @@ import 'package:ghastep/widgets/pyment_validation.dart';
 import 'package:http/http.dart' as http;
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../views/urlconfig.dart';
-import 'package:facebook_app_events/facebook_app_events.dart'; // Add this import
-import '../main.dart'; // Import to access global facebookAppEvents instance
 
 class RazorPayScreen extends StatefulWidget {
   const RazorPayScreen({super.key});
@@ -135,13 +133,8 @@ class _RazorPayScreenState extends State<RazorPayScreen> {
       if (backendResponse.statusCode == 200) {
         final responseData = json.decode(backendResponse.body);
         if (responseData['errFlag'] == '0') {
-          // Track Facebook payment success event
-          await _trackPaymentSuccess(
-            paymentMethod: 'Razorpay',
-            transactionId: response.paymentId ?? 'razorpay_${DateTime.now().millisecondsSinceEpoch}',
-          );
-
           setState(() {
+            // _isPremiumUser = true;
             isPaymentSuccess = true;
             isPaymentFailed = false;
             _result = "Payment successful!";
@@ -254,91 +247,6 @@ class _RazorPayScreenState extends State<RazorPayScreen> {
       });
     } finally {
       setState(() => _isLoading = false);
-    }
-  }
-
-  // Add this new method for tracking payment success
-  Future<void> _trackPaymentSuccess({
-    required String paymentMethod,
-    required String transactionId,
-  }) async {
-    try {
-      // Get user data from storage
-      String? userData = await storage.read(key: 'user_data');
-      String? mobile = await storage.read(key: 'mobile');
-
-      Map<String, dynamic> userInfo = {};
-      if (userData != null) {
-        try {
-          userInfo = json.decode(userData);
-        } catch (e) {
-          print('Error parsing user data: $e');
-        }
-      }
-
-      // Track payment success event
-      await facebookAppEvents.logEvent(
-        name: 'PaymentSuccess',
-        parameters: {
-          'email': userInfo['email'] ?? '',
-          'name': userInfo['name'] ?? '',
-          'mobile': mobile ?? '',
-          'city': userInfo['city'] ?? 'Unknown',
-          'country': 'IN',
-          'college': userInfo['college'] ?? '',
-          'course_name': courseData['course_name'] ?? '',
-          'actual_price': courseData['actual_price_inr']?.toString() ?? '',
-          'selling_price': courseData['selling_price_inr']?.toString() ?? '',
-          'currency': 'INR',
-          'payment_method': paymentMethod,
-          'transaction_id': transactionId,
-          'platform': 'Android',
-          'purchase_type': 'razorpay_payment',
-          'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
-        },
-      );
-
-      print('PaymentSuccess event tracked successfully');
-    } catch (e) {
-      print('Facebook PaymentSuccess tracking error: $e');
-    }
-  }
-
-  // Add this method for tracking payment initiation
-  Future<void> _trackPaymentInitiated() async {
-    try {
-      String? userData = await storage.read(key: 'user_data');
-      String? mobile = await storage.read(key: 'mobile');
-
-      Map<String, dynamic> userInfo = {};
-      if (userData != null) {
-        try {
-          userInfo = json.decode(userData);
-        } catch (e) {
-          print('Error parsing user data: $e');
-        }
-      }
-
-      await facebookAppEvents.logEvent(
-        name: 'InitiateCheckout',
-        parameters: {
-          'email': userInfo['email'] ?? '',
-          'name': userInfo['name'] ?? '',
-          'mobile': mobile ?? '',
-          'city': userInfo['city'] ?? 'Unknown',
-          'country': 'IN',
-          'college': userInfo['college'] ?? '',
-          'course_name': courseData['course_name'] ?? '',
-          'selling_price': courseData['selling_price_inr']?.toString() ?? '',
-          'currency': 'INR',
-          'payment_method': 'Razorpay',
-          'platform': 'Android',
-        },
-      );
-
-      print('InitiateCheckout event tracked successfully');
-    } catch (e) {
-      print('Facebook InitiateCheckout tracking error: $e');
     }
   }
 

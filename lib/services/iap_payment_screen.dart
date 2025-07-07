@@ -4,8 +4,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../views/urlconfig.dart';
 import 'iap_service.dart';
-import 'package:facebook_app_events/facebook_app_events.dart'; // Add this import
-import '../main.dart'; // Import to access global facebookAppEvents instance
 
 class IAPPage extends StatefulWidget {
   const IAPPage({super.key});
@@ -127,72 +125,18 @@ class _IAPPageState extends State<IAPPage> {
     }
   }
 
-  // Add this new method for tracking payment success
-  Future<void> _trackPaymentSuccess({
-    required String paymentMethod,
-    required String transactionId,
-  }) async {
-    try {
-      // Get user data from storage
-      String? userData = await storage.read(key: 'user_data');
-      String? mobile = await storage.read(key: 'mobile');
-
-      Map<String, dynamic> userInfo = {};
-      if (userData != null) {
-        try {
-          userInfo = json.decode(userData);
-        } catch (e) {
-          print('Error parsing user data: $e');
-        }
-      }
-
-      // Track payment success event
-      await facebookAppEvents.logEvent(
-        name: 'PaymentSuccess',
-        parameters: {
-          'email': userInfo['email'] ?? '',
-          'name': userInfo['name'] ?? '',
-          'mobile': mobile ?? '',
-          'city': userInfo['city'] ?? 'Unknown',
-          'country': 'IN',
-          'college': userInfo['college'] ?? '',
-          'course_name': courseData['course_name'] ?? '',
-          'actual_price': courseData['actual_price_inr']?.toString() ?? '',
-          'selling_price': courseData['selling_price_inr']?.toString() ?? '',
-          'currency': 'INR',
-          'payment_method': paymentMethod,
-          'transaction_id': transactionId,
-          'platform': 'iOS',
-          'purchase_type': 'in_app_purchase',
-          'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
-        },
-      );
-
-      print('PaymentSuccess event tracked successfully');
-    } catch (e) {
-      print('Facebook PaymentSuccess tracking error: $e');
-    }
-  }
-
   void _onBuyPressed() async {
     setState(() => _isLoading = true);
     final purchaseResult = await iapService.buyProduct();
     if (purchaseResult == true) {
       // You should get the Apple transaction ID from your IAPService
-      final appleTxnId = ''; // Update this if your IAPService returns a transactionId
-      
+      final appleTxnId =
+          ''; // Update this if your IAPService returns a transactionId
       await _updateBackendWithPaymentStatus(
         appleTxnId: appleTxnId,
         paymentStatus: 1,
         appPurchaseId: courseData['app_purchase_id'],
       );
-
-      // Track Facebook payment success event
-      await _trackPaymentSuccess(
-        paymentMethod: 'Apple In-App Purchase',
-        transactionId: appleTxnId.isNotEmpty ? appleTxnId : 'apple_${DateTime.now().millisecondsSinceEpoch}',
-      );
-
       setState(() {
         _isPremiumUser = true;
         isPaymentSuccess = true;

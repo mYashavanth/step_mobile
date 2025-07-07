@@ -42,23 +42,9 @@ import 'package:ghastep/views/before_enter_exam_screen.dart';
 import 'package:ghastep/views/exam_result_screen.dart';
 import 'package:ghastep/views/exam_screen.dart';
 import 'package:ghastep/views/exam_solutions_screen.dart';
-import 'package:facebook_app_events/facebook_app_events.dart';
-
-final facebookAppEvents = FacebookAppEvents();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Stronger Facebook initialization
-  try {
-    await facebookAppEvents.setAdvertiserTracking(enabled: true);
-    await facebookAppEvents.clearUserData();
-    await facebookAppEvents.logEvent(name: 'app_launch');
-    print('Facebook SDK initialized successfully');
-  } catch (e) {
-    print('Facebook SDK initialization error: $e');
-  }
-
   InAppPurchaseStoreKitPlatform.registerPlatform();
   // FlutterMicrosoftClarity().init(projectId: 'rly2rlgrjp');
   // try {
