@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import 'package:ghastep/services/iap_payment_screen.dart';
 import 'package:ghastep/services/phonepe_payment_screen.dart';
+import 'package:ghastep/services/razorpay.dart';
 import "package:ghastep/widgets/homepage_widgets.dart";
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ghastep/views/urlconfig.dart';
@@ -396,7 +397,8 @@ Widget buildSubscribeNeetcard({required Map coursePricing}) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const PhonePePaymentScreen(),
+                            // builder: (context) => const PhonePePaymentScreen(),
+                            builder: (context) => const RazorPayScreen(),
                           ),
                         );
                       },
