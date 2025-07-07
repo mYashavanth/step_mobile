@@ -100,12 +100,28 @@ class _IAPPageState extends State<IAPPage> {
         final responseData = json.decode(response.body);
         if (responseData['errFlag'] == '0') {
           // Success
+          setState(() {
+            _isPremiumUser = true;
+            isPaymentSuccess = true;
+            isPaymentFailed = false;
+            _result = "Purchase success!";
+          });
         } else {
           // Handle backend error
+          setState(() {
+            isPaymentFailed = true;
+            isPaymentSuccess = false;
+            _result = "Backend error: ${responseData['errMsg']}";
+          });
         }
       }
     } catch (e) {
       // Handle error
+      setState(() {
+        isPaymentFailed = true;
+        isPaymentSuccess = false;
+        _result = "Error updating backend: ${e.toString()}";
+      });
     }
   }
 
