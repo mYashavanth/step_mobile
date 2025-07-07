@@ -294,8 +294,7 @@ class _TestScreenState extends State<TestScreen> {
     }
   }
 
-  Future<void> submitReview(
-      List<int> selectedOptions, String additionalFeedback) async {
+  Future<void> submitReview() async {
     try {
       // Ensure the current question is loaded
       if (currentPage >= questions.length) {
@@ -342,7 +341,7 @@ class _TestScreenState extends State<TestScreen> {
       }
 
       // Prepare the feedback type (using the first selected option)
-      int feedbackType = selectedOptions.isNotEmpty ? selectedOptions[0] : 0;
+      // int feedbackType = selectedOptions.isNotEmpty ? selectedOptions[0] : 0;
 
       // Construct the API URL
       final apiUrl = isPreCourse
@@ -355,7 +354,7 @@ class _TestScreenState extends State<TestScreen> {
       final response = await http.get(apiUrl);
       print("course-test- transaction id: $CourseTestTransactionId");
       print("question id: $questionId");
-      print("feedback type: $feedbackType");
+      // print("feedback type: $feedbackType");
       print(response.body);
       print("data printing in submit review ++++++++++++++++++++++++++++ ^");
 
@@ -590,27 +589,29 @@ class _TestScreenState extends State<TestScreen> {
           ),
           InkWell(
             onTap: () {
-              showModalBottomSheet(
-                isScrollControlled: true,
-                context: context,
-                backgroundColor: Colors.transparent,
-                builder: (context) {
-                  return StatefulBuilder(
-                    builder: (BuildContext context, StateSetter modalSetState) {
-                      return buidQuestionReviewBottomSheet(
-                        modalSetState,
-                        feedbackReviewData,
-                        selectedReviewoption,
-                        "Select your Course",
-                        context,
-                        onSubmitReview: (selectedOptions, additionalFeedback) {
-                          submitReview(selectedOptions, additionalFeedback);
-                        }, // Pass the required callback here
-                      );
-                    },
-                  );
-                },
-              );
+              submitReview();
+              //its for feedback bottom sheet here the below code 
+              // showModalBottomSheet(
+              //   isScrollControlled: true,
+              //   context: context,
+              //   backgroundColor: Colors.transparent,
+              //   builder: (context) {
+              //     return StatefulBuilder(
+              //       builder: (BuildContext context, StateSetter modalSetState) {
+              //         return buidQuestionReviewBottomSheet(
+              //           modalSetState,
+              //           feedbackReviewData,
+              //           selectedReviewoption,
+              //           "Select your Course",
+              //           context,
+              //           onSubmitReview: (selectedOptions, additionalFeedback) {
+              //             submitReview(selectedOptions, );
+              //           }, // Pass the required callback here
+              //         );
+              //       },
+              //     );
+              //   },
+              // );
             },
             child: Container(
               height: 40,
