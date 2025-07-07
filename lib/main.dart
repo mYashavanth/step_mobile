@@ -194,8 +194,30 @@ class _SplashState extends State<Splash> {
         final data = json.decode(response.body);
         print('Response data: $data');
         if (data['errFlag'] == 0 && data['message'] == 'Valid Token') {
-          // Token is valid, navigate to home
-          Navigator.pushReplacementNamed(context, '/home_page');
+          // Token is valid, now check user fields in secure storage
+          final userEmail = await _secureStorage.read(key: 'userEmail');
+          final userName = await _secureStorage.read(key: 'userName');
+          final college = await _secureStorage.read(key: 'college');
+          final selectedCourseId =
+              await _secureStorage.read(key: 'selectedCourseId');
+          final isGraduatedStr = await _secureStorage.read(key: 'isGraduated');
+          final isUgStr = await _secureStorage.read(key: 'isUg');
+          final yearOfGraduation =
+              await _secureStorage.read(key: 'yearOfGraduation') ?? '';
+          // Parse graduation/ug values safely
+          final isGraduated = int.tryParse(isGraduatedStr ?? '0') ?? 0;
+          final isUg = int.tryParse(isUgStr ?? '0') ?? 0;
+
+          if (userEmail == null || userName == null || college == null) {
+            Navigator.pushReplacementNamed(context, "/details_form");
+          } else if (selectedCourseId == null || selectedCourseId.isEmpty) {
+            Navigator.pushReplacementNamed(context, "/select_course");
+          } else if ((isGraduated == 0 && isUg == 0) ||
+              (isGraduated == 1 && (yearOfGraduation.isEmpty))) {
+            Navigator.pushReplacementNamed(context, "/select_course");
+          } else {
+            Navigator.pushReplacementNamed(context, "/home_page");
+          }
         } else {
           // Token is invalid, navigate to intro
           _navigateToIntro();
