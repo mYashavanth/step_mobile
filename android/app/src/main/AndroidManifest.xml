@@ -38,6 +38,20 @@ package="com.ghastep">
         <meta-data android:name="com.phonepe.android.sdk.MerchantId" android:value="PGTESTPAYUAT"/> 
         <meta-data android:name="com.phonepe.android.sdk.AppId" android:value="appId"/> -->
 
+    <!-- Facebook SDK setup -->
+    <meta-data
+    android:name="com.facebook.sdk.ApplicationId"
+    android:value="@string/facebook_app_id" />
+
+    <meta-data
+    android:name="com.facebook.sdk.ClientToken"
+    android:value="@string/facebook_client_token" />
+
+    <provider
+    android:authorities="com.facebook.app.FacebookContentProvider1475628807189925"
+    android:name="com.facebook.FacebookContentProvider"
+    android:exported="true" />
+
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
