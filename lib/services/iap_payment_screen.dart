@@ -4,6 +4,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../views/urlconfig.dart';
 import 'iap_service.dart';
+import 'package:facebook_app_events/facebook_app_events.dart'; // Add this import
+import '../main.dart'; // Import to access global facebookAppEvents instance
 
 class IAPPage extends StatefulWidget {
   const IAPPage({super.key});
@@ -15,6 +17,16 @@ class IAPPage extends StatefulWidget {
 class _IAPPageState extends State<IAPPage> {
   final IAPService iapService = IAPService();
   final FlutterSecureStorage storage = const FlutterSecureStorage();
+
+  // Updated color theme to match application (0xFF247E80)
+  static const Color primaryColor = Color(0xFF247E80); // Teal/Green
+  static const Color accentColor = Color(0xFF34B7B9); // Lighter teal
+  static const Color successColor = Color(0xFF4CAF50);
+  static const Color errorColor = Color(0xFFF44336);
+  static const Color textColor = Color(0xFF333333);
+  static const Color lightGrey = Color(0xFFF5F5F5);
+  static const Color darkPrimary =
+      Color(0xFF1A5E5F); // Darker shade for contrast
 
   bool _isPremiumUser = false;
   bool _isLoading = false;
@@ -90,12 +102,75 @@ class _IAPPageState extends State<IAPPage> {
         final responseData = json.decode(response.body);
         if (responseData['errFlag'] == '0') {
           // Success
+          setState(() {
+            _isPremiumUser = true;
+            isPaymentSuccess = true;
+            isPaymentFailed = false;
+            _result = "Purchase success!";
+          });
         } else {
           // Handle backend error
+          setState(() {
+            isPaymentFailed = true;
+            isPaymentSuccess = false;
+            _result = "Backend error: ${responseData['errMsg']}";
+          });
         }
       }
     } catch (e) {
       // Handle error
+      setState(() {
+        isPaymentFailed = true;
+        isPaymentSuccess = false;
+        _result = "Error updating backend: ${e.toString()}";
+      });
+    }
+  }
+
+  // Add this new method for tracking payment success
+  Future<void> _trackPaymentSuccess({
+    required String paymentMethod,
+    required String transactionId,
+  }) async {
+    try {
+      // Get user data from storage
+      String? userData = await storage.read(key: 'user_data');
+      String? mobile = await storage.read(key: 'mobile');
+
+      Map<String, dynamic> userInfo = {};
+      if (userData != null) {
+        try {
+          userInfo = json.decode(userData);
+        } catch (e) {
+          print('Error parsing user data: $e');
+        }
+      }
+
+      // Track payment success event
+      await facebookAppEvents.logEvent(
+        name: 'PaymentSuccess',
+        parameters: {
+          'email': userInfo['email'] ?? '',
+          'name': userInfo['name'] ?? '',
+          'mobile': mobile ?? '',
+          'city': userInfo['city'] ?? 'Unknown',
+          'country': 'IN',
+          'college': userInfo['college'] ?? '',
+          'course_name': courseData['course_name'] ?? '',
+          'actual_price': courseData['actual_price_inr']?.toString() ?? '',
+          'selling_price': courseData['selling_price_inr']?.toString() ?? '',
+          'currency': 'INR',
+          'payment_method': paymentMethod,
+          'transaction_id': transactionId,
+          'platform': 'iOS',
+          'purchase_type': 'in_app_purchase',
+          'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
+        },
+      );
+
+      print('PaymentSuccess event tracked successfully');
+    } catch (e) {
+      print('Facebook PaymentSuccess tracking error: $e');
     }
   }
 
@@ -104,13 +179,20 @@ class _IAPPageState extends State<IAPPage> {
     final purchaseResult = await iapService.buyProduct();
     if (purchaseResult == true) {
       // You should get the Apple transaction ID from your IAPService
-      final appleTxnId =
-          ''; // Update this if your IAPService returns a transactionId
+      final appleTxnId = ''; // Update this if your IAPService returns a transactionId
+      
       await _updateBackendWithPaymentStatus(
         appleTxnId: appleTxnId,
         paymentStatus: 1,
         appPurchaseId: courseData['app_purchase_id'],
       );
+
+      // Track Facebook payment success event
+      await _trackPaymentSuccess(
+        paymentMethod: 'Apple In-App Purchase',
+        transactionId: appleTxnId.isNotEmpty ? appleTxnId : 'apple_${DateTime.now().millisecondsSinceEpoch}',
+      );
+
       setState(() {
         _isPremiumUser = true;
         isPaymentSuccess = true;
@@ -163,7 +245,7 @@ class _IAPPageState extends State<IAPPage> {
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: Colors.green,
+            color: successColor,
           ),
         ),
         const SizedBox(height: 10),
@@ -178,8 +260,11 @@ class _IAPPageState extends State<IAPPage> {
             Navigator.pushNamed(context, '/home_page');
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF007AFF),
+            backgroundColor: primaryColor,
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
           child: const Text(
             'Start Learning',
@@ -210,7 +295,7 @@ class _IAPPageState extends State<IAPPage> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.red,
+              color: errorColor,
             ),
           ),
           const SizedBox(height: 10),
@@ -223,8 +308,11 @@ class _IAPPageState extends State<IAPPage> {
           ElevatedButton(
             onPressed: _onBuyPressed,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF007AFF),
+              backgroundColor: primaryColor,
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text(
               'Try Again',
@@ -256,7 +344,7 @@ class _IAPPageState extends State<IAPPage> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF007AFF),
+              color: primaryColor,
             ),
           ),
           const SizedBox(height: 10),
@@ -271,8 +359,11 @@ class _IAPPageState extends State<IAPPage> {
               Navigator.pushNamed(context, '/home_page');
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF007AFF),
+              backgroundColor: primaryColor,
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text(
               'Continue Learning',
@@ -298,6 +389,7 @@ class _IAPPageState extends State<IAPPage> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+            color: Colors.white,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -308,6 +400,7 @@ class _IAPPageState extends State<IAPPage> {
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -331,6 +424,7 @@ class _IAPPageState extends State<IAPPage> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
+                          color: textColor,
                         ),
                       ),
                       Column(
@@ -351,7 +445,7 @@ class _IAPPageState extends State<IAPPage> {
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF007AFF),
+                              color: primaryColor,
                             ),
                           ),
                         ],
@@ -366,7 +460,11 @@ class _IAPPageState extends State<IAPPage> {
         ],
         const Text(
           'Payment Method',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: textColor,
+          ),
         ),
         const SizedBox(height: 10),
         Card(
@@ -374,18 +472,23 @@ class _IAPPageState extends State<IAPPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          color: Colors.white,
           child: const Padding(
             padding: EdgeInsets.all(16),
             child: Row(
               children: [
-                Icon(Icons.apple, color: Color(0xFF007AFF), size: 30),
+                Icon(Icons.apple, color: primaryColor, size: 30),
                 SizedBox(width: 16),
                 Text(
                   'Apple In-App Purchase',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: textColor,
+                  ),
                 ),
                 Spacer(),
-                Icon(Icons.radio_button_checked, color: Color(0xFF007AFF)),
+                Icon(Icons.radio_button_checked, color: primaryColor),
               ],
             ),
           ),
@@ -397,9 +500,9 @@ class _IAPPageState extends State<IAPPage> {
             style: TextStyle(
               fontSize: 16,
               color: _result.contains("success")
-                  ? Colors.green
+                  ? successColor
                   : _result.contains("Error") || _result.contains("failed")
-                      ? Colors.red
+                      ? errorColor
                       : Colors.grey[700],
             ),
           ),
@@ -412,13 +515,23 @@ class _IAPPageState extends State<IAPPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(title: const Text('In-App Purchase'), centerTitle: true),
+      backgroundColor: lightGrey,
+      appBar: AppBar(
+        title: const Text('In-App Purchase'),
+        centerTitle: true,
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(
+                  child: CircularProgressIndicator(
+                    color: primaryColor,
+                  ),
+                )
               : isAlreadyPurchased
                   ? _buildAlreadyPurchasedUI()
                   : isPaymentSuccess
@@ -437,12 +550,14 @@ class _IAPPageState extends State<IAPPage> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _onBuyPressed,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF007AFF),
+                        backgroundColor: primaryColor,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         minimumSize: const Size(double.infinity, 50),
+                        elevation: 3,
+                        shadowColor: darkPrimary.withOpacity(0.3),
                       ),
                       child: _isLoading
                           ? const SizedBox(
@@ -470,7 +585,7 @@ class _IAPPageState extends State<IAPPage> {
             onPressed: _isLoading ? null : _onRestorePressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey[300],
-              foregroundColor: Color(0xFF007AFF),
+              foregroundColor: primaryColor,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),

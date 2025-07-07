@@ -69,6 +69,9 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.1.1"))
     implementation("com.google.firebase:firebase-analytics-ktx")
     
+    // Add Facebook SDK dependency
+    implementation("com.facebook.android:facebook-android-sdk:16.0.1")
+    
     // Optionally add other Firebase services:
     // implementation("com.google.firebase:firebase-auth-ktx")
     // implementation("com.google.firebase:firebase-firestore-ktx")

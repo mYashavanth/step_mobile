@@ -2,11 +2,15 @@ import "package:flutter/material.dart";
 import "package:flutter_svg/svg.dart";
 import 'package:ghastep/services/iap_payment_screen.dart';
 import 'package:ghastep/services/phonepe_payment_screen.dart';
+import 'package:ghastep/services/razorpay.dart';
 import "package:ghastep/widgets/homepage_widgets.dart";
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ghastep/views/urlconfig.dart';
+import 'package:ghastep/widgets/navbar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:facebook_app_events/facebook_app_events.dart'; // Add this import
+import '../main.dart'; // Import to access global facebookAppEvents instance
 
 class SubscribePage extends StatefulWidget {
   const SubscribePage({super.key});
@@ -32,56 +36,132 @@ class _SubscribePage extends State<SubscribePage> {
   void initState() {
     super.initState();
     fetchCoursePricing();
+    _trackPricingPageView(); // Add this line
   }
 
-  Future<void> fetchCoursePricing() async {
-    setState(() {
-      isLoading = true;
-    });
-
+  // Add this new method
+  Future<void> _trackPricingPageView() async {
     try {
-      String token = await storage.read(key: 'token') ?? '';
-      String selectedCourseId =
-          await storage.read(key: 'selectedCourseId') ?? '1';
-      final response = await http.get(
-        Uri.parse(
-            '$baseurl/app/get-app-course-pricing/$selectedCourseId/$token'),
-      );
-      print(
-          "url: ${'$baseurl/app/get-app-course-pricing/$selectedCourseId/$token'}");
-      print("response: ${response.body}");
-      if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-        if (data["errFlag"] == 1) {
-          // ScaffoldMessenger.of(context).showSnackBar(
-          //   SnackBar(content: Text('Error: ${data["message"]}')),
-          // );
-          print("Error fetching course pricing: ${data["message"]}");
-          setState(() {
-            coursePricing = {};
-          });
-        } else {
-          print("Course pricing fetched successfully: $data");
-          setState(() {
-            coursePricing = data;
-          });
+      // Get user data from storage
+      String? token = await storage.read(key: 'token');
+      String? userData = await storage.read(key: 'user_data');
+      String? mobile = await storage.read(key: 'mobile');
+
+      Map<String, dynamic> userInfo = {};
+      if (userData != null) {
+        try {
+          userInfo = json.decode(userData);
+        } catch (e) {
+          print('Error parsing user data: $e');
         }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Error fetching course pricing: ${response.body}')),
-        );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+
+      // Track pricing page view event
+      await facebookAppEvents.logEvent(
+        name: 'PricingPage',
+        parameters: {
+          'email': userInfo['email'] ?? '',
+          'name': userInfo['name'] ?? '',
+          'mobile': mobile ?? '',
+          'city': userInfo['city'] ?? 'Unknown',
+          'country': 'IN',
+          'college': userInfo['college'] ?? '',
+          'page': 'subscription_page',
+          'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
+        },
       );
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
+
+      print('PricingPage event tracked successfully');
+    } catch (e) {
+      print('Facebook PricingPage tracking error: $e');
     }
   }
+
+Future<void> fetchCoursePricing() async {
+  setState(() {
+    isLoading = true;
+  });
+
+  try {
+    String token = await storage.read(key: 'token') ?? '';
+    String selectedCourseId = await storage.read(key: 'selectedCourseId') ?? '1';
+    final response = await http.get(
+      Uri.parse('$baseurl/app/get-app-course-pricing/$selectedCourseId/$token'),
+    );
+    
+    print("url: ${'$baseurl/app/get-app-course-pricing/$selectedCourseId/$token'}");
+    print("response: ${response.body}");
+    
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      if (data["errFlag"] == 1) {
+        print("Error fetching course pricing: ${data["message"]}");
+        setState(() {
+          coursePricing = {};
+        });
+      } else {
+        print("Course pricing fetched successfully: $data");
+        setState(() {
+          coursePricing = data;
+        });
+        
+        // Track pricing page with course data
+        await _trackPricingPageWithCourseData(data);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching course pricing: ${response.body}')),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: $e')),
+    );
+  } finally {
+    setState(() {
+      isLoading = false;
+    });
+  }
+}
+
+Future<void> _trackPricingPageWithCourseData(Map courseData) async {
+  try {
+    // Get user data from storage
+    String? userData = await storage.read(key: 'user_data');
+    String? mobile = await storage.read(key: 'mobile');
+
+    Map<String, dynamic> userInfo = {};
+    if (userData != null) {
+      try {
+        userInfo = json.decode(userData);
+      } catch (e) {
+        print('Error parsing user data: $e');
+      }
+    }
+
+    // Track pricing page view with course data
+    await facebookAppEvents.logEvent(
+      name: 'PricingPage',
+      parameters: {
+        'email': userInfo['email'] ?? '',
+        'name': userInfo['name'] ?? '',
+        'mobile': mobile ?? '',
+        'city': userInfo['city'] ?? 'Unknown',
+        'country': 'IN',
+        'college': userInfo['college'] ?? '',
+        'course_name': courseData['course_name'] ?? '',
+        'actual_price': courseData['actual_price_inr']?.toString() ?? '',
+        'selling_price': courseData['selling_price_inr']?.toString() ?? '',
+        'currency': 'INR',
+        'page': 'subscription_page',
+      },
+    );
+
+    print('PricingPage event with course data tracked successfully');
+  } catch (e) {
+    print('Facebook PricingPage tracking error: $e');
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -166,6 +246,7 @@ class _SubscribePage extends State<SubscribePage> {
           ],
         ),
       ),
+      bottomNavigationBar: const StepNavigationBar(1),
     );
   }
 
@@ -394,7 +475,8 @@ Widget buildSubscribeNeetcard({required Map coursePricing}) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const PhonePePaymentScreen(),
+                            // builder: (context) => const PhonePePaymentScreen(),
+                            builder: (context) => const RazorPayScreen(),
                           ),
                         );
                       },
