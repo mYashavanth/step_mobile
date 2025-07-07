@@ -6,6 +6,8 @@ import 'dart:convert';
 import 'package:ghastep/views/dry.dart';
 import 'package:ghastep/views/urlconfig.dart';
 import 'package:ghastep/widgets/inputs.dart';
+import 'package:ghastep/main.dart'; // Import to access global instance
+
 
 class DetailsForm extends StatefulWidget {
   const DetailsForm({super.key});
@@ -53,6 +55,19 @@ class _DetailsFormState extends State<DetailsForm> {
     _scrollController.dispose();
     super.dispose();
   }
+  Future<String?> getCityFromIP() async {
+  try {
+    final response = await http.get(Uri.parse('http://ip-api.com/json'));
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['city']; // or 'regionName', 'country'
+    }
+  } catch (e) {
+    print('Error fetching location: $e');
+  }
+  return null;
+}
+
 
   void _onCollegeFocusChange() {
     if (_collegeFocusNode.hasFocus) {
@@ -157,7 +172,39 @@ class _DetailsFormState extends State<DetailsForm> {
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
           if (data['errFlag'] == 0) {
-            // Success
+            try {
+              // Log user data for Meta
+              final currentCity = await getCityFromIP();
+              await facebookAppEvents.setUserData(
+                email: _emailController.text.trim(),
+                firstName: _nameController.text.trim().split(" ").first,
+                lastName: _nameController.text.trim().split(" ").length > 1
+                    ? _nameController.text.trim().split(" ").sublist(1).join(" ")
+                    : '',
+                phone: mobile,
+                city: currentCity ?? 'Unknown',
+                country: 'IN',
+              );
+
+              // Track registration event
+              await facebookAppEvents.logEvent(
+                name: 'CompleteRegistration',
+                parameters: {
+                  'email': _emailController.text.trim(),
+                  'name': _nameController.text.trim(),
+                  'mobile': mobile,
+                  'city': currentCity ?? 'Unknown',
+                  'country': 'IN',
+                  'college': _selectedCollege?.collegeName ??
+                      _collegeSearchController.text.trim(),
+                },
+              );
+            } catch (e) {
+              // Log the error but don't block the user flow
+              print('Facebook tracking error: $e');
+            }
+
+            // Success feedback + navigation
             showCustomSnackBar(
               context: context,
               message: data['message'],
