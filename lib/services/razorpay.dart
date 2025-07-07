@@ -220,7 +220,7 @@ class _RazorPayScreenState extends State<RazorPayScreen> {
           'key': keyId,
           'amount': amount,
           'currency': 'INR',
-          'name': 'Your App Name',
+          'name': 'GHA Step',
           'description': courseData['course_name'] ?? 'Course Purchase',
           'order_id': orderId,
           'timeout': 300,
@@ -229,7 +229,7 @@ class _RazorPayScreenState extends State<RazorPayScreen> {
             'email': '',
           },
           'theme': {
-            'color': '#6A4BFF', // Razorpay purple
+            'color': '#247E80',
           }
         };
 
