@@ -22,15 +22,16 @@ class _RazorPayScreenState extends State<RazorPayScreen> {
   static const String keyId = 'rzp_live_eI133IZegW9ZQt';
   static const String keySecret = '0sLl1YXdRxgDMpg2s2H83yEd';
 
-  // Razorpay theme colors
-  static const Color primaryColor = Color(0xFF2B2D7D); // Dark blue
-  static const Color accentColor = Color(0xFF6A4BFF); // Purple
+  // Updated color theme to match application (0xFF247E80)
+  static const Color primaryColor = Color(0xFF247E80); // Teal/Green
+  static const Color accentColor = Color(0xFF34B7B9); // Lighter teal
   static const Color successColor = Color(0xFF4CAF50);
   static const Color errorColor = Color(0xFFF44336);
   static const Color textColor = Color(0xFF333333);
   static const Color lightGrey = Color(0xFFF5F5F5);
+  static const Color darkPrimary =
+      Color(0xFF1A5E5F); // Darker shade for contrast
 
-  // bool _isPremiumUser = false;
   bool _isLoading = false;
   String _result = "Ready to pay";
   Map<String, dynamic> courseData = {};
@@ -279,7 +280,7 @@ class _RazorPayScreenState extends State<RazorPayScreen> {
             Navigator.pushNamed(context, '/home_page');
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: accentColor,
+            backgroundColor: primaryColor,
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
@@ -327,7 +328,7 @@ class _RazorPayScreenState extends State<RazorPayScreen> {
           ElevatedButton(
             onPressed: _startPayment,
             style: ElevatedButton.styleFrom(
-              backgroundColor: accentColor,
+              backgroundColor: primaryColor,
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -380,7 +381,7 @@ class _RazorPayScreenState extends State<RazorPayScreen> {
               Navigator.pushNamed(context, '/home_page');
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: accentColor,
+              backgroundColor: primaryColor,
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -410,6 +411,7 @@ class _RazorPayScreenState extends State<RazorPayScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+            color: Colors.white,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -465,7 +467,7 @@ class _RazorPayScreenState extends State<RazorPayScreen> {
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
-                              color: accentColor,
+                              color: primaryColor,
                             ),
                           ),
                         ],
@@ -492,11 +494,12 @@ class _RazorPayScreenState extends State<RazorPayScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          color: Colors.white,
           child: const Padding(
             padding: EdgeInsets.all(16),
             child: Row(
               children: [
-                Icon(Icons.payment, color: accentColor, size: 30),
+                Icon(Icons.payment, color: primaryColor, size: 30),
                 SizedBox(width: 16),
                 Text(
                   'Razorpay Payment Gateway',
@@ -507,7 +510,7 @@ class _RazorPayScreenState extends State<RazorPayScreen> {
                   ),
                 ),
                 Spacer(),
-                Icon(Icons.radio_button_checked, color: accentColor),
+                Icon(Icons.radio_button_checked, color: primaryColor),
               ],
             ),
           ),
@@ -540,6 +543,7 @@ class _RazorPayScreenState extends State<RazorPayScreen> {
         centerTitle: true,
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: SafeArea(
         child: Padding(
@@ -568,12 +572,14 @@ class _RazorPayScreenState extends State<RazorPayScreen> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _startPayment,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: accentColor,
+                        backgroundColor: primaryColor,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         minimumSize: const Size(double.infinity, 50),
+                        elevation: 3,
+                        shadowColor: darkPrimary.withOpacity(0.3),
                       ),
                       child: _isLoading
                           ? const SizedBox(
