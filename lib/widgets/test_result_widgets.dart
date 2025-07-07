@@ -149,16 +149,16 @@ Widget columnOneCard1and2(int cardNo, Map<String, dynamic> resultData) {
                   height: 1.40,
                 ),
               ),
-              const TextSpan(
-                text: ' marks',
-                style: TextStyle(
-                  color: Color(0xFF737373),
-                  fontSize: 12,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w400,
-                  height: 2.33,
-                ),
-              ),
+              // const TextSpan(
+              //   text: ' marks',
+              //   style: TextStyle(
+              //     color: Color(0xFF737373),
+              //     fontSize: 12,
+              //     fontFamily: 'SF Pro Display',
+              //     fontWeight: FontWeight.w400,
+              //     height: 2.33,
+              //   ),
+              // ),
             ],
           ),
         ),
@@ -209,16 +209,16 @@ Widget columnTwoCard1and2(int cardNo, Map<String, dynamic> resultData) {
                   height: 1.40,
                 ),
               ),
-              const TextSpan(
-                text: 'marks',
-                style: TextStyle(
-                  color: Color(0xFF737373),
-                  fontSize: 12,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w400,
-                  height: 2.33,
-                ),
-              ),
+              // const TextSpan(
+              //   text: 'marks',
+              //   style: TextStyle(
+              //     color: Color(0xFF737373),
+              //     fontSize: 12,
+              //     fontFamily: 'SF Pro Display',
+              //     fontWeight: FontWeight.w400,
+              //     height: 2.33,
+              //   ),
+              // ),
             ],
           ),
         ),
