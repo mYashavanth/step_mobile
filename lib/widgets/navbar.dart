@@ -31,7 +31,8 @@ class _StepNavigationBar extends State<StepNavigationBar> {
         case 0:
           Navigator.of(context).pushNamed('/home_page');
         case 1:
-          Navigator.of(context).pushNamed('/notes');
+          // Navigator.of(context).pushNamed('/notes');
+          Navigator.of(context).pushNamed('/subscribe');
         case 2:
           Navigator.of(context).pushNamed('/ranking_leader_board_screen');
         case 3:
@@ -118,25 +119,43 @@ class _StepNavigationBar extends State<StepNavigationBar> {
               _onItemTapped(1);
             },
             child: SizedBox(
-              height: 70,
+              width: 70,
               child: Column(
                 children: [
+                  Container(
+                    width: 56,
+                    height: 4,
+                    decoration: ShapeDecoration(
+                      color: _selectedIndex != 1
+                          ? Colors.white
+                          : const Color(0xFF247E80),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(4),
+                          bottomRight: Radius.circular(4),
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(
                     height: 9,
                   ),
-                  SvgPicture.asset(
-                    'assets/icons/notes.svg',
-                    colorFilter: ColorFilter.mode(
-                        _selectedIndex != 1
-                            ? const Color(0xFF8B8D98)
-                            : const Color(0xFF247E80),
-                        BlendMode.srcIn),
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Icon(
+                      Icons.currency_rupee_rounded,
+                      color: _selectedIndex != 1
+                          ? const Color(0xFF8B8D98)
+                          : const Color(0xFF247E80),
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(
-                    height: 6,
+                    height: 10,
                   ),
                   Text(
-                    'Notes',
+                    'Subscribe',
                     style: TextStyle(
                       color: _selectedIndex != 1
                           ? const Color(0xFF8B8D98)
@@ -146,13 +165,53 @@ class _StepNavigationBar extends State<StepNavigationBar> {
                       fontWeight: _selectedIndex != 1
                           ? FontWeight.w400
                           : FontWeight.w600,
-                      // height: 0.11,
                     ),
                   ),
                 ],
               ),
             ),
           ),
+
+          // InkWell(
+          //   onTap: () {
+          //     _onItemTapped(1);
+          //   },
+          //   child: SizedBox(
+          //     height: 70,
+          //     child: Column(
+          //       children: [
+          //         const SizedBox(
+          //           height: 9,
+          //         ),
+          //         SvgPicture.asset(
+          //           'assets/icons/notes.svg',
+          //           colorFilter: ColorFilter.mode(
+          //               _selectedIndex != 1
+          //                   ? const Color(0xFF8B8D98)
+          //                   : const Color(0xFF247E80),
+          //               BlendMode.srcIn),
+          //         ),
+          //         const SizedBox(
+          //           height: 6,
+          //         ),
+          //         Text(
+          //           'Notes',
+          //           style: TextStyle(
+          //             color: _selectedIndex != 1
+          //                 ? const Color(0xFF8B8D98)
+          //                 : const Color(0xFF247E80),
+          //             fontSize: 12,
+          //             fontFamily: "SF Pro Display",
+          //             fontWeight: _selectedIndex != 1
+          //                 ? FontWeight.w400
+          //                 : FontWeight.w600,
+          //             // height: 0.11,
+          //           ),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
 
           // GestureDetector(
           //   onTap: () {
