@@ -19,6 +19,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
   Map<String, dynamic> testData = {};
   bool isPreCourse = true; // Default to pre-course test
   bool _isLoading = false;
+  String? lastPreCourseTestTransactionId;
 
   @override
   void initState() {
@@ -103,6 +104,17 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
           value: data[0]['no_of_questions'].toString(),
         );
 
+                // Store the last transaction ID
+if (isPreCourse) {
+  lastPreCourseTestTransactionId = data[0]['last_pre_course_test_transaction_id'] != null
+      ? data[0]['last_pre_course_test_transaction_id'].toString()
+      : null;
+} else {
+  lastPreCourseTestTransactionId = data[0]['last_post_course_test_transaction_id'] != null
+      ? data[0]['last_post_course_test_transaction_id'].toString()
+      : null;
+}
+
         setState(() {
           testData = data.isNotEmpty ? data[0] : {};
         });
@@ -123,6 +135,48 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
       );
     }
   }
+
+Future<void> _viewLastAttempt() async {
+  try {
+    String? token = await storage.read(key: "token");
+    
+    if (token == null || lastPreCourseTestTransactionId == null) {
+      print("Missing required data to view last attempt.");
+      return;
+    }
+
+    String apiUrl = isPreCourse
+        ? "$baseurl/app/get-pre-course-test-user-reponses/$token/$lastPreCourseTestTransactionId"
+        : "$baseurl/app/get-post-course-test-user-reponses/$token/$lastPreCourseTestTransactionId";
+
+    final response = await http.get(Uri.parse(apiUrl));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      
+      Navigator.pushNamed(
+        context,
+        '/view_solutions',
+        arguments: {
+          'solutionData': data  // Pass the raw array directly, not wrapped in 'solutions'
+        },
+      );
+    } else {
+      showCustomSnackBar(
+        context: context,
+        message: "Failed to load last attempt. Please try again.",
+        isSuccess: false,
+      );
+    }
+  } catch (e) {
+    print("Error viewing last attempt: $e");
+    showCustomSnackBar(
+      context: context,
+      message: "An error occurred: $e",
+      isSuccess: false,
+    );
+  }
+}
 
   Future<void> _startTest() async {
     setState(() {
@@ -518,53 +572,86 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
         ),
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: ElevatedButton(
-          onPressed: _isLoading ? null : _startTest,
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 50),
-            backgroundColor: _isLoading
-                ? const Color(0xFF247E80).withOpacity(0.7)
-                : const Color(0xFF247E80),
-            disabledBackgroundColor: const Color(0xFF247E80).withOpacity(0.7),
+  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+  child: Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      // View Last Attempt button (only show if lastPreCourseTestTransactionId is not null)
+      if (lastPreCourseTestTransactionId != null ) ...[
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: _viewLastAttempt,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFC7F3F4),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+            child: const Text(
+              'View Last Attempt',
+              style: TextStyle(
+                color: Color(0xFF247E80),
+                fontSize: 16,
+                fontFamily: 'SF Pro Display',
+                fontWeight: FontWeight.w500,
+                height: 1.50,
+              ),
+            ),
           ),
-          child: _isLoading
-              ? const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      'Processing...',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w500,
-                        height: 1.50,
-                      ),
-                    ),
-                  ],
-                )
-              : const Text(
-                  'Start Test',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontFamily: 'SF Pro Display',
-                    fontWeight: FontWeight.w500,
-                    height: 1.50,
-                  ),
-                ),
         ),
+        const SizedBox(height: 12),
+      ],
+      // Start Test button
+      ElevatedButton(
+        onPressed: _isLoading ? null : _startTest,
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 50),
+          backgroundColor: _isLoading
+              ? const Color(0xFF247E80).withOpacity(0.7)
+              : const Color(0xFF247E80),
+          disabledBackgroundColor: const Color(0xFF247E80).withOpacity(0.7),
+        ),
+        child: _isLoading
+            ? const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Processing...',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w500,
+                      height: 1.50,
+                    ),
+                  ),
+                ],
+              )
+            : const Text(
+                'Start Test',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w500,
+                  height: 1.50,
+                ),
+              ),
       ),
+    ],
+  ),
+),
     );
   }
 }

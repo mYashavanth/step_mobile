@@ -37,9 +37,22 @@ class _PaymentLogsPageState extends State<PaymentLogsPage> {
       );
 
       if (response.statusCode == 200) {
+        print(response.body);
         final data = json.decode(response.body);
+        print(data);
+
         setState(() {
-          paymentHistory = data;
+          if (data is List) {
+            paymentHistory = data;
+          } else if (data is Map &&
+              data.containsKey('data') &&
+              data['data'] is List) {
+            paymentHistory = data['data'];
+          } else {
+            paymentHistory = [];
+            // Optionally, set errorMessage to show the API message
+            errorMessage = data['message'] ?? 'No payment history found';
+          }
           isLoading = false;
         });
       } else {
@@ -125,10 +138,67 @@ class _PaymentLogsPageState extends State<PaymentLogsPage> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : errorMessage.isNotEmpty
-              ? Center(child: Text(errorMessage))
-              : paymentHistory.isEmpty
-                  ? const Center(child: Text('No payment history found'))
+: (errorMessage.isNotEmpty || paymentHistory.isEmpty)
+    ? Center(
+        child: SizedBox(
+          height: 200,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Please subscribe to access the payment history.",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w500,
+                      height: 1.50,
+                    )),
+                const SizedBox(height: 20),
+                InkWell(
+                  borderRadius: BorderRadius.circular(24),
+                  onTap: () {
+                    Navigator.pushNamed(context, "/subscribe");
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    width: MediaQuery.of(context).size.width * 0.5,
+                    decoration: ShapeDecoration(
+                      shape: RoundedRectangleBorder(
+                        side: const BorderSide(
+                          width: 1,
+                          color: Color(0xFF247E80),
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.lock,
+                          color: Color(0xFF247E80),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Subscribe Now',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFF247E80),
+                            fontSize: 16,
+                            fontFamily: 'SF Pro Display',
+                            fontWeight: FontWeight.w500,
+                            height: 1.50,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      )
                   : ListView.builder(
                       padding: const EdgeInsets.all(16),
                       itemCount: paymentHistory.length,
