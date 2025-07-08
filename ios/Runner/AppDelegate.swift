@@ -10,11 +10,16 @@ import FBSDKCoreKit
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
     
-    // Initialize Facebook SDK
+    // Initialize Facebook SDK for iOS 14+
     ApplicationDelegate.shared.application(
       application,
       didFinishLaunchingWithOptions: launchOptions
     )
+    
+    // Enable advertiser tracking for iOS 14+ (recommended)
+    if #available(iOS 14, *) {
+      Settings.shared.isAdvertiserTrackingEnabled = true
+    }
     
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
