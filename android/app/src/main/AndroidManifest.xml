@@ -48,7 +48,7 @@ package="com.ghastep">
     android:value="@string/facebook_client_token" />
 
     <provider
-    android:authorities="com.facebook.app.FacebookContentProvider1475628807189925"
+    android:authorities="com.facebook.app.FacebookContentProvider1278082437067819"
     android:name="com.facebook.FacebookContentProvider"
     android:exported="true" />
 
