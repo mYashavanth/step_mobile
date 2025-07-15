@@ -4,6 +4,7 @@ import 'package:ghastep/views/dry.dart';
 import 'dart:ui';
 import 'dart:convert';
 import 'dart:math' as math;
+import 'package:url_launcher/url_launcher.dart';
 
 Widget buildTopSelectCards(bool selected, String title) {
   return Container(
@@ -453,10 +454,58 @@ List<InlineSpan> _buildEditorJsContent(
                   .replaceAll('<br/>', '\n')
                   .replaceAll('<br />', '\n');
 
-              // Process bold tags and split text by newlines
-              spans.addAll(_processTextWithFormatting(paragraphText));
-              // Add spacing after paragraph
-              spans.add(const TextSpan(text: '\n\n'));
+              // Handle links in paragraph text
+              final anchorPattern =
+                  RegExp(r'<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>');
+              final matches = anchorPattern.allMatches(paragraphText);
+
+              if (matches.isNotEmpty) {
+                int lastEnd = 0;
+                for (final match in matches) {
+                  // Add text before the link
+                  if (match.start > lastEnd) {
+                    spans.addAll(_processTextWithFormatting(
+                        paragraphText.substring(lastEnd, match.start)));
+                  }
+                  final url = match.group(1)!;
+                  final linkText =
+                      match.group(2)!.isNotEmpty ? match.group(2)! : url;
+
+                  spans.add(
+                    WidgetSpan(
+                      alignment: PlaceholderAlignment.middle,
+                      child: InkWell(
+                        onTap: () async {
+                          final uri = Uri.parse(url);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri,
+                                mode: LaunchMode.externalApplication);
+                          }
+                        },
+                        child: Text(
+                          linkText,
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                  lastEnd = match.end;
+                }
+                // Add any remaining text after the last link
+                if (lastEnd < paragraphText.length) {
+                  spans.addAll(_processTextWithFormatting(
+                      paragraphText.substring(lastEnd)));
+                }
+                spans.add(const TextSpan(text: '\n\n'));
+              } else {
+                // No links, just process formatting
+                spans.addAll(_processTextWithFormatting(paragraphText));
+                spans.add(const TextSpan(text: '\n\n'));
+              }
             }
           }
           break;
@@ -677,8 +726,10 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
   }
 
   Widget buildTableCell(String cellText) {
+    print("Cell Text: $cellText");
     final decodedText = _decodeHtmlEntities(cellText);
 
+    // Check for image URLs directly
     if (decodedText.toLowerCase().endsWith('.png') ||
         decodedText.toLowerCase().endsWith('.jpg') ||
         decodedText.toLowerCase().endsWith('.jpeg') ||
@@ -694,41 +745,77 @@ Widget _buildTableWidget(Map<String, dynamic> tableData, BuildContext context) {
       );
     }
 
+    // Find all anchor tags and split text accordingly
     final anchorPattern =
         RegExp(r'<a\s+(?:[^>]*?\s+)?href="([^"]*)"[^>]*>(.*?)<\/a>');
-    final anchorMatch = anchorPattern.firstMatch(decodedText);
+    final matches = anchorPattern.allMatches(decodedText);
 
-    if (anchorMatch != null) {
-      final url = anchorMatch.group(1)!;
-      final linkText =
-          anchorMatch.group(2)!.isNotEmpty ? anchorMatch.group(2)! : url;
+    if (matches.isNotEmpty) {
+      List<InlineSpan> spans = [];
+      int lastEnd = 0;
+      for (final match in matches) {
+        // Add text before the link
+        if (match.start > lastEnd) {
+          spans.add(TextSpan(
+            text: decodedText.substring(lastEnd, match.start),
+            style: const TextStyle(fontSize: 14, color: Color(0xFF1A1A1A)),
+          ));
+        }
+        final url = match.group(1)!;
+        final linkText = match.group(2)!.isNotEmpty ? match.group(2)! : url;
 
-      if (url.toLowerCase().endsWith('.png') ||
-          url.toLowerCase().endsWith('.jpg') ||
-          url.toLowerCase().endsWith('.jpeg') ||
-          url.toLowerCase().endsWith('.gif')) {
-        return GestureDetector(
-          onTap: () => _showFullScreenImage(context, url),
-          child: Image.network(
-            url,
-            width: 150,
-            errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.broken_image, size: 40),
-          ),
-        );
-      } else {
-        return InkWell(
-          onTap: () => _showFullScreenImage(context, url),
-          child: Text(
-            linkText,
-            style: const TextStyle(
-              color: Colors.blue,
-              decoration: TextDecoration.underline,
-              fontSize: 14,
+        if (url.toLowerCase().endsWith('.png') ||
+            url.toLowerCase().endsWith('.jpg') ||
+            url.toLowerCase().endsWith('.jpeg') ||
+            url.toLowerCase().endsWith('.gif')) {
+          spans.add(WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: GestureDetector(
+              onTap: () => _showFullScreenImage(context, url),
+              child: Image.network(
+                url,
+                width: 150,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.broken_image, size: 40),
+              ),
             ),
-          ),
-        );
+          ));
+        } else {
+          spans.add(
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: InkWell(
+                onTap: () async {
+                  // Use url_launcher to open the link in browser
+                  // Make sure to add url_launcher to pubspec.yaml
+                  // import 'package:url_launcher/url_launcher.dart';
+                  final uri = Uri.parse(url);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
+                child: Text(
+                  linkText,
+                  style: const TextStyle(
+                    color: Colors.blue,
+                    decoration: TextDecoration.underline,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+        lastEnd = match.end;
       }
+      // Add any remaining text after the last link
+      if (lastEnd < decodedText.length) {
+        spans.add(TextSpan(
+          text: decodedText.substring(lastEnd),
+          style: const TextStyle(fontSize: 14, color: Color(0xFF1A1A1A)),
+        ));
+      }
+      return RichText(text: TextSpan(children: spans));
     }
 
     return _buildTextWithFormatting(decodedText);
