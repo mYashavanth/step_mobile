@@ -189,17 +189,17 @@ class _ResultScreenTestState extends State<ResultScreenTest> {
                               height: 1.40,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Summary of marks scored in “ Attempt 1 “ of the pre-course test attempted on 23 Jan',
-                            style: TextStyle(
-                              color: Color(0xFF737373),
-                              fontSize: 14,
-                              fontFamily: 'SF Pro Display',
-                              fontWeight: FontWeight.w400,
-                              height: 1.57,
-                            ),
-                          ),
+                          // const SizedBox(height: 8),
+                          // const Text(
+                          //   'Summary of marks scored in “ Attempt 1 “ of the pre-course test attempted on 23 Jan',
+                          //   style: TextStyle(
+                          //     color: Color(0xFF737373),
+                          //     fontSize: 14,
+                          //     fontFamily: 'SF Pro Display',
+                          //     fontWeight: FontWeight.w400,
+                          //     height: 1.57,
+                          //   ),
+                          // ),
                           const SizedBox(height: 8),
                           buildResultScreenOverviewtable(
                               resultData!), // Pass resultData to the table
