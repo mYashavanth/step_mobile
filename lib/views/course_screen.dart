@@ -21,6 +21,7 @@ class _CourseScreenState extends State<CourseScreen>
   final storage = const FlutterSecureStorage();
   late TabController _tabController;
   Map<String, dynamic> courseStepDetails = {};
+  Map<String, dynamic> stepTestDetails = {};
   var authToken = '';
   int selectedStepId = 1; // Track selected step by ID
   String courseStepDetailId = '';
@@ -112,6 +113,15 @@ class _CourseScreenState extends State<CourseScreen>
           await storage.write(key: "courseStepDetailId", value: courseStepId);
 
           setState(() {
+            stepTestDetails = {
+              "post_course_duration_minutes":
+                  data["post_course_duration_minutes"],
+              "post_course_total_questions":
+                  data["post_course_total_questions"],
+              "pre_course_duration_minutes":
+                  data["pre_course_duration_minutes"],
+              "pre_course_total_questions": data["pre_course_total_questions"],
+            };
             courseStepDetails = courseStepDetailsData;
             totalNumberOfSteps = data['totalStepCount'] ?? 0;
           });
@@ -420,6 +430,7 @@ class _CourseScreenState extends State<CourseScreen>
                 stepTabSelectedIndex,
                 setState,
                 videoData,
+                stepTestDetails,
                 chooseStepList,
                 selectedStepId,
                 (newStepId) {

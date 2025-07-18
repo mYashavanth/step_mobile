@@ -79,6 +79,7 @@ Widget buildTabBarCourse(
   List<int> stepTabSelectedIndex,
   StateSetter setState,
   List<dynamic> videoData,
+  Map<String, dynamic> stepTestDetails,
   List<int> chooseStepList,
   int selectedStepId,
   Function(int) onStepChanged,
@@ -89,6 +90,7 @@ Widget buildTabBarCourse(
 ) {
   print("videoData in widget page: $videoData");
   print("course and subject ids: $courseId, $subjectId");
+  print("++++++++++++++++++++++++++stepTestDetails: $stepTestDetails");
   // Filter videos based on selected step
   final filteredVideos = videoData.isEmpty
       ? []
@@ -180,7 +182,9 @@ Widget buildTabBarCourse(
                               ]),
                         ),
                       )
-                    : StepContent(videos: filteredVideos),
+                    : StepContent(
+                        videos: filteredVideos,
+                        stepTestDetails: stepTestDetails),
               ),
             ),
             // Notes tab
@@ -460,7 +464,8 @@ Widget NotesList(String docName, int page, bool locked, String icon) {
   );
 }
 
-Widget preCourseCard(bool pending, BuildContext context, bool isPreCourse) {
+Widget preCourseCard(bool pending, BuildContext context, bool isPreCourse,
+    int durationMinutes, int totalQuestions) {
   return InkWell(
     borderRadius: BorderRadius.circular(8),
     onTap: () async {
@@ -514,9 +519,9 @@ Widget preCourseCard(bool pending, BuildContext context, bool isPreCourse) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '1h 30m • 35 MCQS',
-              style: TextStyle(
+            Text(
+              '$durationMinutes m • $totalQuestions MCQS',
+              style: const TextStyle(
                 color: Color(0xFF737373),
                 fontSize: 12,
                 fontFamily: 'SF Pro Display',
@@ -811,7 +816,9 @@ Widget collapseStepClassCard(
 
 class StepContent extends StatefulWidget {
   final List<dynamic> videos;
-  const StepContent({super.key, required this.videos});
+  final Map<String, dynamic> stepTestDetails;
+  const StepContent(
+      {super.key, required this.videos, required this.stepTestDetails});
 
   @override
   State<StepContent> createState() => _StepContentState();
@@ -841,7 +848,13 @@ class _StepContentState extends State<StepContent> {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(height: 20),
-        preCourseCard(true, context, true),
+        preCourseCard(
+          true,
+          context,
+          true,
+          widget.stepTestDetails["pre_course_duration_minutes"] ?? 0,
+          widget.stepTestDetails["pre_course_total_questions"] ?? 0,
+        ),
         const SizedBox(height: 20),
         if (widget.videos.isEmpty)
           const SizedBox()
@@ -879,7 +892,13 @@ class _StepContentState extends State<StepContent> {
             }),
           ),
         const SizedBox(height: 20),
-        preCourseCard(true, context, false),
+        preCourseCard(
+          true,
+          context,
+          false,
+          widget.stepTestDetails["post_course_duration_minutes"] ?? 0,
+          widget.stepTestDetails["post_course_total_questions"] ?? 0,
+        ),
       ],
     );
   }
