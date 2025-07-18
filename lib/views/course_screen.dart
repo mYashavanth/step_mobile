@@ -100,8 +100,9 @@ class _CourseScreenState extends State<CourseScreen>
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print("+++_--_-----------------Course Step Details API Response: ${response.body}");
-        if (data['errFlage'] == 0 && data['stepDetails'] != null) {
+        print(
+            "+++_--_-----------------Course Step Details API Response: ${response.body}");
+        if (data['errFlag'] == 0 && data['stepDetails'] != null) {
           final courseStepDetailsData = data['stepDetails'][0];
           final courseStepId = courseStepDetailsData['id'].toString();
           courseStepDetailId = courseStepId;
@@ -118,7 +119,8 @@ class _CourseScreenState extends State<CourseScreen>
           // Fetch video data after getting courseStepDetailId
           fetchVideoData();
         } else {
-          print('---------------------------------------------');
+          print(
+              '--------------------------------------------- No course step details found.');
           setState(() {
             courseStepDetails = {};
           });
