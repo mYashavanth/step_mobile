@@ -467,29 +467,29 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                               const SizedBox(
                                 height: 12,
                               ),
-                              Row(
-                                children: [
-                                  SvgPicture.asset(
-                                    "assets/icons/ranking_filled.svg",
-                                    width: 24,
-                                    colorFilter: const ColorFilter.mode(
-                                        Color(0xFF247E80), BlendMode.srcIn),
-                                  ),
-                                  const SizedBox(
-                                    width: 12,
-                                  ),
-                                  const Text(
-                                    'All India & State Rankings',
-                                    style: TextStyle(
-                                      color: Color(0xFF1A1A1A),
-                                      fontSize: 16,
-                                      fontFamily: 'SF Pro Display',
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.50,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              // Row(
+                              //   children: [
+                              //     SvgPicture.asset(
+                              //       "assets/icons/ranking_filled.svg",
+                              //       width: 24,
+                              //       colorFilter: const ColorFilter.mode(
+                              //           Color(0xFF247E80), BlendMode.srcIn),
+                              //     ),
+                              //     const SizedBox(
+                              //       width: 12,
+                              //     ),
+                              //     const Text(
+                              //       'All India & State Rankings',
+                              //       style: TextStyle(
+                              //         color: Color(0xFF1A1A1A),
+                              //         fontSize: 16,
+                              //         fontFamily: 'SF Pro Display',
+                              //         fontWeight: FontWeight.w400,
+                              //         height: 1.50,
+                              //       ),
+                              //     ),
+                              //   ],
+                              // ),
                               const SizedBox(
                                 height: 12,
                               ),
