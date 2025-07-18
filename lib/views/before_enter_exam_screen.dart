@@ -283,7 +283,7 @@ Future<bool> _endOngoingExam(String ongoingExamTransactionId) async {
                                   const Text('Exam details', style: TextStyle(color: Color(0xFF1A1A1A), fontSize: 20, fontWeight: FontWeight.w500)),
                                   const SizedBox(height: 12),
                                   _buildDetailRow(Icons.help_outline, '${examData['no_of_questions'] ?? 'N/A'} full-length questions, ${examData['max_marks'] ?? 'N/A'} marks'),
-                                  _buildDetailRow(Icons.trending_up, 'All India & State Rankings'), // Placeholder
+                                  // _buildDetailRow(Icons.trending_up, 'All India & State Rankings'), // Placeholder
                                   _buildDetailRow(Icons.assignment, 'Latest exam pattern-based'), // Placeholder
                                 ],
                               ),
