@@ -276,7 +276,22 @@ Widget buildVedioLearnCard({
 }
 
 Widget buildStepWiseCourseCard(
-    String num, int unlocked, String title, String id, BuildContext context) {
+    String num, 
+    int unlocked, 
+    String title, 
+    String id, 
+    BuildContext context,
+    {int? totalMinutes, 
+    String? totalDuration, 
+    int? totalSteps}) {
+  
+  // Add debugging print statements
+  print('=== buildStepWiseCourseCard Debug ===');
+  print('Title: $title');
+  print('Total Minutes: $totalMinutes');
+  print('Total Duration: $totalDuration');
+  print('Total Steps: $totalSteps');
+  
   String icon = "locked.svg";
   Color color = Colors.transparent;
   String status = '';
@@ -291,15 +306,56 @@ Widget buildStepWiseCourseCard(
     color = const Color(0xFF34C759);
   }
 
+  // Format duration text
+  String durationText = '';
+  if (totalMinutes != null && totalMinutes > 0) {
+    if (totalDuration != null && totalDuration.isNotEmpty) {
+      durationText = totalDuration;
+    } else {
+      // Fallback calculation if totalDuration is not provided
+      int hours = totalMinutes ~/ 60;
+      int mins = totalMinutes % 60;
+      if (hours > 0) {
+        durationText = '${hours}h ${mins}m';
+      } else {
+        durationText = '${mins}m';
+      }
+    }
+  }
+
+  // Format steps text - Show steps if they exist and are non-zero
+  String stepsText = '';
+  if (totalSteps != null && totalSteps > 0) {
+    stepsText = '$totalSteps steps';
+  }
+
+  // Combine duration and steps text
+  String combinedText = '';
+  if (durationText.isNotEmpty && stepsText.isNotEmpty) {
+    combinedText = '$durationText • $stepsText';
+  } else if (stepsText.isNotEmpty) {
+    // Show only steps if duration is zero but steps exist
+    combinedText = stepsText;
+  } else if (durationText.isNotEmpty) {
+    combinedText = durationText;
+  } else {
+    combinedText = '';
+  }
+
+  print('Final combined text: "$combinedText"');
+  print('=== End Debug ===');
+
   Future<void> makeApiCallAndNavigate() async {
     const storage = FlutterSecureStorage();
     String token = await storage.read(key: 'token') ?? '';
     String selectedCourseId = await storage.read(key: 'selectedCourseId') ?? '';
-    print('variables sending: ${{
-      'token': token,
-      'courseId': selectedCourseId,
-      'subjectId': id,
-    }}');
+    
+    print('=== API Call Debug ===');
+    print('Token: $token');
+    print('Selected Course ID: $selectedCourseId');
+    print('Subject ID: $id');
+    print('API URL: $baseurl/app/insert-course-subject-selection');
+    print('=== End API Debug ===');
 
     try {
       final response = await http.post(
@@ -311,6 +367,11 @@ Widget buildStepWiseCourseCard(
         },
       );
 
+      print('=== API Response Debug ===');
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+      print('=== End API Response Debug ===');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         print('Response data: $data');
@@ -320,11 +381,6 @@ Widget buildStepWiseCourseCard(
             'subjectId': id,
           });
           await storage.write(key: "selectedSubjectId", value: id);
-          // showCustomSnackBar(
-          //   context: context,
-          //   message: data['message'],
-          //   isSuccess: true,
-          // );
           print('Success message: ${data['message']}');
         } else if (data['errFlag'] == 2) {
           Navigator.pushNamed(context, "/course_screen", arguments: {
@@ -332,11 +388,6 @@ Widget buildStepWiseCourseCard(
             'subjectId': id,
           });
           await storage.write(key: "selectedSubjectId", value: id);
-          // showCustomSnackBar(
-          //   context: context,
-          //   message: data['message'],
-          //   isSuccess: true,
-          // );
           print('Error message: ${data['message']}');
         } else {
           showCustomSnackBar(
@@ -353,6 +404,9 @@ Widget buildStepWiseCourseCard(
         );
       }
     } catch (e) {
+      print('=== API Error Debug ===');
+      print('Error: $e');
+      print('=== End API Error Debug ===');
       showCustomSnackBar(
         context: context,
         message: "An error occurred: $e",
@@ -363,7 +417,7 @@ Widget buildStepWiseCourseCard(
 
   return InkWell(
     onTap: () async {
-      await makeApiCallAndNavigate(); // Make API call before navigating
+      await makeApiCallAndNavigate();
     },
     borderRadius: BorderRadius.circular(12),
     child: Container(
@@ -410,9 +464,7 @@ Widget buildStepWiseCourseCard(
               ),
             ],
           ),
-          const SizedBox(
-            width: 12,
-          ),
+          const SizedBox(width: 12),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -460,16 +512,18 @@ Widget buildStepWiseCourseCard(
                   ),
                 ],
               ),
-              const Text(
-                '4 hr 30 mins • 10 steps',
-                style: TextStyle(
-                  color: Color(0xFF737373),
-                  fontSize: 12,
-                  fontFamily: 'SF Pro Display',
-                  fontWeight: FontWeight.w400,
-                  height: 1.67,
+              // Only show the text if combinedText is not empty
+              if (combinedText.isNotEmpty)
+                Text(
+                  combinedText,
+                  style: const TextStyle(
+                    color: Color(0xFF737373),
+                    fontSize: 12,
+                    fontFamily: 'SF Pro Display',
+                    fontWeight: FontWeight.w400,
+                    height: 1.67,
+                  ),
                 ),
-              )
             ],
           ),
           const Spacer(),
@@ -494,7 +548,7 @@ Widget buildStepWiseCourseCard(
                     )
                   : GestureDetector(
                       onTap: () async {
-                        await makeApiCallAndNavigate(); // Make API call before navigating
+                        await makeApiCallAndNavigate();
                       },
                       child: const Icon(
                         Icons.arrow_forward_ios_rounded,

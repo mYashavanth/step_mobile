@@ -35,14 +35,9 @@ class _AllSubjectsScreenState extends State<AllSubjectsScreen> {
     try {
       String token = await storage.read(key: 'token') ?? '';
       int courseId = storedCourseId != null ? int.parse(storedCourseId) : 1;
-      // ? selectedCourseIds.first
-      // : storedCourseId != null
-      //     ? int.parse(storedCourseId)
-      //     : 1;
 
       final response = await http.get(
-        Uri.parse(
-            '$baseurl/app/get-all-subjects-by-course-id/$token/$courseId'),
+        Uri.parse('$baseurl/app/get-all-subjects-by-course-id/$token/$courseId'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -53,6 +48,9 @@ class _AllSubjectsScreenState extends State<AllSubjectsScreen> {
               .map((subject) => {
                     'id': subject['id'],
                     'name': subject['subject_name'],
+                    'total_minutes': subject['total_minutes'],
+                    'total_duration': subject['total_duration'],
+                    'total_steps': subject['total_steps'],
                   })
               .toList();
         });
@@ -114,86 +112,22 @@ class _AllSubjectsScreenState extends State<AllSubjectsScreen> {
                 ...subjects.asMap().entries.map((entry) {
                   int index = entry.key;
                   var subject = entry.value;
-                  // print('value: ${subject}');
                   return Column(
                     children: [
                       buildStepWiseCourseCard(
                         (index + 1).toString().padLeft(2, '0'),
-                        // index == 0 ? 1 : 0, // 0 is for unlocked, 1 is for locked , 2 is for completed
                         1,
                         subject['name'],
                         subject['id'].toString(),
                         context,
+                        totalMinutes: subject['total_minutes'],
+                        totalDuration: subject['total_duration'],
+                        totalSteps: subject['total_steps'],
                       ),
                       const SizedBox(height: 8),
                     ],
                   );
                 }).toList(),
-              // buildStepWiseCourseCard("01", 2, "Anatomy", '1', context),
-              // const SizedBox(
-              //   height: 8,
-              // ),
-              // buildStepWiseCourseCard("02", 1, "Physiology", '1', context),
-              // const SizedBox(
-              //   height: 8,
-              // ),
-              // buildStepWiseCourseCard("03", 0, "Biochemistry", '1', context),
-              // const SizedBox(
-              //   height: 8,
-              // ),
-              // buildStepWiseCourseCard("04", 0, "Pathology", '1', context),
-              // const SizedBox(
-              //   height: 8,
-              // ),
-              // buildStepWiseCourseCard("05", 0, "Parmacology", '1', context),
-              // const SizedBox(
-              //   height: 8,
-              // ),
-              // buildStepWiseCourseCard(
-              //     "06", 0, "Comunity Medicine", '1', context),
-              // const SizedBox(
-              //   height: 8,
-              // ),
-              // buildStepWiseCourseCard(
-              //     "07", 0, "Forensic Medicine", '1', context),
-              // const SizedBox(
-              //   height: 24,
-              // ),
-              // buildStepWiseCourseCard(
-              //     "08", 0, "General Medicine", '1', context),
-              // const SizedBox(
-              //   height: 24,
-              // ),
-              // buildStepWiseCourseCard("09", 0, "Pediatrics", '1', context),
-              // const SizedBox(
-              //   height: 24,
-              // ),
-              // buildStepWiseCourseCard(
-              //     "10", 0, "Dermatology, Venereol...", '1', context),
-              // const SizedBox(
-              //   height: 24,
-              // ),
-              // buildStepWiseCourseCard("11", 0, "Psychiatry", '1', context),
-              // const SizedBox(
-              //   height: 24,
-              // ),
-              // buildStepWiseCourseCard("12", 0, "Orthopedics", '1', context),
-              // const SizedBox(
-              //   height: 24,
-              // ),
-              // buildStepWiseCourseCard("13", 0, "Anesthesiology", '1', context),
-              // const SizedBox(
-              //   height: 24,
-              // ),
-              // buildStepWiseCourseCard("14", 0, "Radiology", '1', context),
-              // const SizedBox(
-              //   height: 24,
-              // ),
-              // buildStepWiseCourseCard(
-              //     "15", 0, "Obstetrics & Gynecology", '1', context),
-              // const SizedBox(
-              //   height: 24,
-              // ),
             ],
           ),
         ),

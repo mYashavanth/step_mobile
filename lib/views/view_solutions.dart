@@ -20,7 +20,24 @@ class _ViewSolutionState extends State<ViewSolution> {
   @override
   void initState() {
     super.initState();
-    fetchSolutionData();
+    // Remove fetchSolutionData() from here if using didChangeDependencies approach
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // Check if solution data was passed as arguments
+    final arguments = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (arguments != null && arguments['solutionData'] != null) {
+      setState(() {
+        solutionData = List<Map<String, dynamic>>.from(arguments['solutionData']);
+        isLoading = false;
+      });
+    } else {
+      // Fetch from storage for regular exam results
+      fetchSolutionData();
+    }
   }
 
   Future<void> fetchSolutionData() async {

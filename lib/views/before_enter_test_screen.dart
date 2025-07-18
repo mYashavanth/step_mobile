@@ -17,8 +17,10 @@ class BeforeEnterTestScreen extends StatefulWidget {
 class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
   final FlutterSecureStorage storage = const FlutterSecureStorage();
   Map<String, dynamic> testData = {};
-  bool isPreCourse = true; // Default to pre-course test
+  bool isPreCourse = true;
   bool _isLoading = false;
+  String? lastPreCourseTestTransactionId;
+  String subjectName = ""; // Add this variable to store subject name
 
   @override
   void initState() {
@@ -47,9 +49,9 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
     try {
       // Retrieve values from Flutter Secure Storage
       String? token = await storage.read(key: "token");
-      String? courseStepDetailsId =
-          await storage.read(key: "courseStepDetailId");
+      String? courseStepDetailsId = await storage.read(key: "courseStepDetailId");
       String? stepNo = await storage.read(key: "selectedStepNo");
+      String? selectedSubjectId = await storage.read(key: "selectedSubjectId");
 
       // Ensure all required values are available
       if (token == null || courseStepDetailsId == null || stepNo == null) {
@@ -60,10 +62,12 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
         return;
       }
 
+      // First, fetch the subject name if selectedSubjectId is available
+      if (selectedSubjectId != null) {
+        await _fetchSubjectName(token, selectedSubjectId);
+      }
+
       // Determine the API endpoint based on isPreCourse flag
-      //  String apiUrl = isPreCourse
-      //     ? "$baseurl/app/get-pre-course-test-by-course-step-details-id/$token/$courseStepDetailsId/$stepNo"
-      //     : "$baseurl/app/get-post-course-test-by-course-step-details-id/$token/$courseStepDetailsId/$stepNo";
       String apiUrl = isPreCourse
           ? "$baseurl/app/get-pre-course-test-by-course-step-details-id/$token/$courseStepDetailsId"
           : "$baseurl/app/get-post-course-test-by-course-step-details-id/$token/$courseStepDetailsId";
@@ -75,8 +79,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
 
       // Check the response status
       if (response.statusCode == 200) {
-        print(
-            "++++++++++++++++++++++++++++++++++++++++++++++++++++++API Response: ${response.body}");
+        print("+++++++++++++++++++++++++++++++++++API Response: ${response.body}");
         final data = jsonDecode(response.body);
 
         // Store the test title in Flutter Secure Storage
@@ -103,6 +106,17 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
           value: data[0]['no_of_questions'].toString(),
         );
 
+        // Store the last transaction ID
+        if (isPreCourse) {
+          lastPreCourseTestTransactionId = data[0]['last_pre_course_test_transaction_id'] != null
+              ? data[0]['last_pre_course_test_transaction_id'].toString()
+              : null;
+        } else {
+          lastPreCourseTestTransactionId = data[0]['last_post_course_test_transaction_id'] != null
+              ? data[0]['last_post_course_test_transaction_id'].toString()
+              : null;
+        }
+
         setState(() {
           testData = data.isNotEmpty ? data[0] : {};
         });
@@ -116,6 +130,95 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
       }
     } catch (e) {
       print("Error fetching test details: $e");
+      showCustomSnackBar(
+        context: context,
+        message: "An error occurred: $e",
+        isSuccess: false,
+      );
+    }
+  }
+
+  // Add this new method to fetch subject name
+  Future<void> _fetchSubjectName(String token, String subjectId) async {
+    try {
+      String? courseId = await storage.read(key: 'selectedCourseId');
+      
+      if (courseId == null) {
+        print("Course ID is null");
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseurl/app/get-all-subjects-by-course-id/$token/$courseId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> subjects = json.decode(response.body);
+        
+        // Find the subject with matching ID
+        final subject = subjects.firstWhere(
+          (subject) => subject['id'].toString() == subjectId,
+          orElse: () => null,
+        );
+
+        if (subject != null) {
+          setState(() {
+            subjectName = subject['subject_name'] ?? 'Subject';
+          });
+        } else {
+          setState(() {
+            subjectName = 'Subject';
+          });
+        }
+      } else {
+        print('Failed to load subject name: ${response.statusCode}');
+        setState(() {
+          subjectName = 'Subject';
+        });
+      }
+    } catch (e) {
+      print('Error fetching subject name: $e');
+      setState(() {
+        subjectName = 'Subject';
+      });
+    }
+  }
+
+  Future<void> _viewLastAttempt() async {
+    try {
+      String? token = await storage.read(key: "token");
+      
+      if (token == null || lastPreCourseTestTransactionId == null) {
+        print("Missing required data to view last attempt.");
+        return;
+      }
+
+      String apiUrl = isPreCourse
+          ? "$baseurl/app/get-pre-course-test-user-reponses/$token/$lastPreCourseTestTransactionId"
+          : "$baseurl/app/get-post-course-test-user-reponses/$token/$lastPreCourseTestTransactionId";
+
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        Navigator.pushNamed(
+          context,
+          '/view_solutions',
+          arguments: {
+            'solutionData': data  // Pass the raw array directly, not wrapped in 'solutions'
+          },
+        );
+      } else {
+        showCustomSnackBar(
+          context: context,
+          message: "Failed to load last attempt. Please try again.",
+          isSuccess: false,
+        );
+      }
+    } catch (e) {
+      print("Error viewing last attempt: $e");
       showCustomSnackBar(
         context: context,
         message: "An error occurred: $e",
@@ -290,9 +393,7 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                           height: 1.67,
                         ),
                       ),
-                      const SizedBox(
-                        height: 12,
-                      ),
+                      const SizedBox(height: 12),
                       Text(
                         '${isPreCourse ? testData["pre_course_test_title"] : testData["post_course_test_title"]}',
                         style: const TextStyle(
@@ -303,11 +404,9 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
                           height: 1.40,
                         ),
                       ),
-                      const SizedBox(
-                        height: 12,
-                      ),
+                      const SizedBox(height: 12),
                       Text(
-                        "PYQ's - Anatomy for NEET PG \n${testData['no_of_questions']} Questions • ${isPreCourse ? testData['pre_course_test_duration_minutes'] : testData['post_course_test_duration_minutes']} minutes",
+                        "PYQ's - ${subjectName.isNotEmpty ? subjectName : 'Subject'} \n${testData['no_of_questions']} Questions • ${isPreCourse ? testData['pre_course_test_duration_minutes'] : testData['post_course_test_duration_minutes']} minutes",
                         style: const TextStyle(
                           color: Color(0xFF737373),
                           fontSize: 14,
@@ -518,53 +617,86 @@ class _BeforeEnterTestScreen extends State<BeforeEnterTestScreen> {
         ),
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: ElevatedButton(
-          onPressed: _isLoading ? null : _startTest,
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size(double.infinity, 50),
-            backgroundColor: _isLoading
-                ? const Color(0xFF247E80).withOpacity(0.7)
-                : const Color(0xFF247E80),
-            disabledBackgroundColor: const Color(0xFF247E80).withOpacity(0.7),
+  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+  child: Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      // View Last Attempt button (only show if lastPreCourseTestTransactionId is not null)
+      if (lastPreCourseTestTransactionId != null ) ...[
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: _viewLastAttempt,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFC7F3F4),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+            child: const Text(
+              'View Last Attempt',
+              style: TextStyle(
+                color: Color(0xFF247E80),
+                fontSize: 16,
+                fontFamily: 'SF Pro Display',
+                fontWeight: FontWeight.w500,
+                height: 1.50,
+              ),
+            ),
           ),
-          child: _isLoading
-              ? const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      'Processing...',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontFamily: 'SF Pro Display',
-                        fontWeight: FontWeight.w500,
-                        height: 1.50,
-                      ),
-                    ),
-                  ],
-                )
-              : const Text(
-                  'Start Test',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontFamily: 'SF Pro Display',
-                    fontWeight: FontWeight.w500,
-                    height: 1.50,
-                  ),
-                ),
         ),
+        const SizedBox(height: 12),
+      ],
+      // Start Test button
+      ElevatedButton(
+        onPressed: _isLoading ? null : _startTest,
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 50),
+          backgroundColor: _isLoading
+              ? const Color(0xFF247E80).withOpacity(0.7)
+              : const Color(0xFF247E80),
+          disabledBackgroundColor: const Color(0xFF247E80).withOpacity(0.7),
+        ),
+        child: _isLoading
+            ? const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Processing...',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w500,
+                      height: 1.50,
+                    ),
+                  ),
+                ],
+              )
+            : const Text(
+                'Start Test',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontFamily: 'SF Pro Display',
+                  fontWeight: FontWeight.w500,
+                  height: 1.50,
+                ),
+              ),
       ),
+    ],
+  ),
+),
     );
   }
 }

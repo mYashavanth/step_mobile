@@ -294,14 +294,9 @@ class _HomePageState extends State<HomePage> {
     try {
       String token = await storage.read(key: 'token') ?? '';
       int courseId = storedCourseId != null ? int.parse(storedCourseId) : 1;
-      // ? selectedCourseIds.first
-      // : storedCourseId != null
-      //     ? int.parse(storedCourseId)
-      //     : 1;
 
       final response = await http.get(
-        Uri.parse(
-            '$baseurl/app/get-all-subjects-by-course-id/$token/$courseId'),
+        Uri.parse('$baseurl/app/get-all-subjects-by-course-id/$token/$courseId'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -312,6 +307,9 @@ class _HomePageState extends State<HomePage> {
               .map((subject) => {
                     'id': subject['id'],
                     'name': subject['subject_name'],
+                    'total_minutes': subject['total_minutes'],
+                    'total_duration': subject['total_duration'],
+                    'total_steps': subject['total_steps'],
                   })
               .toList();
         });
@@ -804,21 +802,6 @@ class _HomePageState extends State<HomePage> {
                           height: 1.40,
                         ),
                       ),
-                      InkWell(
-                        onTap: () {
-                          Navigator.pushNamed(context, "/all_subjects");
-                        },
-                        child: const Text(
-                          'View',
-                          style: TextStyle(
-                            color: Color(0xFF1A1A1A),
-                            fontSize: 14,
-                            fontFamily: 'SF Pro Display',
-                            fontWeight: FontWeight.w400,
-                            height: 1.57,
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -829,26 +812,61 @@ class _HomePageState extends State<HomePage> {
                   else if (subjects.isEmpty)
                     const Text('No subjects available')
                   else
-                    ...subjects
-                        .asMap()
-                        .entries
-                        .take(subjects.length > 5 ? 5 : subjects.length)
-                        .map((entry) {
-                      int index = entry.key;
-                      var subject = entry.value;
-                      return Column(
-                        children: [
-                          buildStepWiseCourseCard(
-                            (index + 1).toString().padLeft(2, '0'),
-                            1, // 0 = unlocked, 1 = locked, 2 = completed
-                            subject['name'],
-                            subject['id'].toString(),
-                            context,
+                    Column(
+                      children: [
+                        // Display only 4 subjects instead of 5
+                        ...subjects
+                            .asMap()
+                            .entries
+                            .take(subjects.length > 4 ? 4 : subjects.length)
+                            .map((entry) {
+                          int index = entry.key;
+                          var subject = entry.value;
+                          return Column(
+                            children: [
+                              buildStepWiseCourseCard(
+                                (index + 1).toString().padLeft(2, '0'),
+                                1, // 0 = unlocked, 1 = locked, 2 = completed
+                                subject['name'],
+                                subject['id'].toString(),
+                                context,
+                                totalMinutes: subject['total_minutes'],
+                                totalDuration: subject['total_duration'],
+                                totalSteps: subject['total_steps'],
+                              ),
+                              const SizedBox(height: 8),
+                            ],
+                          );
+                        }).toList(),
+                        // Add the "View All" button in place of the 5th subject
+                        if (subjects.length > 4)
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.pushNamed(context, "/all_subjects");
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFC7F3F4),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                              ),
+                              child: const Text(
+                                'View All Subjects',
+                                style: TextStyle(
+                                  color: Color(0xFF247E80),
+                                  fontSize: 16,
+                                  fontFamily: 'SF Pro Display',
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.50,
+                                ),
+                              ),
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                        ],
-                      );
-                    }).toList(),
+                      ],
+                    ),
 
                   const SizedBox(height: 24),
                   Container(
