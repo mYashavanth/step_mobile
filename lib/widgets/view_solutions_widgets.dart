@@ -84,6 +84,7 @@ class _QuestAnsSolWidgetState extends State<QuestAnsSolWidget> {
 
 Widget buildQuestionAnsSol(
     Map<String, dynamic> data, bool isPreCourse, context) {
+      final marks = int.tryParse(data["marks_for_question"]) ?? 0;
   return Container(
     color: Colors.white,
     margin: const EdgeInsets.only(bottom: 12),
@@ -102,12 +103,13 @@ Widget buildQuestionAnsSol(
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          '${data["marks_for_question"]} MARKS',
+      Text(
+          marks == 0
+              ? 'You skipped it, 0 MARKS'
+              : '${data["marks_for_question"]} MARKS',
           style: TextStyle(
-            color: int.parse(data["marks_for_question"]) <= 0
-                ? const Color(0xFFFF3B30)
-                : const Color(0xFF34C759),
+            color:
+                marks <= 0 ? const Color(0xFFFF3B30) : const Color(0xFF34C759),
             fontSize: 14,
             fontFamily: 'SF Pro Display',
             fontWeight: FontWeight.w400,

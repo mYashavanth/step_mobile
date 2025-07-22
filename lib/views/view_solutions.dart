@@ -71,6 +71,7 @@ class _ViewSolutionState extends State<ViewSolution> {
         } else {
           // Handle error
           print('Failed to fetch data: ${response.statusCode}');
+          print('Response body+++++++++++++++++++++++++++++: ${response.body}');
         }
       } catch (e) {
         print('Error: $e');
