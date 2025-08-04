@@ -194,6 +194,7 @@ class _SplashState extends State<Splash> {
   Future<void> _validateToken() async {
     try {
       final token = await _secureStorage.read(key: 'token');
+      print('Token++++++++++++++++++++++++++: $token');
 
       if (token == null || token.isEmpty) {
         // No token found, navigate to intro

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:ghastep/services/iap_payment_screen.dart';
@@ -138,8 +139,8 @@ class _HomePageState extends State<HomePage> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        print(
-            '+++++++++++++++++++++++++++Resume videos response: ${response.statusCode} ${response.body}');
+        // print(
+        //     '+++++++++++++++++++++++++++Resume videos response: ${response.statusCode} ${response.body}');
         if (data['errFlag'] == 0 && data['data'] != null) {
           setState(() {
             resumeVideos = List<Map<String, dynamic>>.from(data['data']);
@@ -191,8 +192,8 @@ class _HomePageState extends State<HomePage> {
 
       if (videosResponse.statusCode == 200) {
         final List<dynamic> videosData = json.decode(videosResponse.body);
-        print(
-            '+++++++++++++++++++++++++++Videos watched response: ${videosResponse.statusCode} ${videosResponse.body}');
+        // print(
+        //     '+++++++++++++++++++++++++++Videos watched response: ${videosResponse.statusCode} ${videosResponse.body}');
         if (videosData.isNotEmpty &&
             videosData[0]['no_of_videos_watched'] != null) {
           setState(() {
@@ -207,8 +208,8 @@ class _HomePageState extends State<HomePage> {
       // Second API call - Tests/Questions/Steps
       final metricsResponse = await http.get(Uri.parse(
           '$baseurl/app/home/tests-questions-steps/$token/$courseId/$subjectId'));
-      print(
-          '+++++++++++++++++++++++++++Metrics metricsResponse: ${metricsResponse.statusCode} ${metricsResponse.body}');
+      // print(
+      //     '+++++++++++++++++++++++++++Metrics metricsResponse: ${metricsResponse.statusCode} ${metricsResponse.body}');
       if (metricsResponse.statusCode == 200) {
         final metricsData = json.decode(metricsResponse.body);
         if (metricsData.isNotEmpty) {
@@ -296,7 +297,8 @@ class _HomePageState extends State<HomePage> {
       int courseId = storedCourseId != null ? int.parse(storedCourseId) : 1;
 
       final response = await http.get(
-        Uri.parse('$baseurl/app/get-all-subjects-by-course-id/$token/$courseId'),
+        Uri.parse(
+            '$baseurl/app/get-all-subjects-by-course-id/$token/$courseId'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -326,6 +328,8 @@ class _HomePageState extends State<HomePage> {
       });
     }
   }
+
+  List<String> bannerImages = []; // Change from String to List<String>
 
   Future<void> _fetchBannerImages() async {
     const storage = FlutterSecureStorage();
@@ -362,18 +366,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _setHomePageBannerImage(List<dynamic> banners) async {
+    List<String> images = [];
+    String token = await storage.read(key: 'token') ?? '';
     for (var banner in banners) {
       if (banner['banner_title'] == 'home_page') {
-        String token = await storage.read(key: 'token') ?? '';
         String imageUrl =
             '$baseurl/app/ad-banners/display/$token/${banner['banner_image_name']}';
-
-        setState(() {
-          bannerImage = imageUrl; // Set the full image URL
-        });
-        break; // Exit the loop once the banner is found
+        images.add(imageUrl);
       }
     }
+    setState(() {
+      bannerImages = images;
+    });
   }
 
   String get selectedCourseName {
@@ -737,7 +741,7 @@ class _HomePageState extends State<HomePage> {
                   // const UpcomingTests(),
                   // bannerNotes(context),
 
-                  CourseBanner(bannerImage: bannerImage),
+                  CourseBannerCarousel(bannerImages: bannerImages),
                   const SizedBox(height: 20),
                   const Text(
                     'Resume learning',
@@ -1121,6 +1125,145 @@ class CourseBanner extends StatelessWidget {
   }
 }
 
+class CourseBannerCarousel extends StatefulWidget {
+  final List<String> bannerImages;
+  const CourseBannerCarousel({super.key, required this.bannerImages});
+
+  @override
+  State<CourseBannerCarousel> createState() => _CourseBannerCarouselState();
+}
+
+class _CourseBannerCarouselState extends State<CourseBannerCarousel> {
+  late final PageController _controller;
+  int _currentPage = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = PageController();
+
+    // The key change is here: We wait until the widget is built before starting the timer.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _startAutoScroll();
+      }
+    });
+  }
+
+  void _startAutoScroll() {
+    _timer?.cancel(); // Cancel any existing timer
+    if (widget.bannerImages.length > 1) {
+      _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+
+        // Check if the controller has clients (i.e., is attached to a PageView)
+        if (_controller.hasClients) {
+          int nextPage = _controller.page!.round() + 1;
+          _controller.animateToPage(
+            nextPage,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(CourseBannerCarousel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.bannerImages.length != widget.bannerImages.length) {
+      _currentPage = 0;
+      if (_controller.hasClients) {
+        _controller.jumpToPage(0);
+      }
+      _startAutoScroll(); // Restart scrolling logic if images change
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.bannerImages.isEmpty) {
+      return const SizedBox(height: 248); // Placeholder
+    }
+
+    // Infinite scroll implementation
+    final int itemCount = widget.bannerImages.length > 1
+        ? 10000 // Large number for infinite feel
+        : 1;
+
+    return SizedBox(
+      height: 248,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          PageView.builder(
+            controller: _controller,
+            itemCount: itemCount,
+            onPageChanged: (index) {
+              if (mounted) {
+                setState(() {
+                  _currentPage = index % widget.bannerImages.length;
+                });
+              }
+              // Reset timer on manual swipe to avoid weird double-scroll behavior
+              _startAutoScroll();
+            },
+            itemBuilder: (context, index) {
+              final imageIndex = index % widget.bannerImages.length;
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, '/subscribe');
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    image: DecorationImage(
+                      image: NetworkImage(widget.bannerImages[imageIndex]),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+          if (widget.bannerImages.length > 1)
+            Positioned(
+              bottom: 12,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(widget.bannerImages.length, (index) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: _currentPage == index ? 16 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color:
+                          _currentPage == index ? Colors.white : Colors.white54,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  );
+                }),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 List<String> weeksList = ['SUN', "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 DateTime today = DateTime.now();
@@ -1265,35 +1408,35 @@ class _CalendarSectionState extends State<CalendarSection> {
             children: List.generate(7, (index) {
               final date = weekDates[index];
               final isToday = date.day == today.day &&
-            date.month == today.month &&
-            date.year == today.year;
+                  date.month == today.month &&
+                  date.year == today.year;
               return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              weeksList[date.weekday % 7],
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Color(0xFF1A1A1A),
-                fontSize: 12,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w500,
-                height: 1.67,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              date.day.toString(),
-              style: TextStyle(
-                fontSize: 16,
-                fontFamily: 'SF Pro Display',
-                fontWeight: FontWeight.w400,
-                color: isToday ? Colors.orange : Colors.black,
-              ),
-            ),
-            if (isToday)
-              const Icon(Icons.circle, color: Colors.orange, size: 8),
-          ],
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    weeksList[date.weekday % 7],
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFF1A1A1A),
+                      fontSize: 12,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w500,
+                      height: 1.67,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    date.day.toString(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontFamily: 'SF Pro Display',
+                      fontWeight: FontWeight.w400,
+                      color: isToday ? Colors.orange : Colors.black,
+                    ),
+                  ),
+                  if (isToday)
+                    const Icon(Icons.circle, color: Colors.orange, size: 8),
+                ],
               );
             }),
           ),
