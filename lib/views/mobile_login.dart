@@ -46,6 +46,7 @@ class _MobileLoginState extends State<MobileLogin> {
           };
         } else {
           body = {'mobile': mobile};
+          print('Not from profile edit, body ++++++++++++++++++++++++++++++++++++++++++++: $body');
         }
 
         print('URL for request mobile login page: $url, and body is: $body');
@@ -55,11 +56,11 @@ class _MobileLoginState extends State<MobileLogin> {
           body: body,
         );
 
-        print('Response status: ${response.body}');
+          final data = jsonDecode(response.body);
+        print('Response data ++++++++++++++++++++++++++++++++++++++++++++++++++++: ${data}');
 
         if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          print('Response data: $data');
+          print('Response data ++++++++++++++: $data');
 
           if (data['errFlag'] == 0) {
             await storage.write(key: 'mobile', value: mobile);
